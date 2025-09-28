@@ -327,32 +327,31 @@ async def crown_view(request: Request, u: str = None, session: Session = Depends
         .order_by(Pair.source_line_start)
     ).all()
 
-    # Build the flowing crown by removing duplicate connection lines
-    crown_lines = []
-    for i, pair in enumerate(pairs):
+    crown_sonnets = []
+    for pair in pairs:
         lines = session.exec(
             select(Line)
             .where(Line.sonnet_id == pair.sonnet_id)
             .order_by(Line.line_number)
         ).all()
 
-        if i == 0:
-            # First pair: include all lines, mark first and last as source lines
-            for line in lines:
-                is_source = line.line_number == 1 or line.line_number == 14
-                crown_lines.append({"text": line.text, "is_source": is_source})
-        else:
-            # Subsequent pairs: skip line 1 (duplicate connection), include lines 2-14
-            for line in lines:
-                if line.line_number > 1:
-                    is_source = line.line_number == 14
-                    crown_lines.append({"text": line.text, "is_source": is_source})
+        user_1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
+        user_2 = session.exec(select(User).where(User.id == pair.user_2_id)).first()
+
+        if not user_1 or not user_2:
+            continue
+
+        sonnet_data = {
+            "lines": [{"text": line.text, "is_source": line.line_number in [1, 14]} for line in lines],
+            "authors": f"{user_1.pen_name} & {user_2.pen_name}"
+        }
+        crown_sonnets.append(sonnet_data)
 
     return templates.TemplateResponse("crown.html", {
         "request": request,
         "user": user,
         "crown": crown,
         "source_sonnet": source_sonnet,
-        "crown_lines": crown_lines,
-        "pairs_with_sonnets": len(pairs)  # Just the count for "X threads woven"
+        "crown_sonnets": crown_sonnets,
+        "pairs_with_sonnets": len(pairs)
     })

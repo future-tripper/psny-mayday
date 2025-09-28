@@ -46,11 +46,16 @@
             <p class="completed-count">{{ pairs_with_sonnets }} threads woven</p>
         </div>
 
-        {% if crown_lines %}
-        <div class="crown-chain">
-            {% for line in crown_lines %}
-            <div class="line{% if line.is_source %} bookend-line{% endif %}">
-                {{ line.text }}
+        {% if crown_sonnets %}
+        <div class="crown-collection">
+            {% for sonnet in crown_sonnets %}
+            <div class="crown-sonnet">
+                <div class="sonnet-attribution">{{ sonnet.authors }}</div>
+                {% for line in sonnet.lines %}
+                <div class="line{% if line.is_source %} bookend-line{% endif %}">
+                    {{ line.text }}
+                </div>
+                {% endfor %}
             </div>
             {% endfor %}
         </div>

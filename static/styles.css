@@ -641,13 +641,33 @@ h1 {
     letter-spacing: 0.5px;
 }
 
-.crown-chain {
+.crown-collection {
     padding: 20px 60px 50px;
     max-width: 700px;
     margin: 0 auto;
 }
 
-.crown-chain .line {
+.crown-sonnet {
+    margin-bottom: 60px;
+    padding-bottom: 40px;
+    border-bottom: 2px solid rgba(232, 180, 164, 0.3);
+}
+
+.crown-sonnet:last-child {
+    border-bottom: none;
+}
+
+.sonnet-attribution {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #F8B098;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+}
+
+.crown-sonnet .line {
     margin: 12px 0;
     font-size: 1em;
     color: #3a3a3a;
