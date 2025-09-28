@@ -14,7 +14,7 @@ templates = Jinja2Templates(directory="templates")
 
 
 @app.get("/")
-async def home(request: Request, u: str = None, session: Session = Depends(get_session)):
+async def home(request: Request, u: str = None, completed: bool = False, session: Session = Depends(get_session)):
     if not u:
         return templates.TemplateResponse("index.html", {
             "request": request,
@@ -46,13 +46,16 @@ async def home(request: Request, u: str = None, session: Session = Depends(get_s
     is_my_turn = turn and turn.next_user_id == current_user.id
     next_line_number = len(lines) + 1
 
+    just_completed = completed or (len(lines) == 1 and active_sonnet.id > 1)
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "current_user": current_user,
         "lines": lines,
         "is_my_turn": is_my_turn,
         "next_line_number": next_line_number,
-        "sonnet": active_sonnet
+        "sonnet": active_sonnet,
+        "show_celebration": just_completed
     })
 
 
@@ -122,4 +125,31 @@ async def add_line(
 
     session.commit()
 
+    if next_line_number == 14:
+        return RedirectResponse(f"/?u={u}&completed=true", status_code=303)
+
     return RedirectResponse(f"/?u={u}", status_code=303)
+
+
+@app.get("/sonnets")
+async def view_sonnets(request: Request, u: str = None, session: Session = Depends(get_session)):
+    current_user = None
+    if u:
+        current_user = session.exec(select(User).where(User.code == u)).first()
+
+    completed_sonnets = session.exec(
+        select(Sonnet).where(Sonnet.status == "complete").order_by(Sonnet.created_at.desc())
+    ).all()
+
+    sonnets_with_lines = []
+    for sonnet in completed_sonnets:
+        lines = session.exec(
+            select(Line).where(Line.sonnet_id == sonnet.id).order_by(Line.line_number)
+        ).all()
+        sonnets_with_lines.append({"sonnet": sonnet, "lines": lines})
+
+    return templates.TemplateResponse("sonnets.html", {
+        "request": request,
+        "current_user": current_user,
+        "sonnets_with_lines": sonnets_with_lines
+    })

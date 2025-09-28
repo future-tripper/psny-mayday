@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mayday - Collaborative Poetry</title>
     <link rel="stylesheet" href="/static/styles.css">
+    {% if not is_my_turn %}
+    <meta http-equiv="refresh" content="10">
+    {% endif %}
 </head>
 <body>
     <div class="container">
@@ -17,18 +20,23 @@
         <div class="error">{{ error }}</div>
         {% else %}
 
+        {% if show_celebration %}
+        <div class="celebration">
+            <h2>🎉 "The crown is won!" 🎉</h2>
+            <p>Your sonnet is complete, and from its final verse, a new crown begins.</p>
+            <p class="poetry-quote">"What is poetry which does not save nations or people?"<br>— Czesław Miłosz</p>
+        </div>
+        {% endif %}
+
         <div class="user-info">
-            <p>Welcome, <strong>{{ current_user.display_name }}</strong></p>
+            <p>Welcome, <strong>{{ current_user.display_name }}</strong> | <a href="/sonnets?u={{ current_user.code }}" class="link">View Completed Sonnets</a></p>
         </div>
 
         <div class="sonnet">
             <h2>Current Sonnet (Line {{ next_line_number - 1 }}/14)</h2>
             <div class="lines">
                 {% for line in lines %}
-                <div class="line">
-                    <span class="line-number">{{ line.line_number }}.</span>
-                    <span class="line-text">{{ line.text }}</span>
-                </div>
+                <div class="line">{{ line.text }}</div>
                 {% endfor %}
             </div>
         </div>
