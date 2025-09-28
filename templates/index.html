@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mayday - Collaborative Poetry</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mayday</h1>
+            <p class="tagline">Collaborative Poetry for PSNY</p>
+        </header>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% else %}
+
+        <div class="user-info">
+            <p>Welcome, <strong>{{ current_user.display_name }}</strong></p>
+        </div>
+
+        <div class="sonnet">
+            <h2>Current Sonnet (Line {{ next_line_number - 1 }}/14)</h2>
+            <div class="lines">
+                {% for line in lines %}
+                <div class="line">
+                    <span class="line-number">{{ line.line_number }}.</span>
+                    <span class="line-text">{{ line.text }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if is_my_turn %}
+        <div class="turn-indicator my-turn">
+            <p>✍️ It's your turn! Add line {{ next_line_number }}:</p>
+        </div>
+
+        <form method="POST" action="/lines" class="line-form">
+            <input type="hidden" name="u" value="{{ current_user.code }}">
+            <input
+                type="text"
+                name="text"
+                placeholder="Enter your line..."
+                required
+                autofocus
+                class="line-input"
+            >
+            <button type="submit" class="submit-btn">Submit Line</button>
+        </form>
+        {% else %}
+        <div class="turn-indicator waiting">
+            <p>⏳ Waiting for your partner to add line {{ next_line_number }}...</p>
+            <p class="hint">Refresh the page to see their line when they're done.</p>
+        </div>
+        {% endif %}
+
+        {% endif %}
+    </div>
+</body>
+</html>

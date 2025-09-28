@@ -64,6 +64,30 @@ Transform poetry creation into a fundraising engine by connecting sonnet crowns 
 
 *Space reserved for non-fundraising future features*
 
+### Communication Between Poetry Partners
+
+**The Concept:**
+Allow paired users to communicate with each other while writing sonnets together.
+
+**Potential Approaches:**
+- **In-app chat sidebar**: Real-time messaging alongside the sonnet view
+- **Line comments**: Ability to react to or comment on specific lines
+- **Voice notes**: Audio messages for a more personal touch
+- **Timed prompts**: "Your partner added a line - want to send them a note?"
+- **Post-sonnet reflection**: After completing a sonnet, partners can exchange thoughts about the experience
+
+**Why This Matters:**
+- Poetry is collaborative and conversational - communication deepens the connection
+- Partners can discuss direction, offer encouragement, or simply connect as humans
+- Could reduce friction if someone needs to step away (e.g., "Back in 2 hours!")
+- Builds community and relationship beyond just the lines themselves
+
+**Considerations:**
+- Keep it optional - some may prefer silent, meditative collaboration
+- Moderation needs for public/multi-user phases
+- How to preserve the focus on poetry vs. becoming primarily a chat app
+- Privacy and safety features
+
 (Add new ideas here as they emerge!)
 
 ---
