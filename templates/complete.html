@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonnet Complete - Mayday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/menu.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1>Mayday</h1>
+            <p class="tagline">A sonnet crown of epic proportions</p>
+        </header>
+
+        <nav class="mobile-nav">
+            <a href="https://poetrysocietyny.org/membership" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
+
+        <div class="celebration">
+            <div class="ornament">✦</div>
+            <h2>Your thread is woven</h2>
+            <p>
+                Congratulations, {{ user.pen_name }}! You and your partner have completed your sonnet.
+                Your voices are now woven into the Crown—a tapestry of words connecting poets
+                across distance and time. In answering the call, you've reminded us: we are not alone.
+            </p>
+            <p class="poetry-quote">
+                "We are the sleeping fragments of his sky,<br>
+                Wind giving presence to fragments."
+            </p>
+            <p>
+                Between two lines of an existing sonnet, you wrote 12 new lines. Your ending line
+                becomes the beginning for another pair, linking your voice to theirs. This is the Crown:
+                an endless chain of poetry, each thread supporting the next.
+            </p>
+            <a href="/crown?u={{ user.code }}" class="cta-button">View the Crown</a>
+        </div>
+    </div>
+</body>
+</html>

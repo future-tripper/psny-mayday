@@ -5,17 +5,20 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    background: #F5EFE6;
+    font-family: 'Josefin Sans', sans-serif;
+    background: #FFFBE2;
     min-height: 100vh;
     padding: 0;
     color: #333;
+    font-weight: 300;
+    font-size: 1.2em;
+    -webkit-font-smoothing: antialiased;
 }
 
 .container {
-    max-width: 900px;
-    margin: 0 auto;
-    background: white;
+    max-width: none;
+    margin: 0;
+    background: #FFFBE2;
     min-height: 100vh;
     position: relative;
 }
@@ -24,9 +27,140 @@ header {
     background: #2b2b2b;
     color: white;
     text-align: center;
-    padding: 35px 20px 50px;
+    padding: 40px 30px 60px;
     position: relative;
-    overflow: visible;
+}
+
+.psny-logo {
+    position: absolute;
+    top: 0;
+    left: 30px;
+    height: 120px;
+    width: auto;
+    z-index: 10;
+}
+
+.membership-button {
+    display: none;
+}
+
+.membership-button:hover {
+    background: rgba(255, 251, 226, 0.1);
+}
+
+.hamburger-menu {
+    position: absolute;
+    top: 25px;
+    right: 30px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 1001;
+}
+
+.hamburger-menu span {
+    display: block;
+    width: 25px;
+    height: 2px;
+    background: white;
+    margin: 5px 0;
+    transition: all 0.3s;
+}
+
+.hamburger-menu.active span:nth-child(1) {
+    transform: rotate(45deg) translate(7px, 7px);
+}
+
+.hamburger-menu.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-menu.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+}
+
+.mobile-nav {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 300px;
+    height: 100vh;
+    background: #2b2b2b;
+    padding: 80px 30px 30px;
+    transition: right 0.3s;
+    z-index: 1000;
+}
+
+.mobile-nav.active {
+    right: 0;
+}
+
+.mobile-nav a {
+    display: block;
+    padding: 15px 20px;
+    color: white;
+    text-decoration: none;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 400;
+    font-size: 0.9em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 2px solid #FFFBE2;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.mobile-nav a:hover {
+    background: rgba(255, 251, 226, 0.1);
+}
+
+.mobile-nav-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+    z-index: 999;
+}
+
+.mobile-nav-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (max-width: 768px) {
+    header {
+        padding: 30px 20px 50px;
+    }
+
+    .psny-logo {
+        position: static;
+        display: block;
+        margin: 0 auto 20px;
+        height: 90px;
+    }
+
+    .psny-logo {
+        position: static;
+        display: block;
+        margin: 0 auto 20px;
+        height: 70px;
+    }
+
+    h1 {
+        font-size: 2.2em;
+        margin-bottom: 12px;
+    }
+
+    .tagline {
+        margin-bottom: 0;
+    }
 }
 
 header::after {
@@ -35,218 +169,241 @@ header::after {
     bottom: -1px;
     left: 0;
     width: 100%;
-    height: 40px;
+    height: 50px;
     background: #2b2b2b;
-    clip-path: ellipse(80% 100% at 50% 0%);
+    clip-path: ellipse(75% 100% at 50% 0%);
 }
 
 h1 {
-    font-size: 2.8em;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 3.6em;
     font-weight: 300;
-    letter-spacing: 3px;
-    margin-bottom: 10px;
+    letter-spacing: 4px;
+    margin-bottom: 12px;
     text-transform: uppercase;
 }
 
 .tagline {
-    font-size: 1em;
-    font-weight: 300;
-    letter-spacing: 1.5px;
-    opacity: 0.95;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.4em;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    opacity: 0.9;
 }
 
 .error {
     background: #ffe4e1;
-    border-left: 4px solid #dc3545;
-    padding: 20px;
-    margin: 80px 40px 20px;
+    border-left: 3px solid #dc3545;
+    padding: 20px 30px;
+    margin: 60px 50px 20px;
     color: #721c24;
+    font-size: 0.95em;
 }
 
 .celebration {
-    background: linear-gradient(135deg, #E8B4A4 0%, #F4C5B8 100%);
-    padding: 40px;
-    margin: 80px 40px 40px;
-    border-radius: 12px;
+    background: #2b2b2b;
+    padding: 40px 50px;
+    margin: 50px 50px 25px;
     text-align: center;
-    box-shadow: 0 4px 20px rgba(232, 180, 164, 0.3);
     position: relative;
 }
 
-.celebration::before {
-    content: '';
-    position: absolute;
-    top: -30px;
-    left: 10%;
-    right: 10%;
-    height: 40px;
-    background: linear-gradient(135deg, #E8B4A4 0%, #F4C5B8 100%);
-    border-radius: 50%;
-    opacity: 0.3;
-    filter: blur(20px);
+.ornament {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 1em;
+    margin-bottom: 18px;
+    letter-spacing: 4px;
 }
 
 .celebration h2 {
-    color: #2b2b2b;
-    font-size: 2em;
+    font-family: 'Josefin Sans', sans-serif;
+    color: white;
+    font-size: 2.9em;
     margin-bottom: 20px;
-    font-weight: 400;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: lowercase;
 }
 
 .celebration p {
-    color: #4a4a4a;
-    font-size: 1.15em;
-    margin: 15px 0;
-    line-height: 1.7;
+    font-family: 'Josefin Sans', sans-serif;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95em;
+    margin: 12px 0;
+    line-height: 1.6;
+    font-weight: 300;
 }
 
 .poetry-quote {
     font-style: italic;
     margin-top: 25px;
     padding-top: 25px;
-    border-top: 2px solid rgba(43, 43, 43, 0.2);
-    font-size: 1em !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 0.9em !important;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.8;
+}
+
+.author {
+    display: block;
+    margin-top: 12px;
+    font-size: 0.85em;
+    opacity: 0.6;
+    font-style: normal;
+    letter-spacing: 0.5px;
 }
 
 .user-info {
-    background: linear-gradient(135deg, #E8B4A4 0%, #F4C5B8 100%);
-    padding: 18px 40px;
+    font-family: 'Josefin Sans', sans-serif;
+    background: #F8B098;
+    padding: 16px 50px;
     text-align: center;
-    margin-top: 45px;
+    margin-top: 40px;
     position: relative;
+    font-size: 0.9em;
+    font-weight: 300;
 }
 
 .user-info::before {
     content: '';
     position: absolute;
-    top: -15px;
+    top: -18px;
     left: 0;
     width: 100%;
-    height: 20px;
-    background: linear-gradient(135deg, #E8B4A4 0%, #F4C5B8 100%);
-    clip-path: ellipse(60% 100% at 50% 100%);
+    height: 22px;
+    background: #F8B098;
+    clip-path: ellipse(55% 100% at 50% 100%);
 }
 
 .user-info::after {
     content: '';
     position: absolute;
-    bottom: -15px;
+    bottom: -18px;
     left: 0;
     width: 100%;
-    height: 20px;
-    background: linear-gradient(135deg, #E8B4A4 0%, #F4C5B8 100%);
-    clip-path: ellipse(60% 100% at 50% 0%);
+    height: 22px;
+    background: #F8B098;
+    clip-path: ellipse(55% 100% at 50% 0%);
 }
 
 .user-info strong {
+    font-family: 'Josefin Sans', sans-serif;
     color: #2b2b2b;
-    font-weight: 600;
+    font-weight: 400;
 }
 
 .user-info .link {
-    color: #2b2b2b;
+    display: inline-block;
+    padding: 10px 24px;
+    background: #2b2b2b;
+    color: white;
     text-decoration: none;
-    font-weight: 500;
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.2s;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 400;
+    font-size: 0.85em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-radius: 8px;
+    border: 3px solid #FFFBE2;
+    transition: all 0.2s;
+    margin-left: 15px;
 }
 
 .user-info .link:hover {
-    border-bottom-color: #2b2b2b;
+    background: #1a1a1a;
 }
 
 .sonnet {
-    padding: 40px 50px 30px;
+    padding: 45px 60px 35px;
 }
 
 .sonnet h2 {
-    font-size: 0.95em;
-    color: #999;
-    margin-bottom: 30px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.8em;
+    color: #2b2b2b;
+    margin-bottom: 35px;
     text-align: center;
-    font-weight: 400;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+    font-weight: 300;
+    letter-spacing: 1.5px;
 }
 
 .lines {
     background: transparent;
     padding: 0;
-    border-radius: 0;
-    border-left: none;
     line-height: 1.6;
-    max-width: 650px;
+    max-width: 700px;
     margin: 0 auto;
 }
 
+.line-with-number {
+    display: flex;
+    align-items: flex-start;
+    margin: 10px 0;
+    gap: 15px;
+}
+
 .line {
-    margin: 8px 0;
-    font-size: 1.05em;
+    font-size: 1em;
     color: #3a3a3a;
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
     font-weight: 400;
-    letter-spacing: 0.3px;
+    flex: 1;
+    min-height: 1.5em;
 }
 
 .turn-indicator {
-    padding: 0;
-    border-radius: 0;
+    font-family: 'Josefin Sans', sans-serif;
     text-align: center;
-    margin: 35px 50px 25px;
-    font-size: 0.95em;
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    margin: 35px 60px 28px;
+    font-size: 0.9em;
+    font-weight: 300;
 }
 
 .my-turn {
-    background: transparent;
-    border: none;
     color: #2b2b2b;
-    box-shadow: none;
 }
 
 .my-turn p {
-    font-weight: 400;
-    letter-spacing: 0.5px;
-    margin: 8px 0;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+    margin: 6px 0;
 }
 
 .waiting {
-    background: transparent;
-    border: none;
-    color: #888;
-    box-shadow: none;
+    color: #2b2b2b;
 }
 
 .waiting p {
+    font-family: 'Josefin Sans', sans-serif;
     font-weight: 300;
-    letter-spacing: 0.5px;
-    margin: 8px 0;
+    letter-spacing: 0.3px;
+    margin: 6px 0;
 }
 
 .hint {
-    font-size: 0.85em;
-    margin-top: 10px;
-    opacity: 0.7;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.8em;
+    margin-top: 8px;
+    opacity: 0.6;
     font-weight: 300;
 }
 
 .line-form {
     display: flex;
-    gap: 12px;
-    padding: 0 50px 50px;
-    max-width: 750px;
+    gap: 10px;
+    padding: 0 60px 45px;
+    max-width: 700px;
     margin: 0 auto;
 }
 
 .line-input {
     flex: 1;
-    padding: 14px 18px;
+    padding: 12px 16px;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.95em;
-    font-family: Georgia, serif;
+    border-radius: 3px;
+    font-size: 0.9em;
+    font-family: 'EB Garamond', Georgia, serif;
     background: white;
     transition: all 0.2s;
 }
@@ -258,15 +415,17 @@ h1 {
 }
 
 .submit-btn {
-    padding: 14px 30px;
+    padding: 12px 28px;
     background: #2b2b2b;
     color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.95em;
+    border: 3px solid #FFFBE2;
+    border-radius: 8px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.85em;
     cursor: pointer;
-    font-weight: 500;
-    letter-spacing: 0.5px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
     transition: all 0.2s;
 }
 
@@ -275,17 +434,17 @@ h1 {
 }
 
 .page-nav {
-    padding: 30px 50px;
-    margin-top: 70px;
+    padding: 30px 60px;
+    margin-top: 50px;
 }
 
 .nav-link {
     color: #2b2b2b;
     text-decoration: none;
     font-weight: 500;
+    font-size: 0.9em;
     border-bottom: 2px solid transparent;
     transition: border-color 0.2s;
-    font-size: 0.95em;
     letter-spacing: 0.3px;
 }
 
@@ -294,19 +453,19 @@ h1 {
 }
 
 .empty-state {
-    padding: 80px 50px;
+    font-family: 'Josefin Sans', sans-serif;
+    padding: 70px 60px;
     text-align: center;
-    color: #666;
-    font-size: 1em;
-    line-height: 1.6;
+    color: #333;
+    font-size: 1.1em;
+    line-height: 1.7;
     font-weight: 300;
 }
 
 .completed-sonnet {
-    margin: 40px 50px;
-    padding: 40px;
+    margin: 35px 60px;
+    padding: 35px 0;
     background: transparent;
-    border: none;
     border-top: 1px solid #e8e8e8;
 }
 
@@ -316,16 +475,222 @@ h1 {
 
 .completed-sonnet h3 {
     color: #2b2b2b;
-    font-size: 1.1em;
-    margin-bottom: 8px;
+    font-size: 1em;
+    margin-bottom: 6px;
     font-weight: 500;
     letter-spacing: 0.5px;
 }
 
 .sonnet-date {
     color: #aaa;
-    font-size: 0.8em;
-    margin-bottom: 30px;
+    font-size: 0.75em;
+    margin-bottom: 28px;
     font-weight: 300;
     letter-spacing: 0.3px;
+}
+
+.signup-section {
+    padding: 50px 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.signup-section h2 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 3.1em;
+    color: #2b2b2b;
+    margin-bottom: 20px;
+    font-weight: 300;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.description {
+    font-family: 'Josefin Sans', sans-serif;
+    color: #333;
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 35px;
+    text-align: center;
+    font-weight: 300;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.signup-form {
+    margin-top: 35px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    font-family: 'Josefin Sans', sans-serif;
+    display: block;
+    color: #2b2b2b;
+    font-size: 0.85em;
+    margin-bottom: 8px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 0.95em;
+    background: white;
+    transition: all 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #E8B4A4;
+    box-shadow: 0 0 0 2px rgba(232, 180, 164, 0.1);
+}
+
+.waiting-section {
+    padding: 70px 60px;
+    text-align: center;
+}
+
+.waiting-section h2 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 2.9em;
+    color: #2b2b2b;
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.waiting-message {
+    font-family: 'Josefin Sans', sans-serif;
+    color: #333;
+    font-size: 1.1em;
+    line-height: 1.7;
+    margin-bottom: 35px;
+    font-weight: 300;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.waiting-animation {
+    font-family: 'Josefin Sans', sans-serif;
+    padding: 30px;
+    color: #333;
+    font-size: 1.1em;
+    font-weight: 300;
+}
+
+.cta-button {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 14px 32px;
+    background: #2b2b2b;
+    color: white;
+    text-decoration: none;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 400;
+    font-size: 0.85em;
+    border-radius: 8px;
+    border: 3px solid #FFFBE2;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+
+.cta-button:hover {
+    background: #1a1a1a;
+}
+
+.crown-header {
+    padding: 50px 60px 30px;
+    text-align: center;
+}
+
+.crown-header h2 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 3.1em;
+    color: #2b2b2b;
+    margin-bottom: 18px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.crown-description {
+    font-family: 'Josefin Sans', sans-serif;
+    color: #333;
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    font-weight: 300;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.completed-count {
+    font-family: 'Josefin Sans', sans-serif;
+    color: #333;
+    font-size: 1.0em;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+.crown-chain {
+    padding: 20px 60px 50px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.crown-chain .line {
+    margin: 12px 0;
+    font-size: 1em;
+    color: #3a3a3a;
+    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    font-weight: 400;
+    line-height: 1.8;
+}
+
+.bookend-line {
+    font-weight: 500;
+    color: #2b2b2b;
+    background: rgba(232, 180, 164, 0.08);
+    padding: 8px 12px;
+    margin: 12px 0;
+    border-left: 3px solid #E8B4A4;
+}
+
+.line-number {
+    display: inline-block;
+    min-width: 30px;
+    color: #999;
+    font-size: 0.85em;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 400;
+    text-align: right;
+    padding-top: 2px;
+}
+
+.navigation {
+    padding: 30px 60px 50px;
+    text-align: center;
+}
+
+.navigation .link {
+    color: #2b2b2b;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9em;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s;
+    letter-spacing: 0.3px;
+}
+
+.navigation .link:hover {
+    border-bottom-color: #E8B4A4;
 }

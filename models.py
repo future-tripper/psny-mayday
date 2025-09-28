@@ -5,8 +5,11 @@ from typing import Optional
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    display_name: str
+    email: str
+    pen_name: str
     code: str
+    status: str = "waiting"
+    pair_id: Optional[int] = Field(default=None, foreign_key="pair.id")
 
 
 class Sonnet(SQLModel, table=True):
@@ -28,3 +31,34 @@ class Turn(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     sonnet_id: int = Field(foreign_key="sonnet.id")
     next_user_id: int = Field(foreign_key="user.id")
+
+
+class SourceSonnet(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class SourceLine(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    source_sonnet_id: int = Field(foreign_key="sourcesonnet.id")
+    line_number: int
+    text: str
+
+
+class Crown(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    source_sonnet_id: int = Field(foreign_key="sourcesonnet.id")
+    status: str = "forming"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Pair(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    crown_id: int = Field(foreign_key="crown.id")
+    user_1_id: int = Field(foreign_key="user.id")
+    user_2_id: int = Field(foreign_key="user.id")
+    source_line_start: int
+    sonnet_id: int = Field(foreign_key="sonnet.id")
+    status: str = "writing"
+    created_at: datetime = Field(default_factory=datetime.utcnow)

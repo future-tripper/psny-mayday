@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join the Crown - Mayday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/menu.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1>Mayday</h1>
+            <p class="tagline">A sonnet crown of epic proportions</p>
+        </header>
+
+        <nav class="mobile-nav">
+            <a href="https://poetrysocietyny.org/membership" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
+
+        <div class="signup-section">
+            <h2>Join the Crown</h2>
+            <p class="description">
+                If there is one thing we're learning, it's that it is okay to not be okay.
+                It is good to call out for help—for a friend, for a word, or a string of words
+                like pearls, for something beautiful to connect us to one another in the face of sorrow.
+            </p>
+            <p class="description">
+                The Poetry Society of New York invites you to answer the call: <em>m'aider</em>, come help me.
+                Together, we'll weave a Crown—poets from around the world, writing between the lines of
+                existing sonnets, creating an epic tapestry of interconnected verse. At PSNY, poetry is
+                never a lonely artform. The more voices, the greater the Crown.
+            </p>
+
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/signup" class="signup-form">
+                <div class="form-group">
+                    <label for="email">Email or Phone</label>
+                    <input
+                        type="text"
+                        id="email"
+                        name="email"
+                        placeholder="your@email.com"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="pen_name">Pen Name</label>
+                    <input
+                        type="text"
+                        id="pen_name"
+                        name="pen_name"
+                        placeholder="How should we call you?"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="submit-btn">Join the Crown</button>
+            </form>
+
+            <p class="hint">
+                After signing up, you'll be paired with another poet to weave your thread into the Crown.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

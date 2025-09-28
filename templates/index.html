@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mayday - Collaborative Poetry</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/menu.js" defer></script>
     {% if not is_my_turn %}
     <meta http-equiv="refresh" content="10">
     {% endif %}
@@ -12,9 +16,21 @@
 <body>
     <div class="container">
         <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <h1>Mayday</h1>
-            <p class="tagline">Collaborative Poetry for PSNY</p>
+            <p class="tagline">A sonnet crown of epic proportions</p>
         </header>
+
+        <nav class="mobile-nav">
+            <a href="https://poetrysocietyny.org/membership" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
 
         {% if error %}
         <div class="error">{{ error }}</div>
@@ -22,21 +38,25 @@
 
         {% if show_celebration %}
         <div class="celebration">
-            <h2>🎉 "The crown is won!" 🎉</h2>
+            <div class="ornament">✦</div>
+            <h2>The crown is won</h2>
             <p>Your sonnet is complete, and from its final verse, a new crown begins.</p>
-            <p class="poetry-quote">"What is poetry which does not save nations or people?"<br>— Czesław Miłosz</p>
+            <p class="poetry-quote">"What is poetry which does not save<br>nations or people?"<br><span class="author">— Czesław Miłosz</span></p>
         </div>
         {% endif %}
 
         <div class="user-info">
-            <p>Welcome, <strong>{{ current_user.display_name }}</strong> | <a href="/sonnets?u={{ current_user.code }}" class="link">View Completed Sonnets</a></p>
+            <p>Welcome, <strong>{{ current_user.pen_name }}</strong> | <a href="/crown?u={{ current_user.code }}" class="link">View the Crown</a></p>
         </div>
 
         <div class="sonnet">
-            <h2>Current Sonnet (Line {{ next_line_number - 1 }}/14)</h2>
+            <h2>Weaving Your Thread (Line {{ lines_written }}/{{ total_lines_to_write }})</h2>
             <div class="lines">
                 {% for line in lines %}
-                <div class="line">{{ line.text }}</div>
+                <div class="line-with-number">
+                    <span class="line-number">{{ line.line_number }}</span>
+                    <div class="line">{{ line.text }}</div>
+                </div>
                 {% endfor %}
             </div>
         </div>

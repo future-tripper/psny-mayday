@@ -1,47 +1,58 @@
 from sqlmodel import Session, select
 from database import engine, create_db_and_tables
-from models import User, Sonnet, Line, Turn
+from models import SourceSonnet, SourceLine, Crown
 
 
 def seed_data():
     create_db_and_tables()
 
     with Session(engine) as session:
-        existing_users = session.exec(select(User)).first()
-        if existing_users:
+        existing_source = session.exec(select(SourceSonnet)).first()
+        if existing_source:
             print("Database already seeded!")
             return
 
-        user_alpha = User(display_name="Alpha", code="ALPHA")
-        user_beta = User(display_name="Beta", code="BETA")
-        session.add(user_alpha)
-        session.add(user_beta)
+        source_sonnet = SourceSonnet(title="Wind Giving Presence")
+        session.add(source_sonnet)
         session.commit()
-        session.refresh(user_alpha)
-        session.refresh(user_beta)
+        session.refresh(source_sonnet)
 
-        sonnet = Sonnet(status="active")
-        session.add(sonnet)
+        lines = [
+            "His piercing pince-nez. Some dim frieze",
+            "Hands point to a dim frieze, in the dark night.",
+            "In the book of his music the corners have straightened:",
+            "Which owe their presence to our sleeping hands.",
+            "The ox-blood from the hands which play",
+            "For fire for warmth for hands for growth",
+            "Is there room in the room that you room in?",
+            "Upon his structured tomb:",
+            "Still they mean something. For the dance",
+            "And the architecture.",
+            "Weave among incidents",
+            "May be portentous to him",
+            "We are the sleeping fragments of his sky,",
+            "Wind giving presence to fragments."
+        ]
+
+        for i, line_text in enumerate(lines, start=1):
+            source_line = SourceLine(
+                source_sonnet_id=source_sonnet.id,
+                line_number=i,
+                text=line_text
+            )
+            session.add(source_line)
+
         session.commit()
-        session.refresh(sonnet)
 
-        first_line = Line(
-            sonnet_id=sonnet.id,
-            line_number=1,
-            text="Shall I compare thee to a summer's day?",
-            author_user_id=user_alpha.id
-        )
-        session.add(first_line)
-        session.commit()
-
-        turn = Turn(sonnet_id=sonnet.id, next_user_id=user_beta.id)
-        session.add(turn)
+        crown = Crown(source_sonnet_id=source_sonnet.id, status="forming")
+        session.add(crown)
         session.commit()
 
         print("✨ Database seeded successfully!")
-        print(f"- Created users: {user_alpha.display_name} and {user_beta.display_name}")
-        print(f"- Created sonnet #{sonnet.id} with first line")
-        print(f"- It's {user_beta.display_name}'s turn to add line 2")
+        print(f"- Created source sonnet: '{source_sonnet.title}'")
+        print(f"- Added {len(lines)} lines")
+        print(f"- Created Crown #{crown.id} (status: {crown.status})")
+        print(f"- Ready for 14 poets to sign up and create 7 new sonnets!")
 
 
 if __name__ == "__main__":

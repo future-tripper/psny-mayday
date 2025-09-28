@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting for Partner - Mayday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/menu.js" defer></script>
+    <meta http-equiv="refresh" content="5">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1>Mayday</h1>
+            <p class="tagline">A sonnet crown of epic proportions</p>
+        </header>
+
+        <nav class="mobile-nav">
+            <a href="https://poetrysocietyny.org/membership" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
+
+        <div class="waiting-section">
+            <div class="ornament">✦</div>
+            <h2>Welcome, {{ user.pen_name }}</h2>
+            <p class="waiting-message">
+                You've answered the call. Now we're finding your partner—another poet
+                who will help weave your thread into the Crown. Together, you'll write
+                between two lines of an existing sonnet, adding your voice to the tapestry.
+            </p>
+
+            <div class="waiting-animation">
+                <p>⏳ Waiting for your poetry partner...</p>
+            </div>
+
+            <p class="hint">This page will refresh automatically when your partner arrives.</p>
+        </div>
+    </div>
+</body>
+</html>
