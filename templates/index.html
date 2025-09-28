@@ -46,7 +46,7 @@
         {% endif %}
 
         <div class="user-info">
-            <p>Welcome, <strong>{{ current_user.pen_name }}</strong> | <a href="/crown?u={{ current_user.code }}" class="link">View the Crown</a></p>
+            <p>Welcome, <strong>{{ current_user.pen_name }}</strong> | Your partner is <strong>{{ partner.pen_name }}</strong> | <a href="/crown?u={{ current_user.code }}" class="link">View the Crown</a></p>
         </div>
 
         <div class="sonnet">
@@ -80,7 +80,7 @@
         </form>
         {% else %}
         <div class="turn-indicator waiting">
-            <p>⏳ Waiting for your partner to add line {{ next_line_number }}...</p>
+            <p>⏳ Waiting for {{ partner.pen_name }} to add line {{ next_line_number }}...</p>
             <p class="hint">Refresh the page to see their line when they're done.</p>
         </div>
         {% endif %}

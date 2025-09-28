@@ -165,6 +165,9 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
     if pair.status == "complete":
         return RedirectResponse(f"/complete?u={u}", status_code=303)
 
+    partner_id = pair.user_2_id if user.id == pair.user_1_id else pair.user_1_id
+    partner = session.exec(select(User).where(User.id == partner_id)).first()
+
     sonnet = session.exec(select(Sonnet).where(Sonnet.id == pair.sonnet_id)).first()
     if not sonnet:
         return templates.TemplateResponse("waiting.html", {
@@ -206,6 +209,7 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
     return templates.TemplateResponse("index.html", {
         "request": request,
         "current_user": user,
+        "partner": partner,
         "lines": display_lines,
         "is_my_turn": is_my_turn,
         "next_line_number": next_line_number,
@@ -285,9 +289,16 @@ async def completion_page(request: Request, u: str = None, session: Session = De
     if not user:
         return RedirectResponse("/signup", status_code=303)
 
+    pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
+    partner = None
+    if pair:
+        partner_id = pair.user_2_id if user.id == pair.user_1_id else pair.user_1_id
+        partner = session.exec(select(User).where(User.id == partner_id)).first()
+
     return templates.TemplateResponse("complete.html", {
         "request": request,
-        "user": user
+        "user": user,
+        "partner": partner
     })
 
 
