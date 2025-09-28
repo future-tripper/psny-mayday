@@ -7,10 +7,7 @@ def seed_data():
     create_db_and_tables()
 
     with Session(engine) as session:
-        existing_source = session.exec(select(SourceSonnet)).first()
-        if existing_source:
-            print("Database already seeded!")
-            return
+        session.exec(select(SourceSonnet)).first()
 
         source_sonnet = SourceSonnet(title="Wind Giving Presence")
         session.add(source_sonnet)

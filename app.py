@@ -36,9 +36,18 @@ def try_pair_users(session: Session):
     user_1 = waiting_users[0]
     user_2 = waiting_users[1]
 
-    pair_number = len(existing_pairs) + 1
-    first_line_num = pair_number
-    second_line_num = pair_number + 1
+    assigned_line_starts = {pair.source_line_start for pair in existing_pairs}
+
+    first_line_num = None
+    for i in range(1, 14):
+        if i not in assigned_line_starts:
+            first_line_num = i
+            break
+
+    if first_line_num is None:
+        return None
+
+    second_line_num = first_line_num + 1
 
     source_lines = session.exec(
         select(SourceLine)
@@ -265,6 +274,14 @@ async def add_line(
     if next_line_number == 13:
         sonnet.status = "complete"
         pair.status = "complete"
+
+        completed_pairs_count = session.exec(
+            select(Pair)
+            .where(Pair.crown_id == pair.crown_id)
+            .where(Pair.status == "complete")
+        ).all()
+        pair.completion_order = len(completed_pairs_count) + 1
+
         session.add(sonnet)
         session.add(pair)
         session.delete(turn)

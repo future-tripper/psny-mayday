@@ -61,4 +61,5 @@ class Pair(SQLModel, table=True):
     source_line_start: int
     sonnet_id: int = Field(foreign_key="sonnet.id")
     status: str = "writing"
+    completion_order: Optional[int] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
