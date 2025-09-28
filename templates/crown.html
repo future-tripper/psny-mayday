@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Crown - Mayday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/menu.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1>Mayday</h1>
+            <p class="tagline">A sonnet crown of epic proportions</p>
+        </header>
+
+        <nav class="mobile-nav">
+            <a href="https://poetrysocietyny.org/membership" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% else %}
+
+        <div class="crown-header">
+            <h2>The Crown</h2>
+            {% if source_sonnet %}
+            <p class="crown-description">
+                From <em>{{ source_sonnet.title }}</em>, poets around the world are weaving a Crown.
+                Each pair writes between two consecutive lines of the source sonnet—their ending becomes
+                another pair's beginning. The result: an interwoven tapestry where every voice supports
+                the next, a string of words like pearls connecting us in beauty and sorrow.
+            </p>
+            {% endif %}
+            <p class="completed-count">{{ pairs_with_sonnets }} threads woven</p>
+        </div>
+
+        {% if crown_lines %}
+        <div class="crown-chain">
+            {% for line in crown_lines %}
+            <div class="line{% if line.is_source %} bookend-line{% endif %}">
+                {{ line.text }}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="waiting-section">
+            <p>The Crown is forming... Poets are weaving their threads into the tapestry.</p>
+        </div>
+        {% endif %}
+
+        {% if user %}
+        <div class="navigation">
+            <a href="/poet?u={{ user.code }}" class="link">← Back to your sonnet</a>
+        </div>
+        {% endif %}
+
+        {% endif %}
+    </div>
+</body>
+</html>
