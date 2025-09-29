@@ -61,7 +61,7 @@ def create_crown_from_sonnet(sonnet_id: int):
         print(f"✨ Created Crown #{crown.id} from Sonnet {sonnet_id}")
         print(f"   Source: '{source_sonnet.title}'")
         print(f"   Status: {crown.status}")
-        print(f"   Ready for 13 new pairs to form!")
+        print(f"   Ready for 14 new pairs to form!")
         return crown.id
 
 

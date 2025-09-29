@@ -157,15 +157,15 @@ There is a **VISION_BOARD.md** file in the project root for capturing exciting f
 
 The Vision Board keeps motivation high by connecting today's small coding steps to tomorrow's magical possibilities.
 
-## Current Status: Crown System Complete + Visualization-Ready
+## Current Status: V1 Complete + Visualization Exploration
 
 ### ✅ V1 Production System Complete
 
 **Crown Completion System:**
-- Crown automatically marks as "complete" when 13th pair finishes
+- Crown automatically marks as "complete" when 14th pair finishes (corrected from 13)
 - User completion page shows special celebration when entire Crown is done
-- Crown page displays "Crown Complete: All 13 sonnets woven" when finished
-- Waiting page blocks new pairs once Crown has 13 pairs
+- Crown page displays "Crown Complete: All 14 sonnets woven" when finished
+- Waiting page blocks new pairs once Crown has 14 pairs
 
 **Individual Sonnet Views:**
 - `/sonnet/<id>` endpoint shows individual completed sonnets
@@ -174,7 +174,6 @@ The Vision Board keeps motivation high by connecting today's small coding steps 
 - CSS styling for clickable links with hover states
 
 **Crown Page Updates:**
-- Removed seed sonnet title reference
 - Updated copy: "Here lies the Crown woven from voices near and far..."
 - Shows completion status dynamically
 - Each sonnet has clickable author names linking to detail view
@@ -184,21 +183,28 @@ The Vision Board keeps motivation high by connecting today's small coding steps 
 - Commands: `python create_crown.py list` and `python create_crown.py from <sonnet_id>`
 - Foundation for multi-generational Crown system
 
-### ✅ Visualization Development Setup Complete
+### 🧪 Visualization Exploration in Progress
 
-**Safe Isolation System:**
+**Safe Development Environment:**
 - `visualization_dev/` directory contains all test/dev files
 - Environment variable `MAYDAY_VIZ_TEST=true/false` switches data source
 - Production v1 app never touches test database
 - Visualization development never touches production database
 
-**Test Data & API Ready:**
-- Complete test database with 13 finished sonnets (`visualization_dev/test_database.db`)
-- API endpoints built and tested:
-  - `/api/crown/1/nodes` - Returns node/connection data for D3.js
+**Test Data & APIs Built:**
+- Complete test database with 14 finished sonnets (`visualization_dev/test_database.db`)
+- API endpoints available:
+  - `/api/crown/1/nodes` - Returns node/connection data
   - `/api/crown/1/stats` - Returns completion statistics
-- 26 test users with realistic pen names
-- 182 lines of generated poetry for testing
+  - `/api/sonnet/{id}/lines` - Returns full sonnet lines for poetry revelation
+- 28 test users with realistic pen names
+- 196 lines of generated poetry for testing
+
+**Current Visualization Experiments:**
+- Interactive Crown circle with Sigma.js WebGL
+- Poetry revelation with typewriter effects
+- Atmospheric breathing nodes and flowing connection text
+- Multiple view modes: Crown Circle, Seed Focus, Individual Sonnets
 
 ### 🎯 File Organization
 
@@ -218,7 +224,7 @@ create_crown.py    # Manual Crown creation for V2
 visualization_dev/
 ├── README.md              # Full instructions for switching test/production
 ├── viz_database.py        # Database config with environment switching
-├── test_database.db       # Complete test Crown with 13 sonnets
+├── test_database.db       # Complete test Crown with 14 sonnets
 ├── generate_test_data.py  # Regenerate test database
 └── test_viz_api.py        # Test API endpoints
 ```
@@ -239,15 +245,23 @@ uvicorn app:app --reload
 # Everything uses production DB
 ```
 
-### 📋 Next Steps (When Ready for Visualization)
+### 🎨 Visualization Exploration
 
-1. **Set test mode**: `export MAYDAY_VIZ_TEST=true`
-2. **Build D3.js visualization** using `/api/crown/1/nodes` endpoint
-3. **Test with rich data** (13 sonnets, full connections)
-4. **Switch to production** when ready to deploy
-5. **Add to main Crown page** or create separate visualization page
+We're actively exploring different approaches to visualize the Crown of Sonnets, including:
 
-All visualization development happens in isolation without affecting the working v1 system!
+- Interactive Crown circle layouts using Sigma.js WebGL
+- Poetry revelation interfaces with typewriter effects
+- Multi-level view systems (Crown → Seed → Individual)
+- Atmospheric and animated poetry presentations
+
+**Test Environment:**
+```bash
+export MAYDAY_VIZ_TEST=true
+uvicorn app:app --reload
+# Visit: http://localhost:8000/crown/1/visualize
+```
+
+The visualization development is isolated from production and uses test data for experimentation.
 
 ---
 

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crown Visualization - Mayday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/viz_styles.css">
+    <script src="/static/menu.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1>Mayday</h1>
+            <p class="tagline">A sonnet crown of epic proportions</p>
+        </header>
+
+        <nav class="mobile-nav">
+            <a href="https://poetrysocietyny.org/membership" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
+
+        <!-- Visualization Container -->
+        <div class="viz-container">
+            <div class="viz-header">
+                <h2>Crown Visualization</h2>
+                <div class="view-controls">
+                    <button class="view-btn active" data-view="crown">Crown Circle</button>
+                    <button class="view-btn" data-view="seed">Seed Sonnet</button>
+                    <button class="view-btn" data-view="individual">Focus Mode</button>
+                </div>
+            </div>
+
+            <!-- Main Visualization Area -->
+            <div class="viz-main">
+                <div id="sigma-container" class="sigma-container"></div>
+
+                <!-- Info Panel -->
+                <div class="info-panel">
+                    <div class="panel-header">
+                        <h3>Crown Details</h3>
+                        <button class="close-panel" aria-label="Close panel">×</button>
+                    </div>
+                    <div class="panel-content">
+                        <div class="crown-info">
+                            <p class="crown-status">Crown Status: <span id="crown-status">Loading...</span></p>
+                            <p class="crown-progress">Progress: <span id="crown-progress">0/14</span> sonnets complete</p>
+                        </div>
+                        <div class="node-info" style="display: none;">
+                            <h4 id="node-title">Sonnet Details</h4>
+                            <p class="authors">By <span id="node-authors"></span></p>
+                            <div class="line-preview">
+                                <p class="first-line"><em>First:</em> <span id="node-first-line"></span></p>
+                                <p class="last-line"><em>Last:</em> <span id="node-last-line"></span></p>
+                            </div>
+                            <p class="completion-info">Completed <span id="completion-order"></span> of 13</p>
+                            <a href="#" id="view-full-sonnet" class="cta-link">View Full Sonnet →</a>
+                        </div>
+                        <div class="seed-info" style="display: none;">
+                            <h4>Seed Sonnet</h4>
+                            <p class="seed-title" id="seed-title">Wind Giving Presence</p>
+                            <p class="seed-description">Each line of this source sonnet spawns a pair of poets who write between consecutive lines.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-overlay" id="loading">
+                <div class="loading-content">
+                    <div class="ornament">✦</div>
+                    <p>Weaving the Crown...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <a href="/crown" class="link">← Back to Crown</a>
+        </div>
+    </div>
+
+    <!-- Sigma.js Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/graphology@0.25.4/dist/graphology.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js"></script>
+    <script src="/static/crown_viz.js"></script>
+</body>
+</html>

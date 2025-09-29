@@ -31,7 +31,7 @@ def try_pair_users(session: Session):
         select(Pair).where(Pair.crown_id == crown.id)
     ).all()
 
-    if len(existing_pairs) >= 13:
+    if len(existing_pairs) >= 14:  # Allow 14 pairs for true Crown
         return None
 
     user_1 = waiting_users[0]
@@ -40,15 +40,22 @@ def try_pair_users(session: Session):
     assigned_line_starts = {pair.source_line_start for pair in existing_pairs}
 
     first_line_num = None
+    second_line_num = None
+
+    # Check regular pairs (1→2, 2→3, ..., 13→14)
     for i in range(1, 14):
         if i not in assigned_line_starts:
             first_line_num = i
+            second_line_num = i + 1
             break
+
+    # Check crown closure pair (14→1) if all regular pairs are assigned
+    if first_line_num is None and 14 not in assigned_line_starts:
+        first_line_num = 14
+        second_line_num = 1  # Crown closure: line 14 connects back to line 1
 
     if first_line_num is None:
         return None
-
-    second_line_num = first_line_num + 1
 
     source_lines = session.exec(
         select(SourceLine)
@@ -287,8 +294,8 @@ async def add_line(
         session.add(pair)
         session.delete(turn)
 
-        # Check if all 13 pairs are complete - if so, mark Crown as complete
-        if len(completed_pairs_count) + 1 == 13:  # +1 because we just completed this pair
+        # Check if all 14 pairs are complete - if so, mark Crown as complete
+        if len(completed_pairs_count) + 1 == 14:  # +1 because we just completed this pair (14 pairs for true Crown)
             crown = session.exec(select(Crown).where(Crown.id == pair.crown_id)).first()
             if crown:
                 crown.status = "complete"
@@ -504,8 +511,9 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_sess
 
         # Create connection to next node (Crown is circular)
         next_position = pair.source_line_start + 1
-        if next_position <= 13:  # Connect to next consecutive pair
-            # Find the pair that starts with this pair's ending line
+
+        # Handle regular connections (1→2, 2→3, ..., 13→14)
+        if next_position <= 14:
             next_pair = session.exec(
                 select(Pair)
                 .where(Pair.crown_id == crown_id)
@@ -516,6 +524,22 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_sess
                 connection = {
                     "from": pair.sonnet_id,
                     "to": next_pair.sonnet_id,
+                    "shared_line": last_line if lines else ""
+                }
+                connections.append(connection)
+
+        # Handle Crown closure: connect 14th back to 1st (completing the circle)
+        elif pair.source_line_start == 14:
+            first_pair = session.exec(
+                select(Pair)
+                .where(Pair.crown_id == crown_id)
+                .where(Pair.source_line_start == 1)
+            ).first()
+
+            if first_pair:
+                connection = {
+                    "from": pair.sonnet_id,
+                    "to": first_pair.sonnet_id,
                     "shared_line": last_line if lines else ""
                 }
                 connections.append(connection)
@@ -549,6 +573,62 @@ async def crown_stats_api(crown_id: int, session: Session = Depends(get_viz_sess
         "status": crown.status,
         "total_pairs": len(pairs),
         "completed_pairs": len(completed_pairs),
-        "completion_percentage": (len(completed_pairs) / 13) * 100 if completed_pairs else 0,
-        "is_complete": len(completed_pairs) == 13
+        "completion_percentage": (len(completed_pairs) / 14) * 100 if completed_pairs else 0,
+        "is_complete": len(completed_pairs) == 14
     }
+
+
+@app.get("/api/sonnet/{sonnet_id}/lines")
+async def sonnet_lines_api(sonnet_id: int, session: Session = Depends(get_viz_session)):
+    """Return all lines of a specific sonnet for poetry revelation"""
+
+    lines = session.exec(
+        select(Line)
+        .where(Line.sonnet_id == sonnet_id)
+        .order_by(Line.line_number)
+    ).all()
+
+    if not lines:
+        return JSONResponse({"error": "Sonnet not found"}, status_code=404)
+
+    # Get pair info for authors
+    pair = session.exec(
+        select(Pair).where(Pair.sonnet_id == sonnet_id)
+    ).first()
+
+    authors = ""
+    if pair:
+        user1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
+        user2 = session.exec(select(User).where(User.id == pair.user_2_id)).first()
+        if user1 and user2:
+            authors = f"{user1.pen_name} & {user2.pen_name}"
+
+    return {
+        "sonnet_id": sonnet_id,
+        "authors": authors,
+        "lines": [{"number": line.line_number, "text": line.text} for line in lines],
+        "total_lines": len(lines),
+        "position_in_crown": pair.source_line_start if pair else None
+    }
+
+
+@app.get("/crown/{crown_id}/visualize")
+async def crown_visualization(request: Request, crown_id: int, u: str = None):
+    """Crown visualization page"""
+    user = None
+    if u:
+        user = session.exec(select(User).where(User.code == u)).first()
+
+    # Read the HTML file directly
+    import os
+    html_path = os.path.join("visualization_dev", "crown_viz.html")
+    with open(html_path, "r") as f:
+        html_content = f.read()
+
+    # Simple template replacement for crown_id and user
+    html_content = html_content.replace("{{ crown_id }}", str(crown_id))
+    if u:
+        html_content = html_content.replace('href="/crown"', f'href="/crown?u={u}"')
+
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html_content)

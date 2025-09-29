@@ -1,0 +1,503 @@
+/* Crown Visualization Styles */
+
+.viz-container {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #FFFBE2 0%, #f8f5e4 100%);
+    min-height: 100vh;
+    position: relative;
+}
+
+.viz-header {
+    text-align: center;
+    padding: 40px 20px 20px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(248, 176, 152, 0.2);
+    position: relative;
+    z-index: 10;
+}
+
+.viz-header h2 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 2.2em;
+    font-weight: 300;
+    color: #2b2b2b;
+    margin: 0 0 20px 0;
+    letter-spacing: 1px;
+}
+
+.view-controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.view-btn {
+    padding: 10px 20px;
+    border: 2px solid #F8B098;
+    background: transparent;
+    color: #2b2b2b;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.9em;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.view-btn:hover {
+    background: #F8B098;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(248, 176, 152, 0.3);
+}
+
+.view-btn.active {
+    background: #F8B098;
+    color: white;
+    box-shadow: 0 2px 8px rgba(248, 176, 152, 0.4);
+}
+
+.viz-main {
+    position: relative;
+    height: calc(100vh - 200px);
+    display: flex;
+}
+
+.sigma-container {
+    flex: 1;
+    position: relative;
+    background: transparent;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+/* Info Panel */
+.info-panel {
+    width: 320px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    border-left: 1px solid rgba(248, 176, 152, 0.2);
+    padding: 0;
+    overflow-y: auto;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.panel-header {
+    padding: 25px 25px 20px;
+    border-bottom: 1px solid rgba(248, 176, 152, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(248, 176, 152, 0.1);
+}
+
+.panel-header h3 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #2b2b2b;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.close-panel {
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+}
+
+.close-panel:hover {
+    color: #F8B098;
+}
+
+.panel-content {
+    padding: 25px;
+}
+
+.crown-info, .node-info, .seed-info {
+    font-family: 'Josefin Sans', sans-serif;
+    line-height: 1.6;
+}
+
+.crown-status, .crown-progress {
+    margin: 0 0 15px 0;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.crown-status span, .crown-progress span {
+    font-weight: 500;
+    color: #2b2b2b;
+}
+
+.node-info h4 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.3em;
+    font-weight: 400;
+    color: #2b2b2b;
+    margin: 0 0 15px 0;
+}
+
+.authors {
+    color: #F8B098;
+    font-weight: 500;
+    font-size: 1em;
+    margin: 0 0 20px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.line-preview {
+    background: rgba(248, 176, 152, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 3px solid #F8B098;
+}
+
+.first-line, .last-line {
+    margin: 0 0 10px 0;
+    font-family: 'EB Garamond', serif;
+    font-size: 0.95em;
+    line-height: 1.5;
+    color: #444;
+}
+
+.last-line {
+    margin-bottom: 0;
+}
+
+.first-line em, .last-line em {
+    font-family: 'Josefin Sans', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 0.8em;
+    color: #F8B098;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.completion-info {
+    font-size: 0.9em;
+    color: #666;
+    margin: 15px 0;
+}
+
+.completion-info span {
+    font-weight: 500;
+    color: #2b2b2b;
+}
+
+.cta-link {
+    display: inline-block;
+    color: #F8B098;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95em;
+    margin-top: 15px;
+    transition: color 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cta-link:hover {
+    color: #e89d7a;
+}
+
+.seed-info .seed-title {
+    font-style: italic;
+    color: #2b2b2b;
+    font-size: 1.1em;
+    margin: 0 0 15px 0;
+}
+
+.seed-description {
+    color: #666;
+    font-size: 0.95em;
+    line-height: 1.6;
+}
+
+/* Loading State */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 251, 226, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-content {
+    text-align: center;
+    color: #2b2b2b;
+}
+
+.loading-content .ornament {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #F8B098;
+    animation: pulse 2s infinite;
+}
+
+.loading-content p {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.1em;
+    font-weight: 300;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .viz-main {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .info-panel {
+        width: 100%;
+        max-height: 300px;
+        border-left: none;
+        border-top: 1px solid rgba(248, 176, 152, 0.2);
+    }
+
+    .sigma-container {
+        height: 60vh;
+        min-height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .viz-header {
+        padding: 30px 15px 15px;
+    }
+
+    .viz-header h2 {
+        font-size: 1.8em;
+    }
+
+    .view-controls {
+        gap: 8px;
+    }
+
+    .view-btn {
+        padding: 8px 16px;
+        font-size: 0.85em;
+    }
+
+    .info-panel {
+        max-height: 250px;
+    }
+
+    .panel-content {
+        padding: 20px;
+    }
+}
+
+/* Poetry Revelation Styles */
+.poetry-container {
+    background: rgba(255, 251, 226, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 15px 0;
+    border-left: 4px solid #F8B098;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 20px rgba(248, 176, 152, 0.15);
+}
+
+.poetry-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(248, 176, 152, 0.3);
+}
+
+.poetry-authors {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #F8B098;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.poetry-position {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.9em;
+    color: #666;
+    font-style: italic;
+}
+
+.poetry-lines {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.poetry-line {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    padding: 5px 0;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+.poetry-line.revealed {
+    opacity: 1;
+    animation: poetryGlow 0.6s ease-out;
+}
+
+@keyframes poetryGlow {
+    0% {
+        background: rgba(248, 176, 152, 0.2);
+        transform: translateX(5px);
+    }
+    100% {
+        background: transparent;
+        transform: translateX(0);
+    }
+}
+
+.line-number {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.8em;
+    color: #F8B098;
+    font-weight: 500;
+    width: 30px;
+    text-align: right;
+    margin-right: 15px;
+    padding-top: 2px;
+    flex-shrink: 0;
+}
+
+.line-text {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.05em;
+    line-height: 1.6;
+    color: #2b2b2b;
+    flex-grow: 1;
+    min-height: 1.6em; /* Prevent layout shift during typing */
+}
+
+/* Typewriter cursor effect */
+.line-text::after {
+    content: '|';
+    color: #F8B098;
+    animation: blink 1s infinite;
+    margin-left: 2px;
+}
+
+.poetry-line.revealed .line-text::after {
+    display: none;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Enhanced scrollbar for poetry */
+.poetry-lines::-webkit-scrollbar {
+    width: 6px;
+}
+
+.poetry-lines::-webkit-scrollbar-track {
+    background: rgba(248, 176, 152, 0.1);
+    border-radius: 3px;
+}
+
+.poetry-lines::-webkit-scrollbar-thumb {
+    background: rgba(248, 176, 152, 0.4);
+    border-radius: 3px;
+}
+
+.poetry-lines::-webkit-scrollbar-thumb:hover {
+    background: rgba(248, 176, 152, 0.6);
+}
+
+/* Atmospheric Node Breathing Styles */
+.node-breathing {
+    animation: nodeBreath 4s ease-in-out infinite;
+}
+
+@keyframes nodeBreath {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.85;
+    }
+}
+
+/* Connection Line Flow Animation */
+.connection-flow {
+    position: relative;
+    overflow: hidden;
+}
+
+.connection-flow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(248, 176, 152, 0.4),
+        transparent
+    );
+    animation: connectionFlow 3s ease-in-out infinite;
+}
+
+@keyframes connectionFlow {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Sigma.js Custom Styles */
+.sigma-mouse-state-default {
+    cursor: pointer !important;
+}
+
+.sigma-mouse-state-hover {
+    cursor: pointer !important;
+}

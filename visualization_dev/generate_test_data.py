@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """
 Generate Test Database for Crown Visualization Development
-Creates test_database.db with a completed Crown (13 sonnets) for testing
+Creates test_database.db with a completed Crown (14 sonnets) for testing
 """
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlmodel import SQLModel, Session, create_engine
 from models import User, Sonnet, Line, Turn, Crown, Pair, SourceSonnet, SourceLine
@@ -100,7 +104,7 @@ def create_test_database():
         session.refresh(crown)
         print(f"Created Crown #{crown.id}")
 
-        # 3. Create 26 users (13 pairs)
+        # 3. Create 28 users (14 pairs)
         pen_names = [
             "Moonweaver", "Starwhisper", "Nightingale", "Riverstone",
             "Windchaser", "Sunseeker", "Cloudwalker", "Fireheart",
@@ -108,11 +112,11 @@ def create_test_database():
             "Lightbringer", "Dreamweaver", "Soulscribe", "Heartstring",
             "Mindbridge", "Spiritsong", "Timebender", "Spacemaker",
             "Voidwalker", "Echomaster", "Silentvoice", "Thunderword",
-            "Frostwriter", "Flamekeeper"
+            "Frostwriter", "Flamekeeper", "Stormcaller", "Peacekeeper"
         ]
 
         users = []
-        for i, pen_name in enumerate(pen_names[:26]):
+        for i, pen_name in enumerate(pen_names[:28]):
             user = User(
                 email=f"{pen_name.lower()}@poetry.test",
                 pen_name=pen_name,
@@ -125,10 +129,10 @@ def create_test_database():
         session.commit()
         print(f"Created {len(users)} test users")
 
-        # 4. Create 13 pairs with completed sonnets
+        # 4. Create 14 pairs with completed sonnets (for true Crown)
         base_time = datetime.utcnow() - timedelta(days=7)
 
-        for pair_num in range(13):
+        for pair_num in range(14):
             user1_idx = pair_num * 2
             user2_idx = pair_num * 2 + 1
             user1 = users[user1_idx]
@@ -149,7 +153,7 @@ def create_test_database():
                 crown_id=crown.id,
                 user_1_id=user1.id,
                 user_2_id=user2.id,
-                source_line_start=pair_num + 1,  # Lines 1-2, 2-3, 3-4, etc.
+                source_line_start=pair_num + 1,  # Lines 1-2, 2-3, ..., 13-14, 14-1
                 sonnet_id=sonnet.id,
                 status="complete",
                 completion_order=pair_num + 1,
@@ -201,9 +205,9 @@ def create_test_database():
             print(f"Created Pair {pair_num + 1}: {user1.pen_name} & {user2.pen_name} (Sonnet #{sonnet.id})")
 
         print("\n✨ Test database created successfully!")
-        print(f"   Crown #{crown.id} with 13 completed sonnets")
-        print(f"   26 test users paired up")
-        print(f"   182 lines of poetry (14 lines × 13 sonnets)")
+        print(f"   Crown #{crown.id} with 14 completed sonnets")
+        print(f"   28 test users paired up")
+        print(f"   196 lines of poetry (14 lines × 14 sonnets)")
         print(f"   Database: test_database.db")
         print("\n📝 To view the test Crown:")
         print("   1. Temporarily modify database.py to use 'test_database.db'")
