@@ -667,6 +667,17 @@ h1 {
     margin-bottom: 20px;
 }
 
+.sonnet-attribution a.sonnet-link {
+    color: #F8B098;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.sonnet-attribution a.sonnet-link:hover {
+    color: #ff8c66;
+    text-decoration: underline;
+}
+
 .crown-sonnet .line {
     margin: 12px 0;
     font-size: 1em;
@@ -713,4 +724,38 @@ h1 {
 
 .navigation .link:hover {
     border-bottom-color: #E8B4A4;
+}
+
+/* Individual sonnet page styles */
+.sonnet-detail {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.sonnet-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.sonnet-header h2 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.8em;
+    font-weight: 300;
+    color: #2b2b2b;
+    margin-bottom: 10px;
+}
+
+.sonnet-context {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.9em;
+    color: #6a6a6a;
+    font-style: italic;
+}
+
+.sonnet-body {
+    background: white;
+    padding: 40px;
+    border-radius: 3px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }

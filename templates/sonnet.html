@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonnet - Mayday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/menu.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1>Mayday</h1>
+            <p class="tagline">A sonnet crown of epic proportions</p>
+        </header>
+
+        <nav class="mobile-nav">
+            <a href="https://poetrysocietyny.org/membership" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
+
+        <div class="sonnet-detail">
+            <div class="sonnet-header">
+                <h2>Thread #{{ source_line_start }} in the Crown</h2>
+                <p class="sonnet-attribution">
+                    Woven by {{ user_1.pen_name }} & {{ user_2.pen_name }}
+                </p>
+                <p class="sonnet-context">
+                    Written between lines {{ source_line_start }} and {{ source_line_start + 1 }} of the seed sonnet
+                </p>
+            </div>
+
+            <div class="sonnet-body">
+                {% for line in lines %}
+                <div class="line{% if line.line_number == 1 or line.line_number == 14 %} bookend-line{% endif %}">
+                    {{ line.text }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="navigation">
+                <a href="/crown{% if user %}?u={{ user.code }}{% endif %}" class="link">← Back to the Crown</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

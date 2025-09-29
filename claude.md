@@ -157,5 +157,99 @@ There is a **VISION_BOARD.md** file in the project root for capturing exciting f
 
 The Vision Board keeps motivation high by connecting today's small coding steps to tomorrow's magical possibilities.
 
+## Current Status: Crown System Complete + Visualization-Ready
+
+### ✅ V1 Production System Complete
+
+**Crown Completion System:**
+- Crown automatically marks as "complete" when 13th pair finishes
+- User completion page shows special celebration when entire Crown is done
+- Crown page displays "Crown Complete: All 13 sonnets woven" when finished
+- Waiting page blocks new pairs once Crown has 13 pairs
+
+**Individual Sonnet Views:**
+- `/sonnet/<id>` endpoint shows individual completed sonnets
+- Displays both authors, all 14 lines, position in Crown
+- Author names on Crown page link to individual sonnet views
+- CSS styling for clickable links with hover states
+
+**Crown Page Updates:**
+- Removed seed sonnet title reference
+- Updated copy: "Here lies the Crown woven from voices near and far..."
+- Shows completion status dynamically
+- Each sonnet has clickable author names linking to detail view
+
+**Manual Crown Creation (V2 Prep):**
+- `create_crown.py` script for spawning new Crowns from completed sonnets
+- Commands: `python create_crown.py list` and `python create_crown.py from <sonnet_id>`
+- Foundation for multi-generational Crown system
+
+### ✅ Visualization Development Setup Complete
+
+**Safe Isolation System:**
+- `visualization_dev/` directory contains all test/dev files
+- Environment variable `MAYDAY_VIZ_TEST=true/false` switches data source
+- Production v1 app never touches test database
+- Visualization development never touches production database
+
+**Test Data & API Ready:**
+- Complete test database with 13 finished sonnets (`visualization_dev/test_database.db`)
+- API endpoints built and tested:
+  - `/api/crown/1/nodes` - Returns node/connection data for D3.js
+  - `/api/crown/1/stats` - Returns completion statistics
+- 26 test users with realistic pen names
+- 182 lines of generated poetry for testing
+
+### 🎯 File Organization
+
+**Production Files (V1):**
+```
+app.py              # Main FastAPI app (uses production DB)
+database.py         # Production database connection
+mayday.db           # Production database
+models.py           # Database models
+templates/          # Jinja templates
+static/            # CSS, images, JS
+create_crown.py    # Manual Crown creation for V2
+```
+
+**Visualization Development Files:**
+```
+visualization_dev/
+├── README.md              # Full instructions for switching test/production
+├── viz_database.py        # Database config with environment switching
+├── test_database.db       # Complete test Crown with 13 sonnets
+├── generate_test_data.py  # Regenerate test database
+└── test_viz_api.py        # Test API endpoints
+```
+
+### 🔄 How to Switch Test/Production
+
+**For Visualization Development:**
+```bash
+export MAYDAY_VIZ_TEST=true
+uvicorn app:app --reload
+# Main app uses production DB, visualization uses test DB
+```
+
+**For Production:**
+```bash
+export MAYDAY_VIZ_TEST=false  # or unset
+uvicorn app:app --reload
+# Everything uses production DB
+```
+
+### 📋 Next Steps (When Ready for Visualization)
+
+1. **Set test mode**: `export MAYDAY_VIZ_TEST=true`
+2. **Build D3.js visualization** using `/api/crown/1/nodes` endpoint
+3. **Test with rich data** (13 sonnets, full connections)
+4. **Switch to production** when ready to deploy
+5. **Add to main Crown page** or create separate visualization page
+
+All visualization development happens in isolation without affecting the working v1 system!
+
+---
+
 ## Remember
 This is as much about learning to code as it is about building the app. Prioritize understanding over speed. Every small step should feel achievable and connected to the magical bigger vision of fractal, interconnected poetry.

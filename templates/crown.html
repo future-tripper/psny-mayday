@@ -35,22 +35,28 @@
 
         <div class="crown-header">
             <h2>The Crown</h2>
-            {% if source_sonnet %}
             <p class="crown-description">
-                From <em>{{ source_sonnet.title }}</em>, poets around the world are weaving a Crown.
-                Each pair writes between two consecutive lines of the source sonnet—their ending becomes
-                another pair's beginning. The result: an interwoven tapestry where every voice supports
-                the next, a string of words like pearls connecting us in beauty and sorrow.
+                Here lies the Crown woven from voices near and far. Each pair of poets
+                writes between two consecutive lines of a seed sonnet, creating an interlocking
+                chain where every ending becomes another's beginning. Together, these threads
+                form a tapestry of connection—proof that in answering the call, we are not alone.
             </p>
-            {% endif %}
+            {% if crown.status == "complete" %}
+            <p class="completed-count">✦ Crown Complete: All 13 sonnets woven ✦</p>
+            {% else %}
             <p class="completed-count">{{ pairs_with_sonnets }} threads woven</p>
+            {% endif %}
         </div>
 
         {% if crown_sonnets %}
         <div class="crown-collection">
             {% for sonnet in crown_sonnets %}
             <div class="crown-sonnet">
-                <div class="sonnet-attribution">{{ sonnet.authors }}</div>
+                <div class="sonnet-attribution">
+                    <a href="/sonnet/{{ sonnet.sonnet_id }}{% if user %}?u={{ user.code }}{% endif %}" class="sonnet-link">
+                        {{ sonnet.authors }}
+                    </a>
+                </div>
                 {% for line in sonnet.lines %}
                 <div class="line{% if line.is_source %} bookend-line{% endif %}">
                     {{ line.text }}

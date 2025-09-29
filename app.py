@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request, Form, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from sqlmodel import Session, select
 from database import get_session
+from visualization_dev.viz_database import get_viz_session
 from models import User, Sonnet, Line, Turn, Crown, Pair, SourceSonnet, SourceLine
 import secrets
 
@@ -285,6 +286,14 @@ async def add_line(
         session.add(sonnet)
         session.add(pair)
         session.delete(turn)
+
+        # Check if all 13 pairs are complete - if so, mark Crown as complete
+        if len(completed_pairs_count) + 1 == 13:  # +1 because we just completed this pair
+            crown = session.exec(select(Crown).where(Crown.id == pair.crown_id)).first()
+            if crown:
+                crown.status = "complete"
+                session.add(crown)
+
         session.commit()
 
         return RedirectResponse(f"/complete?u={u}", status_code=303)
@@ -308,14 +317,79 @@ async def completion_page(request: Request, u: str = None, session: Session = De
 
     pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
     partner = None
+    crown_complete = False
+
     if pair:
         partner_id = pair.user_2_id if user.id == pair.user_1_id else pair.user_1_id
         partner = session.exec(select(User).where(User.id == partner_id)).first()
 
+        # Check if the Crown is complete
+        crown = session.exec(select(Crown).where(Crown.id == pair.crown_id)).first()
+        if crown and crown.status == "complete":
+            crown_complete = True
+
     return templates.TemplateResponse("complete.html", {
         "request": request,
         "user": user,
-        "partner": partner
+        "partner": partner,
+        "crown_complete": crown_complete
+    })
+
+
+@app.get("/sonnet/{sonnet_id}")
+async def sonnet_view(request: Request, sonnet_id: int, u: str = None, session: Session = Depends(get_session)):
+    user = None
+    if u:
+        user = session.exec(select(User).where(User.code == u)).first()
+
+    sonnet = session.exec(select(Sonnet).where(Sonnet.id == sonnet_id)).first()
+    if not sonnet:
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "Sonnet not found"
+        })
+
+    # Get the pair that created this sonnet
+    pair = session.exec(select(Pair).where(Pair.sonnet_id == sonnet_id)).first()
+    if not pair:
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "Pair information not found"
+        })
+
+    # Get both authors
+    user_1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
+    user_2 = session.exec(select(User).where(User.id == pair.user_2_id)).first()
+
+    # Get all lines
+    lines = session.exec(
+        select(Line)
+        .where(Line.sonnet_id == sonnet_id)
+        .order_by(Line.line_number)
+    ).all()
+
+    # Get Crown info
+    crown = session.exec(select(Crown).where(Crown.id == pair.crown_id)).first()
+
+    # Get source lines that this pair was writing between
+    source_lines = session.exec(
+        select(SourceLine)
+        .where(SourceLine.source_sonnet_id == crown.source_sonnet_id)
+        .where(SourceLine.line_number.in_([pair.source_line_start, pair.source_line_start + 1]))
+        .order_by(SourceLine.line_number)
+    ).all()
+
+    return templates.TemplateResponse("sonnet.html", {
+        "request": request,
+        "user": user,
+        "sonnet": sonnet,
+        "pair": pair,
+        "user_1": user_1,
+        "user_2": user_2,
+        "lines": lines,
+        "crown": crown,
+        "source_lines": source_lines,
+        "source_line_start": pair.source_line_start
     })
 
 
@@ -359,6 +433,9 @@ async def crown_view(request: Request, u: str = None, session: Session = Depends
             continue
 
         sonnet_data = {
+            "sonnet_id": pair.sonnet_id,
+            "pair_id": pair.id,
+            "source_line_start": pair.source_line_start,
             "lines": [{"text": line.text, "is_source": line.line_number in [1, 14]} for line in lines],
             "authors": f"{user_1.pen_name} & {user_2.pen_name}"
         }
@@ -372,3 +449,106 @@ async def crown_view(request: Request, u: str = None, session: Session = Depends
         "crown_sonnets": crown_sonnets,
         "pairs_with_sonnets": len(pairs)
     })
+
+
+# VISUALIZATION API ENDPOINTS (uses viz_database for testing)
+
+@app.get("/api/crown/{crown_id}/nodes")
+async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_session)):
+    """Return JSON data for Crown visualization"""
+
+    crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
+    if not crown:
+        return JSONResponse({"error": "Crown not found"}, status_code=404)
+
+    source_sonnet = session.exec(
+        select(SourceSonnet).where(SourceSonnet.id == crown.source_sonnet_id)
+    ).first()
+
+    pairs = session.exec(
+        select(Pair)
+        .where(Pair.crown_id == crown_id)
+        .where(Pair.status == "complete")
+        .order_by(Pair.source_line_start)
+    ).all()
+
+    nodes = []
+    connections = []
+
+    for pair in pairs:
+        # Get first and last lines for preview
+        lines = session.exec(
+            select(Line)
+            .where(Line.sonnet_id == pair.sonnet_id)
+            .order_by(Line.line_number)
+        ).all()
+
+        first_line = lines[0].text if lines else ""
+        last_line = lines[-1].text if lines else ""
+
+        # Get both authors
+        user_1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
+        user_2 = session.exec(select(User).where(User.id == pair.user_2_id)).first()
+
+        node = {
+            "id": pair.sonnet_id,
+            "pair_id": pair.id,
+            "position": pair.source_line_start,
+            "authors": f"{user_1.pen_name} & {user_2.pen_name}" if user_1 and user_2 else "Unknown",
+            "first_line": first_line,
+            "last_line": last_line,
+            "completion_order": pair.completion_order,
+            "line_count": len(lines)
+        }
+        nodes.append(node)
+
+        # Create connection to next node (Crown is circular)
+        next_position = pair.source_line_start + 1
+        if next_position <= 13:  # Connect to next consecutive pair
+            # Find the pair that starts with this pair's ending line
+            next_pair = session.exec(
+                select(Pair)
+                .where(Pair.crown_id == crown_id)
+                .where(Pair.source_line_start == next_position)
+            ).first()
+
+            if next_pair:
+                connection = {
+                    "from": pair.sonnet_id,
+                    "to": next_pair.sonnet_id,
+                    "shared_line": last_line if lines else ""
+                }
+                connections.append(connection)
+
+    return {
+        "crown_id": crown_id,
+        "status": crown.status,
+        "source_title": source_sonnet.title if source_sonnet else "Unknown",
+        "total_nodes": len(nodes),
+        "nodes": nodes,
+        "connections": connections
+    }
+
+
+@app.get("/api/crown/{crown_id}/stats")
+async def crown_stats_api(crown_id: int, session: Session = Depends(get_viz_session)):
+    """Return Crown statistics for visualization"""
+
+    crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
+    if not crown:
+        return JSONResponse({"error": "Crown not found"}, status_code=404)
+
+    pairs = session.exec(
+        select(Pair).where(Pair.crown_id == crown_id)
+    ).all()
+
+    completed_pairs = [p for p in pairs if p.status == "complete"]
+
+    return {
+        "crown_id": crown_id,
+        "status": crown.status,
+        "total_pairs": len(pairs),
+        "completed_pairs": len(completed_pairs),
+        "completion_percentage": (len(completed_pairs) / 13) * 100 if completed_pairs else 0,
+        "is_complete": len(completed_pairs) == 13
+    }
