@@ -1,16 +1,26 @@
 /**
- * Crown Visualization with Sigma.js WebGL
+ * Crown Visualization with Sigma.js WebGL (legacy orbit view)
  * Multi-level exploration: Seed Sonnet → Crown Circle → Individual Focus
  */
 
-class CrownVisualization {
-    constructor() {
+export default class OrbitView {
+    constructor({ crownId = 1, dataService, state, config } = {}) {
+        if (!dataService) {
+            throw new Error('OrbitView requires a dataService instance');
+        }
+
+        this.crownId = crownId;
+        this.dataService = dataService;
+        this.state = state || null;
+
         this.graph = null;
         this.sigma = null;
         this.data = null;
         this.currentView = 'crown';
         this.selectedNode = null;
         this.isInitialized = false;
+        this.graphologyLib = null;
+        this.sigmaLib = null;
 
         // Animation performance tracking
         this.animationFrame = null;
@@ -36,10 +46,19 @@ class CrownVisualization {
             }
         };
 
-        this.init();
+        if (config) {
+            this.config = {
+                ...this.config,
+                ...config,
+                colors: {
+                    ...this.config.colors,
+                    ...(config.colors || {})
+                }
+            };
+        }
     }
 
-    async init() {
+    async initialize() {
         try {
             console.log('Starting Crown visualization initialization...');
             await this.loadData();
@@ -68,16 +87,45 @@ class CrownVisualization {
     }
 
     async loadData() {
-        const response = await fetch('/api/crown/1/nodes');
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
+        this.data = await this.dataService.getCrownNodes(this.crownId);
+        this.stats = await this.dataService.getCrownStats(this.crownId);
+        console.log('Loaded Crown data:', this.data, this.stats);
+    }
+
+    getGraphologyLib() {
+        if (this.graphologyLib) {
+            return this.graphologyLib;
         }
-        this.data = await response.json();
-        console.log('Loaded Crown data:', this.data);
+
+        const globalLib = (typeof window !== 'undefined' ? window.graphology : undefined)
+            || (typeof globalThis !== 'undefined' ? globalThis.graphology : undefined);
+
+        if (!globalLib) {
+            throw new Error('Graphology library not loaded');
+        }
+
+        this.graphologyLib = globalLib;
+        return this.graphologyLib;
+    }
+
+    getSigmaLib() {
+        if (this.sigmaLib) {
+            return this.sigmaLib;
+        }
+
+        const globalSigma = (typeof window !== 'undefined' ? window.Sigma : undefined)
+            || (typeof globalThis !== 'undefined' ? globalThis.Sigma : undefined);
+
+        if (!globalSigma) {
+            throw new Error('Sigma library not loaded');
+        }
+
+        this.sigmaLib = globalSigma;
+        return this.sigmaLib;
     }
 
     createGraph() {
-        const { Graph } = graphology;
+        const { Graph } = this.getGraphologyLib();
         this.graph = new Graph({ type: 'directed' });
 
         // Add nodes in circle formation
@@ -140,7 +188,9 @@ class CrownVisualization {
         const container = document.getElementById('sigma-container');
 
         // Use Sigma.js v2.x API
-        this.sigma = new Sigma(this.graph, container, {
+        const SigmaLib = this.getSigmaLib();
+
+        this.sigma = new SigmaLib(this.graph, container, {
             renderer: {
                 type: 'webgl'
             },
@@ -245,6 +295,11 @@ class CrownVisualization {
     handleNodeClick(nodeId) {
         this.selectedNode = nodeId;
         const nodeData = this.graph.getNodeAttributes(nodeId);
+        this.selectedNodeData = nodeData;
+
+        if (typeof this.onNodeSelected === 'function') {
+            this.onNodeSelected(nodeId, nodeData);
+        }
 
         if (this.currentView === 'crown') {
             // Switch to individual focus mode
@@ -402,10 +457,7 @@ class CrownVisualization {
 
     async revealSonnetPoetry(sonnetId) {
         try {
-            const response = await fetch(`/api/sonnet/${sonnetId}/lines`);
-            if (!response.ok) throw new Error('Failed to fetch sonnet');
-
-            const sonnetData = await response.json();
+            const sonnetData = await this.dataService.getSonnetLines(sonnetId);
 
             // Clear previous poetry
             const poetryContainer = this.getOrCreatePoetryContainer();
@@ -434,8 +486,10 @@ class CrownVisualization {
         } catch (error) {
             console.error('Poetry revelation failed:', error);
             // Fallback to basic display
-            document.getElementById('node-first-line').textContent = this.selectedNodeData?.first_line || '';
-            document.getElementById('node-last-line').textContent = this.selectedNodeData?.last_line || '';
+            const first = document.getElementById('node-first-line');
+            const last = document.getElementById('node-last-line');
+            if (first) first.textContent = this.selectedNodeData?.first_line || '';
+            if (last) last.textContent = this.selectedNodeData?.last_line || '';
         }
     }
 
@@ -711,10 +765,23 @@ class CrownVisualization {
     }
 
     updateInfoPanel() {
-        document.getElementById('crown-status').textContent =
-            this.data.status === 'complete' ? 'Complete' : 'In Progress';
-        document.getElementById('crown-progress').textContent =
-            `${this.data.total_nodes}/14`;
+        const statusElement = document.getElementById('crown-status');
+        const progressElement = document.getElementById('crown-progress');
+
+        const isComplete = this.stats?.is_complete !== undefined
+            ? this.stats.is_complete
+            : this.data.status === 'complete';
+
+        const completedPairs = this.stats?.completed_pairs ?? this.data.total_nodes ?? 0;
+        const totalPairs = this.stats?.total_pairs ?? 14;
+
+        if (statusElement) {
+            statusElement.textContent = isComplete ? 'Complete' : 'In Progress';
+        }
+
+        if (progressElement) {
+            progressElement.textContent = `${completedPairs}/${totalPairs}`;
+        }
     }
 
     getOrdinalNumber(n) {
@@ -764,8 +831,3 @@ class CrownVisualization {
         return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
     }
 }
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    new CrownVisualization();
-});

@@ -351,18 +351,12 @@ async def sonnet_view(request: Request, sonnet_id: int, u: str = None, session: 
 
     sonnet = session.exec(select(Sonnet).where(Sonnet.id == sonnet_id)).first()
     if not sonnet:
-        return templates.TemplateResponse("error.html", {
-            "request": request,
-            "error": "Sonnet not found"
-        })
+        return RedirectResponse("/crown", status_code=303)
 
     # Get the pair that created this sonnet
     pair = session.exec(select(Pair).where(Pair.sonnet_id == sonnet_id)).first()
     if not pair:
-        return templates.TemplateResponse("error.html", {
-            "request": request,
-            "error": "Pair information not found"
-        })
+        return RedirectResponse("/crown", status_code=303)
 
     # Get both authors
     user_1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
@@ -483,7 +477,7 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_sess
     connections = []
 
     for pair in pairs:
-        # Get first and last lines for preview
+        # Get first and last lines for preview and metadata
         lines = session.exec(
             select(Line)
             .where(Line.sonnet_id == pair.sonnet_id)
@@ -492,6 +486,12 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_sess
 
         first_line = lines[0].text if lines else ""
         last_line = lines[-1].text if lines else ""
+
+        started_at = lines[0].created_at if lines else None
+        completed_at = lines[-1].created_at if lines else None
+        duration_seconds = None
+        if started_at and completed_at:
+            duration_seconds = int((completed_at - started_at).total_seconds())
 
         # Get both authors
         user_1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
@@ -505,7 +505,15 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_sess
             "first_line": first_line,
             "last_line": last_line,
             "completion_order": pair.completion_order,
-            "line_count": len(lines)
+            "line_count": len(lines),
+            "started_at": started_at.isoformat() if started_at else None,
+            "completed_at": completed_at.isoformat() if completed_at else None,
+            "duration_seconds": duration_seconds,
+            "lineage_depth": 1,
+            "source_line_range": [
+                pair.source_line_start,
+                1 if pair.source_line_start == 14 else pair.source_line_start + 1
+            ]
         }
         nodes.append(node)
 
@@ -544,10 +552,22 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_sess
                 }
                 connections.append(connection)
 
+    # Get source sonnet first line for seed star
+    source_first_line = None
+    if source_sonnet:
+        source_lines = session.exec(
+            select(SourceLine)
+            .where(SourceLine.source_sonnet_id == source_sonnet.id)
+            .order_by(SourceLine.line_number)
+        ).all()
+        if source_lines:
+            source_first_line = source_lines[0].text
+
     return {
         "crown_id": crown_id,
         "status": crown.status,
         "source_title": source_sonnet.title if source_sonnet else "Unknown",
+        "source_first_line": source_first_line,
         "total_nodes": len(nodes),
         "nodes": nodes,
         "connections": connections
@@ -603,17 +623,22 @@ async def sonnet_lines_api(sonnet_id: int, session: Session = Depends(get_viz_se
         if user1 and user2:
             authors = f"{user1.pen_name} & {user2.pen_name}"
 
+    started_at = lines[0].created_at if lines else None
+    completed_at = lines[-1].created_at if lines else None
+
     return {
         "sonnet_id": sonnet_id,
         "authors": authors,
         "lines": [{"number": line.line_number, "text": line.text} for line in lines],
         "total_lines": len(lines),
-        "position_in_crown": pair.source_line_start if pair else None
+        "position_in_crown": pair.source_line_start if pair else None,
+        "started_at": started_at.isoformat() if started_at else None,
+        "completed_at": completed_at.isoformat() if completed_at else None
     }
 
 
 @app.get("/crown/{crown_id}/visualize")
-async def crown_visualization(request: Request, crown_id: int, u: str = None):
+async def crown_visualization(request: Request, crown_id: int, u: str = None, session: Session = Depends(get_session)):
     """Crown visualization page"""
     user = None
     if u:

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/static/viz_styles.css">
     <script src="/static/menu.js" defer></script>
 </head>
-<body>
+<body data-crown-id="{{ crown_id }}">
     <div class="container">
         <header>
             <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
@@ -33,44 +33,50 @@
         <!-- Visualization Container -->
         <div class="viz-container">
             <div class="viz-header">
-                <h2>Crown Visualization</h2>
+                <h2>The Crown</h2>
                 <div class="view-controls">
-                    <button class="view-btn active" data-view="crown">Crown Circle</button>
-                    <button class="view-btn" data-view="seed">Seed Sonnet</button>
-                    <button class="view-btn" data-view="individual">Focus Mode</button>
+                    <a href="#" class="view-link active" data-view="orbit">Jewels</a>
+                    <a href="#" class="view-link" data-view="lineage">Threads</a>
                 </div>
             </div>
 
             <!-- Main Visualization Area -->
             <div class="viz-main">
-                <div id="sigma-container" class="sigma-container"></div>
+                <div class="stage-wrapper">
+                    <div id="orrery-stage" class="viz-stage viz-stage--orrery active" aria-live="polite">
+                        <canvas id="orrery-canvas"></canvas>
+                        <div id="orrery-overlay" class="orrery-overlay">
+                            <div class="overlay-content">
+                                <p class="overlay-title">Crown Orrery</p>
+                                <p class="overlay-subtitle">Drag to rotate • Scroll to zoom • Click stars to explore</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="lineage-stage" class="viz-stage viz-stage--lineage" hidden>
+                        <div id="lineage-scroll" class="lineage-scroll" role="list"></div>
+                    </div>
+                    <div id="legacy-stage" class="viz-stage viz-stage--legacy" hidden>
+                        <div id="sigma-container" class="sigma-container"></div>
+                    </div>
+                </div>
 
                 <!-- Info Panel -->
-                <div class="info-panel">
+                <div class="info-panel" style="display: none;">
                     <div class="panel-header">
-                        <h3>Crown Details</h3>
+                        <h3 id="panel-title">Sonnet</h3>
                         <button class="close-panel" aria-label="Close panel">×</button>
                     </div>
                     <div class="panel-content">
-                        <div class="crown-info">
-                            <p class="crown-status">Crown Status: <span id="crown-status">Loading...</span></p>
-                            <p class="crown-progress">Progress: <span id="crown-progress">0/14</span> sonnets complete</p>
-                        </div>
-                        <div class="node-info" style="display: none;">
-                            <h4 id="node-title">Sonnet Details</h4>
-                            <p class="authors">By <span id="node-authors"></span></p>
-                            <div class="line-preview">
-                                <p class="first-line"><em>First:</em> <span id="node-first-line"></span></p>
-                                <p class="last-line"><em>Last:</em> <span id="node-last-line"></span></p>
+                        <section id="poet-studio" class="poet-studio" aria-live="polite">
+                            <div class="studio-header">
+                                <h4 id="studio-title">Select a star to open its poem</h4>
+                                <p class="studio-meta" id="studio-meta">Waiting to weave…</p>
                             </div>
-                            <p class="completion-info">Completed <span id="completion-order"></span> of 13</p>
-                            <a href="#" id="view-full-sonnet" class="cta-link">View Full Sonnet →</a>
-                        </div>
-                        <div class="seed-info" style="display: none;">
-                            <h4>Seed Sonnet</h4>
-                            <p class="seed-title" id="seed-title">Wind Giving Presence</p>
-                            <p class="seed-description">Each line of this source sonnet spawns a pair of poets who write between consecutive lines.</p>
-                        </div>
+                            <div class="studio-lines" id="studio-lines"></div>
+                            <div class="studio-actions">
+                                <a href="#" id="studio-view-link" class="cta-link" target="_blank" rel="noopener">Open full sonnet →</a>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -84,15 +90,11 @@
             </div>
         </div>
 
-        <!-- Navigation -->
-        <div class="navigation">
-            <a href="/crown" class="link">← Back to Crown</a>
-        </div>
     </div>
 
     <!-- Sigma.js Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/graphology@0.25.4/dist/graphology.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js"></script>
-    <script src="/static/crown_viz.js"></script>
+    <script type="module" src="/static/viz/main.js"></script>
 </body>
 </html>
