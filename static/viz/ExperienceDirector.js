@@ -146,11 +146,15 @@ export default class ExperienceDirector {
         const links = document.querySelectorAll('.view-link');
         links.forEach((link) => {
             link.addEventListener('click', (event) => {
-                event.preventDefault();
                 const view = link.dataset.view;
-                if (view && view !== this.state.get('currentView')) {
-                    this.state.set('currentView', view);
+                // Only prevent default for view-switching links (with data-view attribute)
+                if (view) {
+                    event.preventDefault();
+                    if (view !== this.state.get('currentView')) {
+                        this.state.set('currentView', view);
+                    }
                 }
+                // Links without data-view (like SCROLL) navigate normally
             });
         });
     }

@@ -16,6 +16,7 @@ class Sonnet(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     status: str = "active"
+    spawned_source_sonnet_id: Optional[int] = Field(default=None, foreign_key="sourcesonnet.id")  # Links to SourceSonnet this became
 
 
 class Line(SQLModel, table=True):
@@ -36,6 +37,8 @@ class Turn(SQLModel, table=True):
 class SourceSonnet(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str
+    source_type: str = "classic"  # "classic" or "collaborative"
+    parent_sonnet_id: Optional[int] = Field(default=None, foreign_key="sonnet.id")  # If collaborative, which Sonnet spawned this
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -49,6 +52,8 @@ class SourceLine(SQLModel, table=True):
 class Crown(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     source_sonnet_id: int = Field(foreign_key="sourcesonnet.id")
+    parent_sonnet_id: Optional[int] = Field(default=None, foreign_key="sonnet.id")  # Which completed Sonnet spawned this Crown
+    generation: int = 0  # 0=classic seed, 1=first gen, 2=second gen, etc.
     status: str = "forming"
     created_at: datetime = Field(default_factory=datetime.utcnow)
 

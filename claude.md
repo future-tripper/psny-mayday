@@ -145,17 +145,91 @@ uvicorn app:app --reload  # Start server at http://localhost:8000
 9. **static/styles.css** - Make it look nice
 10. **Test**: Two people taking turns in different browser tabs
 
+## 🚧 Current Branch: `fractal-multi-generation` (Experimental)
+
+**Main branch** preserves working V1 production + V2 single-Crown visualization.
+
+**This branch** explores fractal multi-generation Crown system where every completed sonnet becomes a seed.
+
+### Return to Main Branch
+```bash
+git checkout main
+```
+
+---
+
+## Fractal Multi-Generation Crown System (In Progress)
+
+### The Vision
+Every completed sonnet becomes a seed for a new Crown, creating an infinite generational tree of interconnected poetry.
+
+**Sequential Growth:**
+- **Gen 0**: Classic seed (Ozymandias) → spawns Crown 1
+- **Gen 1**: Crown 1 completes (14 sonnets) → each sonnet available as seed
+- **Gen 2**:
+  - Sonnet #1 from Crown 1 → spawns Crown 2 (complete)
+  - Sonnet #2 from Crown 1 → spawns Crown 3 (in progress, 7 sonnets)
+  - Sonnet #3 from Crown 1 → spawns Crown 4 (just started, 2 sonnets)
+  - Sonnets #4-14 → waiting for users to pair
+- **Result**: 1 seed → 14 → 196 → 2,744... exponential growth
+
+---
+
+## Implementation Plan
+
+### Phase 1: Database Schema (In Progress)
+**Add genealogy tracking:**
+```python
+Crown:
+  + parent_sonnet_id (which Sonnet spawned this Crown)
+  + generation (0=classic, 1, 2, 3...)
+
+Sonnet:
+  + spawned_source_sonnet_id (link to SourceSonnet it became)
+
+SourceSonnet:
+  + source_type ("classic" or "collaborative")
+  + parent_sonnet_id (which Sonnet this came from)
+```
+
+**Auto-seed logic:**
+- When 14th line written → mark sonnet complete
+- Automatically create SourceSonnet + 14 SourceLines
+- Next pair gets assigned to this new seed
+
+### Phase 2: Test Data
+**Multi-generation mock database:**
+- Gen 0: 1 classic seed
+- Gen 1: 14 complete sonnets
+- Gen 2: 3 child Crowns (varying completion: 14/14, 7/14, 2/14)
+- Tests both complete and incomplete Crown visualization
+
+### Phase 3: Visualization Strategy
+**"Context View" Approach:**
+- **Primary**: One Crown shown in full 3D detail (current Jewels view)
+- **Context**:
+  - Parent seed star visible above (clickable to go up)
+  - Ghost circles below for child Crowns (clickable to go down)
+  - Info panel shows: "Generation 2 • Parent: [link] • Children: [links]"
+- **Navigation**: Up/down buttons to traverse generations
+- **Future**: Minimap showing tree position
+
+**Why one Crown at a time:**
+- Keeps performance fast
+- Maintains immersive experience
+- Avoids overwhelming complexity
+- Scales to infinite generations
+
+### Phase 4: Progressive Rollout
+1. Test multi-gen data structure
+2. Build single Crown with context view
+3. Add navigation between Crowns
+4. Test with production DB
+5. Add minimap if needed
+
 ## Vision Board
 
 There is a **VISION_BOARD.md** file in the project root for capturing exciting future ideas and features beyond the MVP.
-
-**When to use it:**
-- When the student shares a "what if..." or breakthrough idea during development
-- When discussing potential monetization or expansion concepts
-- When imagining how Mayday could evolve beyond Phase 3
-- Proactively suggest adding ideas to it when creative concepts emerge in conversation
-
-The Vision Board keeps motivation high by connecting today's small coding steps to tomorrow's magical possibilities.
 
 ## Current Status: V1 Production + V2 Immersive Visualization Complete
 
@@ -165,6 +239,23 @@ Multi-user collaborative poetry platform with Crown of Sonnets system fully oper
 - Crown automatically completes when 14th pair finishes
 - Individual sonnet views, Crown overview page
 - Manual Crown creation tool (`create_crown.py`) for multi-generational poetry
+
+### 🧭 Navigation Structure
+**User Journey:**
+1. **Sign Up** → `/signup` - Join the Crown and get paired with a partner
+2. **Writing** → `/poet?u=CODE` - Collaborate on your sonnet (turns between partners)
+3. **Completion** → Shows celebration page when sonnet is finished
+4. **View Crown** → Multiple viewing options:
+   - `/crown/1/visualize` - **JEWELS** (3D immersive) or **THREADS** (timeline) views
+   - `/crown/1` - **SCROLL** (v1 vertical list view)
+   - `/sonnet/{id}` - Individual completed sonnets
+5. **About** → `/about` - Learn about Mayday and Crown of Sonnets form
+
+**Navigation Menu (all pages):**
+- Sign Up | The Crown | About | Membership
+- All "View the Crown" links point to immersive visualization (`/crown/1/visualize`)
+- Visualization page includes **SCROLL** link to access v1 list view
+- Individual sonnet pages link back to visualization
 
 ### ✅ V2 Immersive 3D Visualization
 **The Crown Visualization** at `/crown/1/visualize` - A living, breathing poetic universe:

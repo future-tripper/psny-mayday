@@ -157,6 +157,13 @@ async def signup(
     return RedirectResponse(f"/poet?u={new_user.code}", status_code=303)
 
 
+@app.get("/about")
+async def about_page(request: Request):
+    return templates.TemplateResponse("about.html", {
+        "request": request
+    })
+
+
 @app.get("/poet")
 async def poet_home(request: Request, u: str = None, session: Session = Depends(get_session)):
     if not u:
@@ -598,6 +605,129 @@ async def crown_stats_api(crown_id: int, session: Session = Depends(get_viz_sess
     }
 
 
+@app.get("/api/crown/{crown_id}/context")
+async def crown_context_api(crown_id: int, session: Session = Depends(get_viz_session)):
+    """Return Crown with full genealogical context for fractal navigation"""
+
+    crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
+    if not crown:
+        return JSONResponse({"error": "Crown not found"}, status_code=404)
+
+    # Get source sonnet
+    source_sonnet = session.exec(
+        select(SourceSonnet).where(SourceSonnet.id == crown.source_sonnet_id)
+    ).first()
+
+    source_first_line = None
+    if source_sonnet:
+        first_line_obj = session.exec(
+            select(SourceLine)
+            .where(SourceLine.source_sonnet_id == source_sonnet.id)
+            .where(SourceLine.line_number == 1)
+        ).first()
+        if first_line_obj:
+            source_first_line = first_line_obj.text
+
+    # Get pairs for completion progress
+    pairs = session.exec(select(Pair).where(Pair.crown_id == crown_id)).all()
+    completed_pairs = [p for p in pairs if p.status == "complete"]
+
+    # Parent info (if this Crown has a parent)
+    parent_info = None
+    if crown.parent_sonnet_id:
+        parent_sonnet = session.exec(
+            select(Sonnet).where(Sonnet.id == crown.parent_sonnet_id)
+        ).first()
+
+        if parent_sonnet:
+            # Get parent Crown
+            parent_pair = session.exec(
+                select(Pair).where(Pair.sonnet_id == parent_sonnet.id)
+            ).first()
+
+            if parent_pair:
+                parent_crown = session.exec(
+                    select(Crown).where(Crown.id == parent_pair.crown_id)
+                ).first()
+
+                # Get authors
+                user1 = session.exec(select(User).where(User.id == parent_pair.user_1_id)).first()
+                user2 = session.exec(select(User).where(User.id == parent_pair.user_2_id)).first()
+
+                # Get sonnet first line
+                parent_first_line = session.exec(
+                    select(Line)
+                    .where(Line.sonnet_id == parent_sonnet.id)
+                    .where(Line.line_number == 1)
+                ).first()
+
+                parent_info = {
+                    "crown_id": parent_crown.id if parent_crown else None,
+                    "sonnet_id": parent_sonnet.id,
+                    "sonnet_title": parent_first_line.text[:40] + "..." if parent_first_line else "Untitled",
+                    "authors": f"{user1.pen_name} & {user2.pen_name}" if user1 and user2 else "Unknown",
+                    "generation": parent_crown.generation if parent_crown else 0
+                }
+
+    # Children info (Crowns spawned from this Crown's sonnets)
+    children_info = []
+
+    # Get all completed sonnets in this Crown
+    completed_sonnet_ids = [p.sonnet_id for p in completed_pairs]
+
+    # Find Crowns that have these sonnets as parents
+    child_crowns = session.exec(
+        select(Crown)
+        .where(Crown.parent_sonnet_id.in_(completed_sonnet_ids))
+    ).all()
+
+    for child_crown in child_crowns:
+        # Find which sonnet spawned this
+        parent_pair = session.exec(
+            select(Pair)
+            .where(Pair.sonnet_id == child_crown.parent_sonnet_id)
+            .where(Pair.crown_id == crown_id)
+        ).first()
+
+        # Get child Crown stats
+        child_pairs = session.exec(
+            select(Pair).where(Pair.crown_id == child_crown.id)
+        ).all()
+        child_completed = [p for p in child_pairs if p.status == "complete"]
+
+        children_info.append({
+            "crown_id": child_crown.id,
+            "sonnet_id": child_crown.parent_sonnet_id,
+            "sonnet_position": parent_pair.completion_order if parent_pair else None,
+            "status": child_crown.status,
+            "completion": f"{len(child_completed)}/14",
+            "generation": child_crown.generation
+        })
+
+    # Get current Crown's nodes (existing endpoint logic)
+    nodes_response = await crown_nodes_api(crown_id, session)
+
+    return {
+        "crown": {
+            "id": crown.id,
+            "generation": crown.generation,
+            "status": crown.status,
+            "completion_progress": f"{len(completed_pairs)}/14",
+            "created_at": crown.created_at.isoformat()
+        },
+        "source": {
+            "id": source_sonnet.id if source_sonnet else None,
+            "title": source_sonnet.title if source_sonnet else "Unknown",
+            "type": source_sonnet.source_type if source_sonnet else "classic",
+            "first_line": source_first_line
+        },
+        "parent": parent_info,
+        "children": children_info,
+        "nodes": nodes_response.get("nodes", []),
+        "connections": nodes_response.get("connections", [])
+    }
+
+
 @app.get("/api/sonnet/{sonnet_id}/lines")
 async def sonnet_lines_api(sonnet_id: int, session: Session = Depends(get_viz_session)):
     """Return all lines of a specific sonnet for poetry revelation"""
@@ -653,6 +783,7 @@ async def crown_visualization(request: Request, crown_id: int, u: str = None, se
     # Simple template replacement for crown_id and user
     html_content = html_content.replace("{{ crown_id }}", str(crown_id))
     if u:
+        html_content = html_content.replace('href="/crown/1"', f'href="/crown/1?u={u}"')
         html_content = html_content.replace('href="/crown"', f'href="/crown?u={u}"')
 
     from fastapi.responses import HTMLResponse

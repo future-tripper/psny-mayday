@@ -28,7 +28,10 @@
         </header>
 
         <nav class="mobile-nav">
-            <a href="https://poetrysocietyny.org/membership" target="_blank" rel="noopener noreferrer">Membership</a>
+            <a href="/signup">Sign Up</a>
+            <a href="/crown/1/visualize">The Crown</a>
+            <a href="/about">About</a>
+            <a href="https://poetrysocietyny.org/membership" class="nav-button" target="_blank" rel="noopener noreferrer">Membership</a>
         </nav>
         <div class="mobile-nav-overlay"></div>
 
@@ -46,7 +49,7 @@
         {% endif %}
 
         <div class="user-info">
-            <p>Welcome, <strong>{{ current_user.pen_name }}</strong> | Your partner is <strong>{{ partner.pen_name }}</strong> | <a href="/crown?u={{ current_user.code }}" class="link">View the Crown</a></p>
+            <p>Welcome, <strong>{{ current_user.pen_name }}</strong> | Your partner is <strong>{{ partner.pen_name }}</strong> | <a href="/crown/1/visualize?u={{ current_user.code }}" class="link">View the Crown</a></p>
         </div>
 
         <div class="sonnet">

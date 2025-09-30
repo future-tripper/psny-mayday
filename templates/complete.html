@@ -25,7 +25,10 @@
         </header>
 
         <nav class="mobile-nav">
-            <a href="https://poetrysocietyny.org/membership" target="_blank" rel="noopener noreferrer">Membership</a>
+            <a href="/signup">Sign Up</a>
+            <a href="/crown/1/visualize">The Crown</a>
+            <a href="/about">About</a>
+            <a href="https://poetrysocietyny.org/membership" class="nav-button" target="_blank" rel="noopener noreferrer">Membership</a>
         </nav>
         <div class="mobile-nav-overlay"></div>
 
@@ -47,7 +50,7 @@
                 each pair of voices supporting the next in an unbroken chain. You helped create
                 something greater than any one poem alone.
             </p>
-            <a href="/crown?u={{ user.code }}" class="cta-button">View the Complete Crown</a>
+            <a href="/crown/1/visualize?u={{ user.code }}" class="cta-button">View the Complete Crown</a>
             {% else %}
             <div class="ornament">✦</div>
             <h2>Your thread is woven</h2>
@@ -65,7 +68,7 @@
                 becomes the beginning for another pair, linking your voice to theirs. This is the Crown:
                 an endless chain of poetry, each thread supporting the next.
             </p>
-            <a href="/crown?u={{ user.code }}" class="cta-button">View the Crown</a>
+            <a href="/crown/1/visualize?u={{ user.code }}" class="cta-button">View the Crown</a>
             {% endif %}
         </div>
     </div>
