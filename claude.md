@@ -175,57 +175,109 @@ Every completed sonnet becomes a seed for a new Crown, creating an infinite gene
 
 ---
 
-## Implementation Plan
+## Implementation Progress
 
-### Phase 1: Database Schema (In Progress)
-**Add genealogy tracking:**
+### ✅ Phase 1: Database Schema (COMPLETE)
+**Genealogy tracking added to models.py:**
 ```python
 Crown:
-  + parent_sonnet_id (which Sonnet spawned this Crown)
-  + generation (0=classic, 1, 2, 3...)
+  + parent_sonnet_id: Optional[int]  # Which Sonnet spawned this Crown
+  + generation: int = 0  # 0=classic seed, 1, 2, 3...
 
 Sonnet:
-  + spawned_source_sonnet_id (link to SourceSonnet it became)
+  + spawned_source_sonnet_id: Optional[int]  # Links to SourceSonnet it became
 
 SourceSonnet:
-  + source_type ("classic" or "collaborative")
-  + parent_sonnet_id (which Sonnet this came from)
+  + source_type: str = "classic"  # "classic" or "collaborative"
+  + parent_sonnet_id: Optional[int]  # If collaborative, which Sonnet spawned this
 ```
 
-**Auto-seed logic:**
-- When 14th line written → mark sonnet complete
-- Automatically create SourceSonnet + 14 SourceLines
-- Next pair gets assigned to this new seed
+### ✅ Phase 2: Test Data (COMPLETE)
+**Multi-generation mock database created:**
+- **File**: `visualization_dev/test_database.db`
+- **Generator**: `visualization_dev/generate_fractal_test_data.py`
+- **Structure**:
+  - Gen 0: 1 classic seed (Ozymandias)
+  - Gen 1: Crown 1 with 14 complete sonnets (all auto-seeded)
+  - Gen 2:
+    - Crown 2 from sonnet #1 (14/14 complete)
+    - Crown 3 from sonnet #2 (7/14 in progress)
+    - Crown 4 from sonnet #3 (2/14 just started)
+- **Total**: 37 sonnets across 3 generations
 
-### Phase 2: Test Data
-**Multi-generation mock database:**
-- Gen 0: 1 classic seed
-- Gen 1: 14 complete sonnets
-- Gen 2: 3 child Crowns (varying completion: 14/14, 7/14, 2/14)
-- Tests both complete and incomplete Crown visualization
+### ✅ Phase 3: API (COMPLETE)
+**New endpoint**: `GET /api/crown/{crown_id}/context`
 
-### Phase 3: Visualization Strategy
-**"Context View" Approach:**
-- **Primary**: One Crown shown in full 3D detail (current Jewels view)
-- **Context**:
-  - Parent seed star visible above (clickable to go up)
-  - Ghost circles below for child Crowns (clickable to go down)
-  - Info panel shows: "Generation 2 • Parent: [link] • Children: [links]"
-- **Navigation**: Up/down buttons to traverse generations
-- **Future**: Minimap showing tree position
+**Returns genealogical context:**
+```json
+{
+  "crown": { "id": 2, "generation": 2, "status": "forming", "completion_progress": "7/14" },
+  "source": { "id": 2, "title": "...", "type": "collaborative", "first_line": "..." },
+  "parent": { "crown_id": 1, "sonnet_id": 1, "authors": "...", "generation": 1 },
+  "children": [
+    { "crown_id": 5, "sonnet_position": 1, "completion": "14/14", "generation": 3 }
+  ],
+  "nodes": [...],  // Current Crown's sonnets
+  "connections": [...]
+}
+```
+
+**Testing**:
+```bash
+# Crown 1 (Gen 1) - no parent, 3 children
+curl http://localhost:8000/api/crown/1/context | python -m json.tool
+
+# Crown 2 (Gen 2) - has parent (Crown 1), no children yet
+curl http://localhost:8000/api/crown/2/context | python -m json.tool
+```
+
+### 🚧 Phase 4: Visualization (NEXT)
+**"Context View" implementation needed:**
+
+**Visual Layout:**
+```
+        Y = +80    [Parent Seed Star] ← Smaller, ghosted, clickable
+                          |
+                   connection line
+                          ↓
+        Y = 0      ═══ CROWN 2 ═══     ← Primary focus (full 3D)
+                   14 orbs, full detail
+                   Current Jewels view
+                          ↓
+        Y = -80    [Child 1] [Child 2] ← Ghost circles, clickable
+                   14/14     3/14       ← Progress labels
+```
+
+**Implementation Tasks:**
+1. **Update CrownDataService.js**: Switch from `/nodes` to `/context` endpoint
+2. **Update OrreryView.js**:
+   - Add `renderParentSeed()` method (position: 0, +80, 0)
+   - Add `renderChildGhosts()` method (positions around -80Y)
+   - Add click handlers for parent/children navigation
+3. **Camera adjustments**: Frame all 3 levels (parent, current, children)
+4. **ExperienceDirector.js**: Handle Crown ID changes and data reloading
+5. **Navigation UI**: Breadcrumb showing "Gen 0 → Crown 1 → Crown 2"
+
+**Technical Details:**
+- Parent seed: radius 8, 30% opacity, golden material
+- Current Crown: Full existing Jewels experience (0% change to current behavior)
+- Child ghosts: Ring geometry (radius 15), progress label sprites
+- Camera: Auto-frame to show all 3 levels, smooth transitions
+- Connection lines: Vertical golden lines (parent→current→children)
 
 **Why one Crown at a time:**
-- Keeps performance fast
-- Maintains immersive experience
-- Avoids overwhelming complexity
-- Scales to infinite generations
+- Keeps performance fast (only render 1 Crown + lightweight context)
+- Maintains immersive experience (primary Crown gets full attention)
+- Avoids overwhelming complexity (clear hierarchy)
+- Scales infinitely (always just 3 levels visible)
 
-### Phase 4: Progressive Rollout
-1. Test multi-gen data structure
-2. Build single Crown with context view
-3. Add navigation between Crowns
-4. Test with production DB
-5. Add minimap if needed
+### Phase 5: Production Integration (FUTURE)
+1. Test navigation between Crowns in mock DB
+2. Polish transitions and camera movements
+3. Add keyboard shortcuts (↑/↓ arrows)
+4. Switch `MAYDAY_VIZ_TEST=false` to test with production data
+5. Implement auto-seed logic in production `/lines` endpoint
+6. Deploy to main branch
 
 ## Vision Board
 
