@@ -5,7 +5,7 @@
 export default class AppState {
     constructor(initialState = {}) {
         this.state = {
-            currentView: 'crown',
+            currentView: 'graph',
             selectedNodeId: null,
             isLoading: true,
             ...initialState

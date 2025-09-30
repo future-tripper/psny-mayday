@@ -38,17 +38,20 @@
 
         <div class="crown-header">
             <h2>The Crown</h2>
+            {% if crown.status == "complete" %}
+            <div class="crown-status-badge-scroll complete">✓ Complete (14/14)</div>
+            {% else %}
+            <div class="crown-status-badge-scroll in-progress">⧗ In Progress ({{ pairs_with_sonnets }}/14)</div>
+            {% endif %}
+            {% if seed_first_line and seed_authors %}
+            <p class="seed-context-scroll">"{{ seed_first_line }}" by {{ seed_authors }} • Generation {{ crown.generation if crown.generation else 1 }}</p>
+            {% endif %}
             <p class="crown-description">
                 Here lies the Crown woven from voices near and far. Each pair of poets
                 writes between two consecutive lines of a seed sonnet, creating an interlocking
                 chain where every ending becomes another's beginning. Together, these threads
                 form a tapestry of connection—proof that in answering the call, we are not alone.
             </p>
-            {% if crown.status == "complete" %}
-            <p class="completed-count">✦ Crown Complete: All 14 sonnets woven ✦</p>
-            {% else %}
-            <p class="completed-count">{{ pairs_with_sonnets }} threads woven</p>
-            {% endif %}
         </div>
 
         {% if crown_sonnets %}

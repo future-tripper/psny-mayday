@@ -38,6 +38,12 @@
             <div class="viz-header">
                 <h2>The Crown</h2>
                 <div class="view-controls">
+                    <select id="crown-selector" class="crown-selector">
+                        <option value="1">Crown 1 (14/14 ✓)</option>
+                        <option value="2">Crown 2 (14/14 ✓)</option>
+                        <option value="3">Crown 3 (7/14 ⧗)</option>
+                        <option value="4">Crown 4 (2/14 ⧗)</option>
+                    </select>
                     <a href="#" class="view-link active" data-view="orbit">Jewels</a>
                     <a href="#" class="view-link" data-view="lineage">Threads</a>
                     <a href="/crown/{{ crown_id }}" class="view-link">Scroll</a>
@@ -49,14 +55,15 @@
                 <div class="stage-wrapper">
                     <div id="orrery-stage" class="viz-stage viz-stage--orrery active" aria-live="polite">
                         <canvas id="orrery-canvas"></canvas>
-                        <div id="orrery-overlay" class="orrery-overlay">
-                            <div class="overlay-content">
-                                <p class="overlay-title">Crown Orrery</p>
-                                <p class="overlay-subtitle">Drag to rotate • Scroll to zoom • Click stars to explore</p>
-                            </div>
+                        <div class="crown-status-badge" id="crown-status-badge"></div>
+                        <div class="orrery-tooltip" id="orrery-tooltip">
+                            <div class="tooltip-title"></div>
+                            <div class="tooltip-subtitle"></div>
                         </div>
                     </div>
                     <div id="lineage-stage" class="viz-stage viz-stage--lineage" hidden>
+                        <div class="crown-status-badge" id="crown-status-badge-threads"></div>
+                        <div id="seed-context-threads" class="seed-context seed-context--threads"></div>
                         <div id="lineage-scroll" class="lineage-scroll" role="list"></div>
                     </div>
                     <div id="legacy-stage" class="viz-stage viz-stage--legacy" hidden>

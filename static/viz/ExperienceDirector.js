@@ -1,4 +1,5 @@
 import OrreryView from './views/OrreryView.js';
+import GalaxyGraphView from './views/GalaxyGraphView.js';
 import LineageTunnelView from './views/LineageTunnelView.js';
 import PoetStudioView from './views/PoetStudioView.js';
 import PagesView from './views/PagesView.js';
@@ -18,6 +19,7 @@ export default class ExperienceDirector {
         this.metrics = new MetricsTracker();
 
         this.stageMap = {
+            graph: 'graph-stage',
             orbit: 'orrery-stage',
             lineage: 'lineage-stage',
             studio: 'orrery-stage',
@@ -26,21 +28,35 @@ export default class ExperienceDirector {
     }
 
     async initialize() {
-        const [crownData, stats] = await Promise.all([
-            this.dataService.getCrownNodes(this.crownId),
+        const [contextData, stats] = await Promise.all([
+            this.dataService.getCrownContext(this.crownId),
             this.dataService.getCrownStats(this.crownId)
         ]);
 
-        this.crownData = crownData;
+        this.contextData = contextData;
+        this.crownData = contextData; // For backwards compatibility
         this.stats = stats;
-        this.nodes = Array.isArray(crownData.nodes) ? crownData.nodes.slice() : [];
-        this.connections = crownData.connections || [];
+        this.nodes = Array.isArray(contextData.nodes) ? contextData.nodes.slice() : [];
+        this.connections = contextData.connections || [];
 
         this.enhanceNodes();
+        this.renderSeedContext();
         this.setupViewControls();
+        this.setupCrownSelector();
         this.setupPanelControls();
         this.renderMetrics();
         this.renderStoryHighlights();
+        this.renderCrownStatusBadge();
+
+        // Initialize Galaxy Graph View (2D tree)
+        this.galaxyGraphView = new GalaxyGraphView({
+            container: document.getElementById('graph-stage'),
+            canvas: document.getElementById('graph-canvas'),
+            state: this.state,
+            crownId: this.crownId,
+            dataService: this.dataService
+        });
+        await this.galaxyGraphView.initialize();
 
         this.orreryView = new OrreryView({
             container: document.getElementById('orrery-stage'),
@@ -49,8 +65,9 @@ export default class ExperienceDirector {
             state: this.state,
             nodes: this.nodes,
             connections: this.connections,
-            sourceTitle: crownData.source_title,
-            sourceFirstLine: crownData.source_first_line
+            sourceTitle: contextData.source?.title || 'The Seed',
+            sourceFirstLine: contextData.source?.first_line || 'The source of all creation',
+            crownContext: contextData // Pass full context with parent/children
         });
         await this.orreryView.initialize();
 
@@ -87,6 +104,7 @@ export default class ExperienceDirector {
 
         this.state.subscribe('currentView', (view) => this.onViewChange(view));
         this.state.subscribe('selectedNodeId', (nodeId) => this.onNodeSelected(nodeId));
+        this.state.subscribe('selectedCrownId', (crownId) => this.onCrownSelected(crownId));
 
         // Don't auto-select a node - let panel stay closed until user clicks
         // const defaultNode = this.nodes.slice().sort(this.compareByCompletion())[0];
@@ -95,6 +113,19 @@ export default class ExperienceDirector {
         // }
 
         this.onViewChange(this.state.get('currentView'));
+    }
+
+    onCrownSelected(crownId) {
+        if (!crownId) return;
+        console.log('[ExperienceDirector] Crown selected, navigating to:', crownId);
+
+        // If clicking current Crown, just switch to Jewels view
+        if (crownId === this.crownId) {
+            this.state.set('currentView', 'orbit');
+        } else {
+            // Navigate to different Crown's visualization page
+            window.location.href = `/crown/${crownId}/visualize`;
+        }
     }
 
     enhanceNodes() {
@@ -156,6 +187,22 @@ export default class ExperienceDirector {
                 }
                 // Links without data-view (like SCROLL) navigate normally
             });
+        });
+    }
+
+    setupCrownSelector() {
+        const selector = document.getElementById('crown-selector');
+        if (!selector) return;
+
+        // Set current Crown as selected
+        selector.value = this.crownId;
+
+        // Navigate on change
+        selector.addEventListener('change', (event) => {
+            const newCrownId = parseInt(event.target.value);
+            if (newCrownId !== this.crownId) {
+                window.location.href = `/crown/${newCrownId}/visualize`;
+            }
         });
     }
 
@@ -233,6 +280,7 @@ export default class ExperienceDirector {
 
         this.metrics.recordView(view);
 
+        // Handle view switching
         document.querySelectorAll('.viz-stage').forEach((stage) => {
             stage.classList.remove('active');
             if (!stage.hasAttribute('hidden')) {
@@ -245,6 +293,10 @@ export default class ExperienceDirector {
         if (stage) {
             stage.removeAttribute('hidden');
             stage.classList.add('active');
+        }
+
+        if (this.galaxyGraphView) {
+            this.galaxyGraphView.setActive(view === 'graph');
         }
 
         if (this.orreryView) {
@@ -301,5 +353,56 @@ export default class ExperienceDirector {
             if (orderA !== orderB) return orderA - orderB;
             return a.position - b.position;
         };
+    }
+
+    renderCrownStatusBadge() {
+        const badges = [
+            document.getElementById('crown-status-badge'),
+            document.getElementById('crown-status-badge-threads')
+        ];
+
+        if (!this.contextData) return;
+
+        const crown = this.contextData.crown;
+        const isComplete = crown.status === 'complete';
+        const progress = crown.completion_progress || '';
+
+        const className = 'crown-status-badge ' + (isComplete ? 'complete' : 'in-progress');
+        const text = isComplete ? `✓ Complete (${progress})` : `⧗ In Progress (${progress})`;
+
+        badges.forEach(badge => {
+            if (badge) {
+                badge.className = className;
+                badge.textContent = text;
+            }
+        });
+    }
+
+    renderSeedContext() {
+        const jewelsContext = document.getElementById('seed-context-jewels');
+        const threadsContext = document.getElementById('seed-context-threads');
+
+        if (!this.contextData) return;
+
+        const source = this.contextData.source;
+        const crown = this.contextData.crown;
+
+        if (source && source.first_line) {
+            const firstLine = source.first_line;
+            const authors = source.authors || 'Unknown';
+            const generation = crown.generation;
+            const genLabel = generation === 0 ? 'Classic Seed' : `Generation ${generation}`;
+
+            // Truncate first line if too long
+            const displayLine = firstLine.length > 60 ? firstLine.substring(0, 60) + '...' : firstLine;
+            const contextText = `"${displayLine}" by ${authors} • ${genLabel}`;
+
+            if (jewelsContext) {
+                jewelsContext.textContent = contextText;
+            }
+            if (threadsContext) {
+                threadsContext.textContent = contextText;
+            }
+        }
     }
 }

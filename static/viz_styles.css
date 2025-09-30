@@ -22,9 +22,36 @@
     font-size: 1.4em;
     font-weight: 600;
     color: #2b2b2b;
-    margin: 0 0 18px 0;
+    margin: 0 0 8px 0;
     letter-spacing: 2px;
     text-transform: uppercase;
+}
+
+.seed-context {
+    font-family: 'EB Garamond', serif;
+    font-size: 0.85em;
+    font-style: italic;
+    color: rgba(43, 43, 43, 0.5);
+    text-align: center;
+    padding: 8px 20px;
+    line-height: 1.3;
+}
+
+.seed-context--jewels {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 251, 226, 0.8);
+    backdrop-filter: blur(4px);
+    border-radius: 4px;
+    z-index: 5;
+}
+
+.seed-context--threads {
+    padding: 15px 20px 10px;
+    background: rgba(255, 251, 226, 0.6);
+    border-bottom: 1px solid rgba(43, 43, 43, 0.1);
 }
 
 .view-controls {
@@ -33,6 +60,67 @@
     align-items: center;
     gap: 30px;
     flex-wrap: wrap;
+}
+
+.crown-selector {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.95em;
+    font-weight: 600;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #F8B098 0%, #FF9F7F 100%);
+    color: #FFFBE2;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(248, 176, 152, 0.3);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.crown-selector:hover {
+    background: linear-gradient(135deg, #FF9F7F 0%, #F8B098 100%);
+    box-shadow: 0 4px 12px rgba(248, 176, 152, 0.5);
+    transform: translateY(-1px);
+}
+
+.crown-selector:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(248, 176, 152, 0.4), 0 4px 12px rgba(248, 176, 152, 0.5);
+}
+
+.crown-selector option {
+    background: #FFFBE2;
+    color: #2b2b2b;
+    padding: 10px;
+}
+
+.crown-status-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 400;
+    font-size: 0.75em;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    z-index: 10;
+    opacity: 0.85;
+}
+
+.crown-status-badge.complete {
+    background: rgba(76, 175, 80, 0.12);
+    color: rgba(46, 125, 50, 0.9);
+    border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.crown-status-badge.in-progress {
+    background: rgba(255, 152, 0, 0.12);
+    color: rgba(230, 81, 0, 0.9);
+    border: 1px solid rgba(255, 152, 0, 0.2);
 }
 
 .view-link {
@@ -93,15 +181,62 @@
     display: none;
 }
 
+.viz-stage--graph {
+    background: #FFFBE2; /* Cream background for genealogy tree */
+}
+
 .viz-stage--orrery {
     background: linear-gradient(160deg, rgba(8, 22, 46, 0.94), rgba(42, 16, 55, 0.88));
 }
 
+.orrery-tooltip {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 15;
+    max-width: 600px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.orrery-tooltip.visible {
+    opacity: 1;
+}
+
+.tooltip-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.3em;
+    font-style: italic;
+    color: #2b2b2b;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.tooltip-subtitle {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.85em;
+    color: rgba(43, 43, 43, 0.75);
+    letter-spacing: 0.5px;
+}
+
+#graph-canvas,
 #orrery-canvas {
     width: 100%;
     height: 100%;
     display: block;
     cursor: grab;
+}
+
+#graph-canvas {
+    cursor: default;
 }
 
 #orrery-canvas:active {

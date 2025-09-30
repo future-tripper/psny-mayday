@@ -9,15 +9,16 @@ const COLOR_GRADIENT = [
 ];
 
 export default class OrreryView {
-    constructor({ container, canvas, overlay, state, nodes, connections, sourceTitle, sourceFirstLine }) {
+    constructor({ container, canvas, overlay, state, nodes, connections, sourceTitle, sourceFirstLine, crownContext }) {
         this.container = container;
         this.canvas = canvas;
-        this.overlay = overlay;
+        this.tooltip = document.getElementById('orrery-tooltip');
         this.state = state;
         this.nodes = nodes;
         this.connections = connections;
         this.sourceTitle = sourceTitle || 'The Seed';
         this.sourceFirstLine = sourceFirstLine || 'The source of all creation';
+        this.crownContext = crownContext || {};
 
         this.scene = null;
         this.camera = null;
@@ -37,6 +38,19 @@ export default class OrreryView {
         this.hoveredMesh = null;
         this.seedStar = null;
         this.seedGlow = null;
+        this.seedStarOverlay = null;
+
+        // VIEW MODE: 'galaxy' or 'crown-detail'
+        this.viewMode = 'galaxy';
+        this.currentDetailCrownId = null;
+
+        // Galaxy view elements (parent + current + children seeds)
+        this.galaxySeeds = [];
+        this.galaxySeedOverlays = [];
+
+        // Crown detail view elements (14 sonnets of specific Crown)
+        this.crownDetailGroup = null;
+
         this.animationId = null;
         this.rotationSpeed = 0.003;
         this.isPaused = false;
@@ -46,12 +60,12 @@ export default class OrreryView {
         this.dragStartY = 0;
         this.dragStartRotation = 0;
 
-        // Camera controls
-        this.cameraDistance = 120;
-        this.cameraTheta = 0; // horizontal angle
-        this.cameraPhi = Math.PI / 6; // vertical angle (30 degrees from top)
-        this.minDistance = 60;
-        this.maxDistance = 250;
+        // Camera controls (adjusted for two-level view system)
+        this.cameraDistance = 300; // Start further back for galaxy view
+        this.cameraTheta = 0;
+        this.cameraPhi = Math.PI / 4; // 45 degrees for better view
+        this.minDistance = 80; // Allow close zoom in crown detail
+        this.maxDistance = 500; // Allow far zoom for galaxy overview
         this.dragStartTheta = 0;
         this.dragStartPhi = 0;
 
@@ -63,6 +77,10 @@ export default class OrreryView {
         if (!this.canvas) return;
         this.setupScene();
         this.createLights();
+        this.createStarField();
+        this.createAtmosphericParticles();
+
+        // Create standard Jewels view (just the 14 orbs + seed)
         this.createCentralStar();
         this.createSeedStarEnhancements();
         this.createOrbitRing();
@@ -70,9 +88,8 @@ export default class OrreryView {
         this.createConnectionLines();
         this.createWordSprites();
         this.createTextOverlays();
-        this.createAtmosphericParticles();
         this.createGodRays();
-        this.createStarField();
+
         this.setupEvents();
         this.startAnimation();
     }
@@ -141,6 +158,9 @@ export default class OrreryView {
         this.seedStar = sphere;
         this.scene.add(sphere);
 
+        // Create text overlay for seed star
+        this.createSeedStarOverlay();
+
         const glowGeometry = new THREE.SphereGeometry(22, 64, 64);
         const glowMaterial = new THREE.MeshBasicMaterial({
             color: new THREE.Color(0xffd700),
@@ -150,6 +170,46 @@ export default class OrreryView {
         const glow = new THREE.Mesh(glowGeometry, glowMaterial);
         this.seedGlow = glow;
         this.scene.add(glow);
+    }
+
+    createSeedStarOverlay() {
+        // Create hover overlay for the seed star (like sonnet orbs have)
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 512;
+        canvas.height = 128;
+
+        context.fillStyle = 'rgba(255, 251, 226, 0.92)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        context.fillStyle = '#2b2b2b';
+        context.font = 'italic 24px "EB Garamond"';
+        context.textAlign = 'center';
+
+        const title = this.crownContext.source?.title || this.sourceTitle;
+        const truncated = title.length > 40 ? title.substring(0, 40) + '...' : title;
+        context.fillText(truncated, 256, 50);
+
+        context.font = '18px "EB Garamond"';
+        context.fillStyle = 'rgba(43, 43, 43, 0.7)';
+        const authors = this.crownContext.source?.authors || 'Unknown';
+        const genText = this.crownContext.crown?.generation === 0 ? 'Classic Seed' : `Generation ${this.crownContext.crown?.generation || 1} Seed`;
+        context.fillText(`${authors} • ${genText}`, 256, 85);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const spriteMaterial = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            opacity: 0
+        });
+
+        const sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(30, 7.5, 1);
+        sprite.position.set(0, 25, 0);
+        sprite.userData = { type: 'seed-star-overlay' };
+
+        this.seedStarOverlay = sprite;
+        this.scene.add(sprite);
     }
 
     createSeedStarEnhancements() {
@@ -705,6 +765,160 @@ export default class OrreryView {
         this.scene.add(this.starField);
     }
 
+    createContextSeeds() {
+        // Add parent and children seeds around the main Crown visualization
+        if (!this.crownContext) return;
+
+        const parent = this.crownContext.parent;
+        const children = this.crownContext.children || [];
+
+        // Parent seed positioned ABOVE the Crown ring (higher Y)
+        if (parent) {
+            this.createContextSeed({
+                crownId: parent.crown_id,
+                sonnetId: parent.sonnet_id,
+                title: parent.sonnet_title || 'Parent Crown',
+                authors: parent.authors || 'Unknown',
+                generation: parent.generation,
+                position: new THREE.Vector3(0, 90, 0),
+                type: 'parent',
+                scale: 0.8
+            });
+        }
+
+        // Children seeds positioned BELOW the Crown ring (lower Y)
+        // Spread them out horizontally if multiple children
+        const numChildren = children.length;
+        children.forEach((child, index) => {
+            const xOffset = numChildren > 1 ? (index - (numChildren - 1) / 2) * 60 : 0;
+            this.createContextSeed({
+                crownId: child.crown_id,
+                sonnetId: child.sonnet_id,
+                title: `Crown ${child.crown_id}`,
+                authors: 'Collaborative',
+                generation: child.generation,
+                completion: child.completion,
+                position: new THREE.Vector3(xOffset, -90, 0),
+                type: 'child',
+                scale: 0.7
+            });
+        });
+    }
+
+    createContextSeed({ crownId, sonnetId, title, authors, generation, completion, position, type, scale }) {
+        // Smaller seeds that fit around the main Crown visualization
+        const size = 18 * (scale || 1);
+        const geometry = new THREE.IcosahedronGeometry(size, 2);
+
+        // Color-code by type
+        let color, emissive;
+        if (type === 'parent') {
+            color = 0xff9800;  // Orange for parent
+            emissive = 0xff6f00;
+        } else {
+            color = 0xfdd835;  // Yellow for children
+            emissive = 0xfbc02d;
+        }
+
+        const material = new THREE.MeshPhongMaterial({
+            color: color,
+            emissive: emissive,
+            emissiveIntensity: 0.8,
+            transparent: false,
+            opacity: 1,
+            shininess: 80
+        });
+
+        const seed = new THREE.Mesh(geometry, material);
+        seed.position.copy(position);
+        seed.userData = {
+            type: 'context-seed',
+            crownId: crownId,
+            sonnetId: sonnetId,
+            title: title,
+            authors: authors,
+            generation: generation,
+            completion: completion,
+            isInteractive: true
+        };
+        this.scene.add(seed);
+        this.galaxySeeds.push(seed); // Reuse array for raycasting
+
+        // Add glow
+        const glowGeometry = new THREE.IcosahedronGeometry(size + 8, 1);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: color,
+            transparent: true,
+            opacity: 0.2,
+            side: THREE.BackSide
+        });
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        glow.position.copy(position);
+        this.scene.add(glow);
+        seed.userData.glow = glow;
+
+        // Add label
+        this.createContextSeedLabel({ seed, title, authors, generation, completion, type });
+    }
+
+    createContextSeedLabel({ seed, title, authors, generation, completion, type }) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 600;
+        canvas.height = 160;
+
+        // White background for readability
+        context.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Border
+        context.strokeStyle = 'rgba(43, 43, 43, 0.3)';
+        context.lineWidth = 2;
+        context.strokeRect(0, 0, canvas.width, canvas.height);
+
+        // Title
+        context.fillStyle = '#000000';
+        context.font = 'italic bold 28px "EB Garamond"';
+        context.textAlign = 'center';
+        const truncated = title.length > 30 ? title.substring(0, 30) + '...' : title;
+        context.fillText(truncated, 300, 45);
+
+        // Subtitle
+        context.font = 'bold 22px "EB Garamond"';
+        context.fillStyle = '#333333';
+        const genText = generation === 0 ? 'Classic' : `Gen ${generation}`;
+        const label = type === 'parent' ? '↑ Parent Crown' : '↓ Child Crown';
+        context.fillText(`${label} • ${genText}`, 300, 80);
+
+        // Completion status for children
+        if (completion !== undefined) {
+            const isComplete = completion && completion.includes('/') && completion.split('/')[0] === completion.split('/')[1];
+            context.font = 'bold 20px "Josefin Sans"';
+            context.fillStyle = isComplete ? '#1B5E20' : '#E65100';
+            context.fillText(completion + (isComplete ? ' ✓' : ' ⧗'), 300, 115);
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const spriteMaterial = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            opacity: 0.9,
+            depthTest: false
+        });
+
+        const sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(40, 11, 1);
+        sprite.position.copy(seed.position);
+        sprite.position.y += type === 'parent' ? 28 : -28;
+        sprite.userData = {
+            type: 'context-seed-label',
+            linkedSeed: seed
+        };
+
+        this.galaxySeedOverlays.push(sprite);
+        this.scene.add(sprite);
+    }
+
     updateCameraPosition() {
         const x = this.cameraDistance * Math.sin(this.cameraPhi) * Math.cos(this.cameraTheta);
         const y = this.cameraDistance * Math.cos(this.cameraPhi);
@@ -770,7 +984,29 @@ export default class OrreryView {
 
         this.raycaster.setFromCamera(this.pointer, this.camera);
 
-        // Check seed star first
+        // Check context seeds first (parent/children navigation)
+        if (this.galaxySeeds.length > 0) {
+            const contextIntersects = this.raycaster.intersectObjects(this.galaxySeeds, false);
+            if (contextIntersects.length > 0) {
+                const seed = contextIntersects[0].object;
+                if (seed !== this.hoveredMesh) {
+                    this.setHoveredMesh(seed);
+                    // Show navigation hint
+                    const userData = seed.userData;
+                    if (userData.type === 'context-seed') {
+                        this.updateOverlayHint({
+                            isContextSeed: true,
+                            title: userData.title,
+                            crownId: userData.crownId,
+                            type: userData.type
+                        });
+                    }
+                }
+                return;
+            }
+        }
+
+        // Check seed star
         if (this.seedStar) {
             const seedIntersects = this.raycaster.intersectObject(this.seedStar, false);
             if (seedIntersects.length > 0) {
@@ -834,6 +1070,17 @@ export default class OrreryView {
 
         console.log('[OrreryView] Click detected, hoveredMesh:', this.hoveredMesh);
 
+        // Check if context seed clicked (navigate to that Crown)
+        if (this.hoveredMesh && this.hoveredMesh.userData) {
+            const userData = this.hoveredMesh.userData;
+            if (userData.type === 'context-seed') {
+                const crownId = userData.crownId;
+                console.log('[OrreryView] Context seed clicked, navigating to Crown:', crownId);
+                this.navigateToCrown(crownId);
+                return;
+            }
+        }
+
         // Check if seed star is clicked
         if (this.hoveredMesh && this.hoveredMesh === this.seedStar) {
             console.log('[OrreryView] Seed star clicked - opening seed sonnet');
@@ -880,12 +1127,28 @@ export default class OrreryView {
 
     setHoveredMesh(mesh) {
         if (this.hoveredMesh === mesh) return;
+
+        // Reset previous hover
         if (this.hoveredMesh && this.hoveredMesh !== this.selectedMesh) {
-            this.hoveredMesh.scale.set(1, 1, 1);
+            // Don't scale parent/children, only regular nodes
+            if (!this.hoveredMesh.userData.isInteractive) {
+                this.hoveredMesh.scale.set(1, 1, 1);
+            }
         }
+
         this.hoveredMesh = mesh;
+
+        // Apply new hover
         if (this.hoveredMesh && this.hoveredMesh !== this.selectedMesh) {
-            this.hoveredMesh.scale.set(1.15, 1.15, 1.15);
+            // Scale up regular nodes, cursor pointer for interactive elements
+            if (this.hoveredMesh.userData.isInteractive) {
+                this.canvas.style.cursor = 'pointer';
+            } else {
+                this.hoveredMesh.scale.set(1.15, 1.15, 1.15);
+                this.canvas.style.cursor = 'pointer';
+            }
+        } else {
+            this.canvas.style.cursor = 'grab';
         }
     }
 
@@ -912,34 +1175,34 @@ export default class OrreryView {
     }
 
     updateOverlayHint(node) {
-        if (!this.overlay) return;
-        const title = this.overlay.querySelector('.overlay-title');
-        const subtitle = this.overlay.querySelector('.overlay-subtitle');
+        if (!this.tooltip) return;
+        const title = this.tooltip.querySelector('.tooltip-title');
+        const subtitle = this.tooltip.querySelector('.tooltip-subtitle');
+
         if (node) {
-            if (node.isSeedStar) {
-                title.textContent = 'The Seed Sonnet';
-                subtitle.textContent = 'Click to open the source that sparked the Crown';
+            if (node.isContextSeed) {
+                const label = node.type === 'parent' ? 'Parent Crown' : 'Child Crown';
+                title.textContent = node.title;
+                subtitle.textContent = `Click to navigate to ${label} ${node.crownId}`;
+            } else if (node.isSeedStar) {
+                title.textContent = this.sourceFirstLine;
+                subtitle.textContent = `${this.sourceTitle} • Click to open the source sonnet`;
             } else {
-                title.textContent = node.first_line || 'A weaving of voices';
-                subtitle.textContent = `Click to open ${node.authors}`;
+                // Show first line (title) and authors for each orb
+                title.textContent = `"${node.first_line || 'A sonnet in the making'}"`;
+                subtitle.textContent = `${node.authors} • Click to read the full poem`;
             }
+            this.tooltip.classList.add('visible');
         } else {
             title.textContent = '';
-            subtitle.textContent = 'Drag to rotate • Scroll to zoom • Click stars to explore';
+            subtitle.textContent = '';
+            this.tooltip.classList.remove('visible');
         }
     }
 
     updateOverlayDetail(node) {
-        if (!this.overlay) return;
-        const title = this.overlay.querySelector('.overlay-title');
-        const subtitle = this.overlay.querySelector('.overlay-subtitle');
-        if (!node) {
-            this.updateOverlayHint();
-            return;
-        }
-
-        title.textContent = `${node.authors}`;
-        subtitle.textContent = `Completed ${formatOrdinal(node.completion_order || node.position)}`;
+        // Tooltip now handled by updateOverlayHint
+        return;
     }
 
     startAnimation() {
@@ -980,96 +1243,158 @@ export default class OrreryView {
                 this.atmosphericParticles.rotation.y = elapsed * 0.0005;
             }
 
-            // Animate god rays
-            this.godRays.forEach((ray) => {
-                const { pulsePhase } = ray.userData;
-                const pulse = 0.08 + Math.sin(elapsed * 0.5 + pulsePhase) * 0.04;
-                ray.material.opacity = pulse;
-            });
+            // Animate god rays (Crown Detail View only)
+            if (this.godRays && this.godRays.length > 0) {
+                this.godRays.forEach((ray) => {
+                    const { pulsePhase } = ray.userData;
+                    const pulse = 0.08 + Math.sin(elapsed * 0.5 + pulsePhase) * 0.04;
+                    ray.material.opacity = pulse;
+                });
+            }
 
-            // Animate seed star glow pulse
+            // Animate seed star glow pulse (Crown Detail View only)
             if (this.seedGlow) {
                 const pulse = 0.25 + Math.sin(elapsed * 0.8) * 0.15;
                 this.seedGlow.material.opacity = pulse;
                 this.seedGlow.scale.setScalar(1 + Math.sin(elapsed * 0.8) * 0.1);
             }
 
-            // Animate seed word sprites orbiting and floating
-            this.seedWordSprites.forEach((obj) => {
-                if (obj.userData.isSeedSprite) {
-                    const { baseAngle, baseRadius, baseY, orbitSpeed, floatSpeed, floatPhase } = obj.userData;
-                    const orbitAngle = baseAngle + elapsed * orbitSpeed;
-                    const floatY = baseY + Math.sin(elapsed * floatSpeed + floatPhase) * 2;
+            // Animate seed star overlay on hover
+            if (this.seedStarOverlay) {
+                const isHovered = this.hoveredMesh === this.seedStar;
+                const targetOpacity = isHovered ? 1.0 : 0;
+                this.seedStarOverlay.material.opacity += (targetOpacity - this.seedStarOverlay.material.opacity) * 0.1;
+            }
 
-                    obj.position.set(
-                        Math.cos(orbitAngle) * baseRadius,
-                        floatY,
-                        Math.sin(orbitAngle) * baseRadius
-                    );
-                } else if (obj.userData.isSeedRay) {
-                    const { pulsePhase } = obj.userData;
-                    const pulse = 0.15 + Math.sin(elapsed * 1.5 + pulsePhase) * 0.1;
-                    obj.material.opacity = pulse;
-                }
-            });
+            // Animate seed word sprites orbiting and floating (Crown Detail View only)
+            if (this.seedWordSprites && this.seedWordSprites.length > 0) {
+                this.seedWordSprites.forEach((obj) => {
+                    if (obj.userData.isSeedSprite) {
+                        const { baseAngle, baseRadius, baseY, orbitSpeed, floatSpeed, floatPhase } = obj.userData;
+                        const orbitAngle = baseAngle + elapsed * orbitSpeed;
+                        const floatY = baseY + Math.sin(elapsed * floatSpeed + floatPhase) * 2;
 
-            // Breathing animation for all orbs
-            this.nodeMeshes.forEach((mesh, index) => {
-                const breathPhase = elapsed * 0.3 + index * 0.2;
-                const breathScale = 1 + Math.sin(breathPhase) * 0.05;
-                mesh.scale.setScalar(breathScale);
-
-                // Subtle emissive pulse for completed sonnets
-                if (mesh.userData.node && mesh.userData.node.completed_at) {
-                    const record = this.meshById.get(mesh.userData.node.id);
-                    if (record && record.material.emissiveIntensity !== undefined) {
-                        const baseIntensity = mesh === this.selectedMesh ? 0.55 : 0.65;
-                        const pulse = Math.sin(elapsed * 0.5 + index * 0.3) * 0.1;
-                        record.material.emissiveIntensity = baseIntensity + pulse;
+                        obj.position.set(
+                            Math.cos(orbitAngle) * baseRadius,
+                            floatY,
+                            Math.sin(orbitAngle) * baseRadius
+                        );
+                    } else if (obj.userData.isSeedRay) {
+                        const { pulsePhase } = obj.userData;
+                        const pulse = 0.15 + Math.sin(elapsed * 1.5 + pulsePhase) * 0.1;
+                        obj.material.opacity = pulse;
                     }
-                }
-            });
+                });
+            }
 
-            // Animate word sprites with gentle floating motion
-            this.wordSprites.forEach((sprite) => {
-                const { rotationSpeed, rotationPhase } = sprite.userData;
-                const floatY = Math.sin(elapsed * rotationSpeed + rotationPhase) * 1.5;
-                sprite.position.y = sprite.userData.baseOffset.y + floatY;
+            // Galaxy View: Animate seeds (breathing, rotation, glow)
+            if (this.viewMode === 'galaxy') {
+                this.galaxySeeds.forEach((seed) => {
+                    // Breathing animation
+                    const breathe = 1 + Math.sin(elapsed * 0.001) * 0.05;
+                    seed.scale.set(breathe, breathe, breathe);
 
-                // Subtle fade in/out
-                const opacity = 0.5 + Math.sin(elapsed * rotationSpeed * 0.5 + rotationPhase) * 0.3;
-                sprite.material.opacity = opacity;
-            });
+                    // Slow rotation
+                    seed.rotation.y += 0.002;
 
-            // Animate connection particles
-            this.connectionLines.forEach((obj) => {
-                if (obj.userData.curve) {
-                    // Animate particle along curve
-                    const { curve, offset, speed } = obj.userData;
-                    const t = ((elapsed * speed + offset) % 1);
-                    const point = curve.getPoint(t);
-                    obj.position.copy(point);
-                }
-            });
+                    // Glow pulse
+                    if (seed.userData.glow) {
+                        const baseOpacity = seed.userData.isCurrent ? 0.15 : 0.1;
+                        const glowPulse = baseOpacity + Math.sin(elapsed * 0.0015) * 0.05;
+                        seed.userData.glow.material.opacity = glowPulse;
+                    }
 
-            // Update text overlay opacity based on camera distance and hover
-            this.textOverlays.forEach((sprite) => {
-                const { nodeId } = sprite.userData;
-                const record = this.meshById.get(nodeId);
-
-                if (record && record.mesh) {
-                    const isHovered = this.hoveredMesh === record.mesh;
-                    const isClose = this.cameraDistance < 80;
-
-                    // Fade in when close OR hovered
-                    if (isHovered || isClose) {
-                        const targetOpacity = isHovered ? 1.0 : Math.max(0, 1 - (this.cameraDistance - 60) / 20);
-                        sprite.material.opacity += (targetOpacity - sprite.material.opacity) * 0.1;
+                    // Enhance on hover
+                    const isHovered = this.hoveredMesh === seed;
+                    if (isHovered) {
+                        const targetEmissive = seed.userData.isCurrent ? 0.8 : 0.6;
+                        seed.material.emissiveIntensity += (targetEmissive - seed.material.emissiveIntensity) * 0.1;
                     } else {
-                        sprite.material.opacity *= 0.9;
+                        const baseEmissive = seed.userData.isCurrent ? 0.6 : 0.4;
+                        seed.material.emissiveIntensity += (baseEmissive - seed.material.emissiveIntensity) * 0.1;
                     }
+                });
+
+                // Animate galaxy seed overlays (always visible, brighten on hover)
+                this.galaxySeedOverlays.forEach((sprite) => {
+                    const linkedSeed = sprite.userData.linkedSeed;
+                    const isHovered = this.hoveredMesh === linkedSeed;
+                    const targetOpacity = isHovered ? 1.0 : 0.85;
+                    sprite.material.opacity += (targetOpacity - sprite.material.opacity) * 0.15;
+                });
+            }
+
+            // Crown Detail View: Animate individual sonnets
+            if (this.viewMode === 'crown-detail') {
+                // Breathing animation for all orbs
+                if (this.nodeMeshes && this.nodeMeshes.length > 0) {
+                    this.nodeMeshes.forEach((mesh, index) => {
+                        const breathPhase = elapsed * 0.3 + index * 0.2;
+                        const breathScale = 1 + Math.sin(breathPhase) * 0.05;
+                        mesh.scale.setScalar(breathScale);
+
+                        // Subtle emissive pulse for completed sonnets
+                        if (mesh.userData.node && mesh.userData.node.completed_at) {
+                            const record = this.meshById.get(mesh.userData.node.id);
+                            if (record && record.material.emissiveIntensity !== undefined) {
+                                const baseIntensity = mesh === this.selectedMesh ? 0.55 : 0.65;
+                                const pulse = Math.sin(elapsed * 0.5 + index * 0.3) * 0.1;
+                                record.material.emissiveIntensity = baseIntensity + pulse;
+                            }
+                        }
+                    });
                 }
-            });
+
+                // Animate word sprites with gentle floating motion
+                if (this.wordSprites && this.wordSprites.length > 0) {
+                    this.wordSprites.forEach((sprite) => {
+                        const { rotationSpeed, rotationPhase } = sprite.userData;
+                        const floatY = Math.sin(elapsed * rotationSpeed + rotationPhase) * 1.5;
+                        sprite.position.y = sprite.userData.baseOffset.y + floatY;
+
+                        // Subtle fade in/out
+                        const opacity = 0.5 + Math.sin(elapsed * rotationSpeed * 0.5 + rotationPhase) * 0.3;
+                        sprite.material.opacity = opacity;
+                    });
+                }
+
+                // Update text overlay opacity based on camera distance and hover
+                if (this.textOverlays && this.textOverlays.length > 0) {
+                    this.textOverlays.forEach((sprite) => {
+                        const { nodeId } = sprite.userData;
+                        const record = this.meshById.get(nodeId);
+
+                        if (record && record.mesh) {
+                            const isHovered = this.hoveredMesh === record.mesh;
+                            const isClose = this.cameraDistance < 80;
+
+                            // Fade in when close OR hovered
+                            if (isHovered || isClose) {
+                                const targetOpacity = isHovered ? 1.0 : Math.max(0, 1 - (this.cameraDistance - 60) / 20);
+                                sprite.material.opacity += (targetOpacity - sprite.material.opacity) * 0.1;
+                            } else {
+                                sprite.material.opacity *= 0.9;
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Update parent/child overlay opacity on hover (old context view - not used in galaxy mode)
+            if (this.parentSeedOverlay) {
+                const isHovered = this.hoveredMesh === this.parentSeedStar;
+                const targetOpacity = isHovered ? 1.0 : 0.5;
+                this.parentSeedOverlay.material.opacity += (targetOpacity - this.parentSeedOverlay.material.opacity) * 0.1;
+            }
+
+            if (this.childOverlays && this.childOverlays.length > 0) {
+                this.childOverlays.forEach((sprite, index) => {
+                    const ghost = this.childGhosts[index];
+                    const isHovered = this.hoveredMesh === ghost;
+                    const targetOpacity = isHovered ? 1.0 : 0.5;
+                    sprite.material.opacity += (targetOpacity - sprite.material.opacity) * 0.1;
+                });
+            }
 
             this.renderer.render(this.scene, this.camera);
         };
@@ -1113,4 +1438,335 @@ export default class OrreryView {
             }
         }
     }
+
+    // ===== CONTEXT VIEW METHODS (Parent/Children Navigation) =====
+
+    // GALAXY VIEW: Show parent + current + children seeds as large prominent suns
+    createGalaxyView() {
+        console.log('[OrreryView] Creating Galaxy View');
+        console.log('[OrreryView] crownContext:', this.crownContext);
+
+        this.viewMode = 'galaxy';
+        this.galaxySeeds = [];
+        this.galaxySeedOverlays = [];
+
+        if (!this.crownContext) {
+            console.error('[OrreryView] No crownContext available');
+            return;
+        }
+
+        const crownId = this.crownContext.crown?.id;
+        const parent = this.crownContext.parent;
+        const children = this.crownContext.children || [];
+
+        console.log('[OrreryView] Crown ID:', crownId, 'Parent:', parent, 'Children:', children);
+
+        // Layout: Parent above (Y=+100), Current center (Y=0), Children below (Y=-100)
+
+        // 1. Parent seed (if exists)
+        if (parent) {
+            this.createGalaxySeed({
+                crownId: parent.crown_id,
+                sonnetId: parent.sonnet_id,
+                title: parent.sonnet_title || 'Parent Seed',
+                authors: parent.authors,
+                generation: parent.generation,
+                position: new THREE.Vector3(0, 100, 0),
+                type: 'parent'
+            });
+        }
+
+        // 2. Current seed (center, most prominent)
+        this.createGalaxySeed({
+            crownId: crownId,
+            sonnetId: this.crownContext.source?.id,
+            title: this.crownContext.source?.title || this.sourceTitle,
+            authors: this.crownContext.source?.authors || 'Unknown',
+            generation: this.crownContext.crown?.generation || 0,
+            position: new THREE.Vector3(0, 0, 0),
+            type: 'current',
+            isCurrent: true
+        });
+
+        // 3. Children seeds (if exist)
+        const numChildren = children.length;
+        const spacing = 80;
+        if (Array.isArray(children)) {
+            children.forEach((child, index) => {
+                const xOffset = (index - (numChildren - 1) / 2) * spacing;
+                this.createGalaxySeed({
+                    crownId: child.crown_id,
+                    sonnetId: child.sonnet_id,
+                    title: `Child Crown ${child.crown_id}`,
+                    authors: 'Collaborative',
+                    generation: child.generation,
+                    completion: child.completion,
+                    position: new THREE.Vector3(xOffset, -100, 0),
+                    type: 'child'
+                });
+            });
+        }
+
+        // Connect seeds with lines
+        if (parent) {
+            this.createGalaxyConnection(new THREE.Vector3(0, 100, 0), new THREE.Vector3(0, 0, 0));
+        }
+        if (Array.isArray(children)) {
+            children.forEach((child, index) => {
+                const xOffset = (index - (numChildren - 1) / 2) * spacing;
+                this.createGalaxyConnection(new THREE.Vector3(0, 0, 0), new THREE.Vector3(xOffset, -100, 0));
+            });
+        }
+
+        console.log('[OrreryView] Galaxy View created with', this.galaxySeeds.length, 'seeds');
+    }
+
+    createGalaxySeed({ crownId, sonnetId, title, authors, generation, position, type, isCurrent, completion }) {
+        // HUGE prominent suns - need to be visible from camera distance 300
+        const size = isCurrent ? 45 : 38;
+        const geometry = new THREE.IcosahedronGeometry(size, 3);
+
+        // ULTRA BRIGHT colors with strong emissive - must pop against dark background
+        let color, emissive, emissiveIntensity;
+        if (isCurrent) {
+            color = 0xffeb3b;  // Current = blazing yellow
+            emissive = 0xffc107;
+            emissiveIntensity = 1.2;
+        } else if (type === 'parent') {
+            color = 0xff9800;  // Parent = bright orange
+            emissive = 0xff6f00;
+            emissiveIntensity = 1.0;
+        } else {
+            color = 0xfdd835;  // Children = bright yellow
+            emissive = 0xfbc02d;
+            emissiveIntensity = 0.9;
+        }
+
+        const material = new THREE.MeshPhongMaterial({
+            color: color,
+            emissive: emissive,
+            emissiveIntensity: emissiveIntensity,
+            transparent: false,
+            opacity: 1,
+            shininess: 100
+        });
+
+        const seed = new THREE.Mesh(geometry, material);
+        seed.position.copy(position);
+        seed.userData = {
+            type: 'galaxy-seed',
+            crownId: crownId,
+            sonnetId: sonnetId,
+            title: title,
+            authors: authors,
+            generation: generation,
+            isCurrent: isCurrent || false,
+            completion: completion,
+            isInteractive: true
+        };
+        this.scene.add(seed);
+        this.galaxySeeds.push(seed);
+
+        // MASSIVE glow halo to make seeds unmissable
+        const glowGeometry = new THREE.IcosahedronGeometry(size + 25, 2);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: color,
+            transparent: true,
+            opacity: isCurrent ? 0.3 : 0.2,
+            side: THREE.BackSide
+        });
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        glow.position.copy(position);
+        this.scene.add(glow);
+        seed.userData.glow = glow;
+
+        // Create text overlay
+        this.createGalaxySeedOverlay({ seed, title, authors, generation, completion });
+    }
+
+    createGalaxySeedOverlay({ seed, title, authors, generation, completion }) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 1000;
+        canvas.height = 280;
+
+        // VERY white background with near-opaque fill for maximum readability
+        context.fillStyle = 'rgba(255, 255, 255, 0.98)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Add subtle border for definition
+        context.strokeStyle = 'rgba(43, 43, 43, 0.3)';
+        context.lineWidth = 3;
+        context.strokeRect(0, 0, canvas.width, canvas.height);
+
+        // BLACK text for maximum contrast - LARGER fonts
+        context.fillStyle = '#000000';
+        context.font = 'italic bold 44px "EB Garamond"';
+        context.textAlign = 'center';
+
+        const truncated = title.length > 35 ? title.substring(0, 35) + '...' : title;
+        context.fillText(truncated, 500, 80);
+
+        context.font = 'bold 32px "EB Garamond"';
+        context.fillStyle = '#222222';
+        const genText = generation === 0 ? 'Classic' : `Gen ${generation}`;
+        context.fillText(`${authors} • ${genText}`, 500, 135);
+
+        if (completion !== undefined) {
+            context.font = 'bold 30px "Josefin Sans"';
+            const isComplete = completion && completion.startsWith && completion.split('/').filter(Boolean).length === 2 &&
+                              completion.split('/')[0] === completion.split('/')[1];
+            context.fillStyle = isComplete ? '#1B5E20' : '#E65100';
+            context.fillText(completion, 500, 190);
+
+            // Add status text
+            context.font = 'bold 24px "Josefin Sans"';
+            context.fillStyle = isComplete ? '#1B5E20' : '#E65100';
+            context.fillText(isComplete ? '✓ Complete' : '⧗ In Progress', 500, 230);
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const spriteMaterial = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            opacity: 1.0, // Always fully visible
+            depthTest: false // Render on top
+        });
+
+        const sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(90, 25, 1); // MUCH larger for visibility from far camera
+        sprite.position.copy(seed.position);
+        sprite.position.y += seed.userData.isCurrent ? 70 : 60;
+        sprite.userData = {
+            type: 'galaxy-seed-overlay',
+            linkedSeed: seed
+        };
+
+        this.galaxySeedOverlays.push(sprite);
+        this.scene.add(sprite);
+    }
+
+    createGalaxyConnection(start, end) {
+        const linePoints = [];
+        const steps = 20;
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const x = start.x + (end.x - start.x) * t;
+            const y = start.y + (end.y - start.y) * t;
+            const z = start.z + (end.z - start.z) * t;
+            linePoints.push(new THREE.Vector3(x, y, z));
+        }
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
+        const lineMaterial = new THREE.LineDashedMaterial({
+            color: 0xffd700,
+            opacity: 0.3,
+            transparent: true,
+            dashSize: 3,
+            gapSize: 2,
+            linewidth: 2
+        });
+        const line = new THREE.Line(lineGeometry, lineMaterial);
+        line.computeLineDistances();
+        this.scene.add(line);
+        this.connectionLines.push(line);
+    }
+
+
+    transitionToCrownDetail() {
+        console.log('[OrreryView] Transitioning to Crown Detail view');
+
+        // Clear galaxy view elements
+        this.galaxySeeds.forEach(seed => {
+            if (seed.userData.glow) {
+                this.scene.remove(seed.userData.glow);
+            }
+            this.scene.remove(seed);
+        });
+        this.galaxySeedOverlays.forEach(overlay => this.scene.remove(overlay));
+        this.galaxySeeds = [];
+        this.galaxySeedOverlays = [];
+
+        // Clear connection lines
+        this.connectionLines.forEach(line => this.scene.remove(line));
+        this.connectionLines = [];
+
+        // Switch to Crown Detail mode
+        this.viewMode = 'crown-detail';
+
+        // Recreate orbit group for Crown Detail elements
+        this.orbitGroup = new THREE.Group();
+        this.scene.add(this.orbitGroup);
+
+        // Create full Crown visualization
+        this.createCentralStar();
+        this.createSeedStarEnhancements();
+        this.createOrbitRing();
+        this.createNodes();
+        this.createConnectionLines();
+        this.createWordSprites();
+        this.createTextOverlays();
+        this.createGodRays();
+
+        // Zoom camera closer for detail view
+        this.cameraDistance = 120;
+        this.updateCameraPosition();
+
+        console.log('[OrreryView] Crown Detail view created');
+    }
+
+    transitionToGalaxyView() {
+        console.log('[OrreryView] Transitioning back to Galaxy view');
+
+        // Clear Crown Detail elements
+        if (this.seedStar) {
+            this.scene.remove(this.seedStar);
+            this.seedStar = null;
+        }
+        if (this.seedGlow) {
+            this.scene.remove(this.seedGlow);
+            this.seedGlow = null;
+        }
+        if (this.seedStarOverlay) {
+            this.scene.remove(this.seedStarOverlay);
+            this.seedStarOverlay = null;
+        }
+        if (this.orbitGroup) {
+            this.scene.remove(this.orbitGroup);
+            this.orbitGroup = null;
+        }
+
+        this.nodeMeshes.forEach(mesh => this.scene.remove(mesh));
+        this.wordSprites.forEach(sprite => this.scene.remove(sprite));
+        this.seedWordSprites.forEach(sprite => this.scene.remove(sprite));
+        this.textOverlays.forEach(overlay => this.scene.remove(overlay));
+        this.connectionLines.forEach(line => this.scene.remove(line));
+        this.godRays.forEach(ray => this.scene.remove(ray));
+
+        this.nodeMeshes = [];
+        this.wordSprites = [];
+        this.seedWordSprites = [];
+        this.textOverlays = [];
+        this.connectionLines = [];
+        this.godRays = [];
+        this.meshById.clear();
+
+        // Recreate Galaxy View
+        this.viewMode = 'galaxy';
+        this.createGalaxyView();
+
+        // Zoom camera back out
+        this.cameraDistance = 300;
+        this.updateCameraPosition();
+
+        console.log('[OrreryView] Galaxy view restored');
+    }
+
+    navigateToCrown(crownId) {
+        console.log('[OrreryView] Navigating to Crown:', crownId);
+        // Navigate to the VISUALIZATION page, not the scroll page
+        const currentUrl = new URL(window.location.href);
+        const newUrl = currentUrl.pathname.replace(/\/crown\/\d+\/visualize/, `/crown/${crownId}/visualize`) + currentUrl.search;
+        window.location.href = newUrl;
+    }
 }
+

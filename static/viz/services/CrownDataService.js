@@ -12,6 +12,7 @@ export default class CrownDataService {
 
         this.crownNodesCache = new Map(); // key: crownId → graph data
         this.crownStatsCache = new Map();
+        this.crownContextCache = new Map(); // key: crownId → context data (with genealogy)
         this.sonnetCache = new Map(); // key: sonnetId → sonnet payload
     }
 
@@ -23,6 +24,7 @@ export default class CrownDataService {
     invalidate() {
         this.crownNodesCache.clear();
         this.crownStatsCache.clear();
+        this.crownContextCache.clear();
         this.sonnetCache.clear();
     }
 
@@ -43,6 +45,16 @@ export default class CrownDataService {
 
         const data = await this.#fetchJson(`${this.basePath}/crown/${crownId}/stats`);
         this.crownStatsCache.set(crownId, data);
+        return data;
+    }
+
+    async getCrownContext(crownId = this.crownId) {
+        if (this.crownContextCache.has(crownId)) {
+            return this.crownContextCache.get(crownId);
+        }
+
+        const data = await this.#fetchJson(`${this.basePath}/crown/${crownId}/context`);
+        this.crownContextCache.set(crownId, data);
         return data;
     }
 
