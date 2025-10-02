@@ -58,41 +58,75 @@ A collaborative poetry platform for the Poetry Society of New York (PSNY) where 
 - **Styling**: Custom CSS with PSNY branding
 
 ## File Structure
+
+### Core Application Files
 ```
 psny-mayday/
-├── app.py                      # Main FastAPI server
+├── app.py                      # Main FastAPI server with fractal auto-spawning
 ├── models.py                   # Database models with fractal Crown schema
 ├── database.py                 # Database connection
 ├── seed.py                     # Seeds DB with Ted Berrigan's "Sonnet 1"
-├── mayday.db                   # Production SQLite database
+├── create_crown.py             # Manual Crown creation tool
+├── mayday.db                   # Production SQLite database (gitignored)
+├── requirements.txt            # Python dependencies
+```
+
+### Frontend Files
+```
 ├── templates/                  # Jinja2 HTML templates
-│   ├── signup.html
-│   ├── index.html             # Poet writing interface
-│   ├── crown_visualization.html
-│   ├── sonnet.html
-│   └── about.html
+│   ├── signup.html            # User signup page
+│   ├── waiting.html           # Waiting for pair page
+│   ├── index.html             # Poet writing interface (turn-based)
+│   ├── complete.html          # Sonnet completion celebration
+│   ├── crown_visualization.html # Crown viz with Jewels/Threads/Scroll
+│   ├── sonnet.html            # Individual sonnet view
+│   └── about.html             # About Mayday page
+│
 ├── static/
 │   ├── styles.css             # Main PSNY styling
 │   ├── viz_styles.css         # Visualization-specific styles
+│   ├── menu.js                # Mobile hamburger menu
 │   ├── images/
 │   │   └── psny-logo.png
-│   └── viz/                   # ES6 module architecture
-│       ├── main.js
-│       ├── ExperienceDirector.js
+│   └── viz/                   # ES6 module architecture for visualization
+│       ├── main.js            # Boot sequence
+│       ├── ExperienceDirector.js  # View orchestration
 │       ├── services/
-│       │   ├── AppState.js
-│       │   └── CrownDataService.js
+│       │   ├── AppState.js    # Reactive state management
+│       │   └── CrownDataService.js # API data fetching
 │       ├── views/
-│       │   ├── OrreryView.js       # 3D Jewels view
-│       │   ├── LineageTunnelView.js # Threads view
-│       │   ├── ScrollView.js       # Scroll view
-│       │   └── PoetStudioView.js   # Side panel
+│       │   ├── OrreryView.js       # 3D Jewels view (Three.js)
+│       │   ├── LineageTunnelView.js # Threads timeline view
+│       │   ├── ScrollView.js       # Scroll vertical list view
+│       │   └── PoetStudioView.js   # Side panel poem reader
 │       └── utils/
-│           ├── formatters.js
-│           └── metrics.js
-└── visualization_dev/          # Test data generation scripts
-    ├── generate_fractal_test_data.py
-    └── README.md
+│           ├── formatters.js   # Text formatting helpers
+│           └── metrics.js      # Analytics tracking
+```
+
+### Documentation & Development
+```
+├── README.md                   # Quick start guide
+├── claude.md                   # Full technical documentation (this file)
+├── VISION_BOARD.md            # Future ideas and expansion concepts
+│
+└── visualization_dev/          # Development tools
+    ├── generate_fractal_test_data.py # Generate test Crowns
+    ├── generate_test_data.py         # Legacy test data generator
+    ├── test_viz_api.py              # API testing script
+    ├── UNIFICATION_PLAN.md          # Database unification notes
+    └── README.md                    # Dev environment guide
+```
+
+### Git Ignored Files
+```
+.gitignore includes:
+- .venv/              # Virtual environment
+- __pycache__/        # Python cache
+- *.db                # All database files
+- .env                # Environment variables
+- .DS_Store           # macOS files
+- images/             # Local image assets
 ```
 
 ## Database Schema (Fractal Crown System)
