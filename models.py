@@ -53,7 +53,7 @@ class Crown(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     source_sonnet_id: int = Field(foreign_key="sourcesonnet.id")
     parent_sonnet_id: Optional[int] = Field(default=None, foreign_key="sonnet.id")  # Which completed Sonnet spawned this Crown
-    generation: int = 0  # 0=classic seed, 1=first gen, 2=second gen, etc.
+    generation: int = 1  # 1=classic seed, 2=first gen collaborative, 3=second gen, etc.
     status: str = "forming"
     created_at: datetime = Field(default_factory=datetime.utcnow)
 

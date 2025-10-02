@@ -39,14 +39,13 @@
                 <h2>The Crown</h2>
                 <div class="view-controls">
                     <select id="crown-selector" class="crown-selector">
-                        <option value="1">Crown 1 (14/14 ✓)</option>
-                        <option value="2">Crown 2 (14/14 ✓)</option>
-                        <option value="3">Crown 3 (7/14 ⧗)</option>
-                        <option value="4">Crown 4 (2/14 ⧗)</option>
+                        {% for crown in available_crowns %}
+                        <option value="{{ crown.id }}" {% if crown.id == crown_id %}selected{% endif %}>Crown {{ crown.id }}</option>
+                        {% endfor %}
                     </select>
                     <a href="#" class="view-link active" data-view="orbit">Jewels</a>
                     <a href="#" class="view-link" data-view="lineage">Threads</a>
-                    <a href="/crown/{{ crown_id }}" class="view-link">Scroll</a>
+                    <a href="#" class="view-link" data-view="scroll">Scroll</a>
                 </div>
             </div>
 
@@ -65,6 +64,11 @@
                         <div class="crown-status-badge" id="crown-status-badge-threads"></div>
                         <div id="seed-context-threads" class="seed-context seed-context--threads"></div>
                         <div id="lineage-scroll" class="lineage-scroll" role="list"></div>
+                    </div>
+                    <div id="scroll-stage" class="viz-stage viz-stage--scroll" hidden>
+                        <div class="crown-status-badge" id="crown-status-badge-scroll"></div>
+                        <div id="seed-context-scroll" class="seed-context seed-context--scroll"></div>
+                        <div id="scroll-content" class="scroll-content"></div>
                     </div>
                     <div id="legacy-stage" class="viz-stage viz-stage--legacy" hidden>
                         <div id="sigma-container" class="sigma-container"></div>

@@ -27,9 +27,8 @@ export default class LineageTunnelView {
             card.tabIndex = 0;
             card.innerHTML = `
                 <p class="lineage-sequence">${formatOrdinal(node.completion_order || node.position)}</p>
-                <h4 class="lineage-title">${node.last_line}</h4>
+                <h4 class="lineage-title">${node.first_line}</h4>
                 <p class="lineage-authors">${node.authors}</p>
-                <p class="lineage-first-line">${node.first_line}</p>
             `;
 
             card.addEventListener('click', () => {

@@ -4,7 +4,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse
 from sqlmodel import Session, select
 from database import get_session
-from visualization_dev.viz_database import get_viz_session
 from models import User, Sonnet, Line, Turn, Crown, Pair, SourceSonnet, SourceLine
 import secrets
 
@@ -13,6 +12,68 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
+
+
+def spawn_source_sonnet_from_completed(sonnet_id: int, session: Session):
+    """
+    When a sonnet is completed, automatically create a new SourceSonnet from it.
+    This allows completed sonnets to become seeds for future Crowns.
+    """
+    # Get the completed sonnet and its lines
+    sonnet = session.exec(select(Sonnet).where(Sonnet.id == sonnet_id)).first()
+    if not sonnet:
+        return None
+
+    lines = session.exec(
+        select(Line)
+        .where(Line.sonnet_id == sonnet_id)
+        .order_by(Line.line_number)
+    ).all()
+
+    if len(lines) != 14:
+        return None
+
+    # Get the pair info for authors
+    pair = session.exec(select(Pair).where(Pair.sonnet_id == sonnet_id)).first()
+    if not pair:
+        return None
+
+    user1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
+    user2 = session.exec(select(User).where(User.id == pair.user_2_id)).first()
+
+    # Create title from first line
+    title = lines[0].text
+
+    # Create new SourceSonnet
+    new_source = SourceSonnet(
+        title=title,
+        source_type="collaborative",
+        parent_sonnet_id=sonnet_id
+    )
+    session.add(new_source)
+    session.commit()
+    session.refresh(new_source)
+
+    # Copy all 14 lines to SourceLine
+    for line in lines:
+        source_line = SourceLine(
+            source_sonnet_id=new_source.id,
+            line_number=line.line_number,
+            text=line.text
+        )
+        session.add(source_line)
+
+    # Mark that this sonnet spawned a source
+    sonnet.spawned_source_sonnet_id = new_source.id
+    session.add(sonnet)
+
+    session.commit()
+
+    print(f"✨ Spawned new SourceSonnet #{new_source.id} from Sonnet #{sonnet_id}")
+    print(f"   Title: \"{title}\"")
+    print(f"   Authors: {user1.pen_name if user1 else '?'} & {user2.pen_name if user2 else '?'}")
+
+    return new_source
 
 
 def try_pair_users(session: Session):
@@ -24,8 +85,54 @@ def try_pair_users(session: Session):
         return None
 
     crown = session.exec(select(Crown).where(Crown.status == "forming")).first()
+
+    # If no forming Crown, try to create a new one from next available SourceSonnet
     if not crown:
-        return None
+        # Get the next unused SourceSonnet (one that hasn't spawned a Crown yet)
+        unused_source = session.exec(
+            select(SourceSonnet)
+            .where(~SourceSonnet.id.in_(
+                select(Crown.source_sonnet_id)
+            ))
+            .order_by(SourceSonnet.id)
+        ).first()
+
+        if not unused_source:
+            print("⚠️  No unused SourceSonnets available to create new Crown")
+            return None
+
+        # Get the parent Crown's generation (if collaborative)
+        parent_generation = 1
+        if unused_source.source_type == "collaborative" and unused_source.parent_sonnet_id:
+            parent_sonnet = session.exec(
+                select(Sonnet).where(Sonnet.id == unused_source.parent_sonnet_id)
+            ).first()
+            if parent_sonnet:
+                parent_pair = session.exec(
+                    select(Pair).where(Pair.sonnet_id == parent_sonnet.id)
+                ).first()
+                if parent_pair:
+                    parent_crown = session.exec(
+                        select(Crown).where(Crown.id == parent_pair.crown_id)
+                    ).first()
+                    if parent_crown:
+                        parent_generation = parent_crown.generation
+
+        # Create new Crown
+        new_crown = Crown(
+            source_sonnet_id=unused_source.id,
+            parent_sonnet_id=unused_source.parent_sonnet_id,
+            generation=parent_generation + 1 if unused_source.source_type == "collaborative" else 1,
+            status="forming"
+        )
+        session.add(new_crown)
+        session.commit()
+        session.refresh(new_crown)
+
+        crown = new_crown
+
+        print(f"🌟 Created new Crown #{crown.id} (Generation {crown.generation})")
+        print(f"   Seed: \"{unused_source.title}\" ({unused_source.source_type})")
 
     existing_pairs = session.exec(
         select(Pair).where(Pair.crown_id == crown.id)
@@ -310,6 +417,9 @@ async def add_line(
 
         session.commit()
 
+        # 🌱 Spawn a new SourceSonnet from this completed sonnet
+        spawn_source_sonnet_from_completed(sonnet.id, session)
+
         return RedirectResponse(f"/complete?u={u}", status_code=303)
     else:
         other_user_id = pair.user_2_id if user.id == pair.user_1_id else pair.user_1_id
@@ -401,181 +511,10 @@ async def sonnet_view(request: Request, sonnet_id: int, u: str = None, session: 
     })
 
 
-@app.get("/crown")
-async def crown_view(request: Request, u: str = None, session: Session = Depends(get_session)):
-    user = None
-    if u:
-        user = session.exec(select(User).where(User.code == u)).first()
-
-    crown = session.exec(select(Crown)).first()
-    if not crown:
-        return templates.TemplateResponse("crown.html", {
-            "request": request,
-            "user": user,
-            "error": "No crown found"
-        })
-
-    source_sonnet = session.exec(
-        select(SourceSonnet).where(SourceSonnet.id == crown.source_sonnet_id)
-    ).first()
-
-    # Get seed first line and authors
-    seed_first_line = None
-    seed_authors = None
-    if source_sonnet:
-        first_line_obj = session.exec(
-            select(SourceLine)
-            .where(SourceLine.source_sonnet_id == source_sonnet.id)
-            .where(SourceLine.line_number == 1)
-        ).first()
-        if first_line_obj:
-            seed_first_line = first_line_obj.text
-
-        # Get authors based on source type
-        if source_sonnet.source_type == "classic":
-            seed_authors = source_sonnet.title
-        elif source_sonnet.source_type == "collaborative" and source_sonnet.parent_sonnet_id:
-            parent_pair = session.exec(
-                select(Pair).where(Pair.sonnet_id == source_sonnet.parent_sonnet_id)
-            ).first()
-            if parent_pair:
-                user1 = session.exec(select(User).where(User.id == parent_pair.user_1_id)).first()
-                user2 = session.exec(select(User).where(User.id == parent_pair.user_2_id)).first()
-                if user1 and user2:
-                    seed_authors = f"{user1.pen_name} & {user2.pen_name}"
-
-    pairs = session.exec(
-        select(Pair)
-        .where(Pair.crown_id == crown.id)
-        .where(Pair.status == "complete")
-        .order_by(Pair.source_line_start)
-    ).all()
-
-    crown_sonnets = []
-    for pair in pairs:
-        lines = session.exec(
-            select(Line)
-            .where(Line.sonnet_id == pair.sonnet_id)
-            .order_by(Line.line_number)
-        ).all()
-
-        user_1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
-        user_2 = session.exec(select(User).where(User.id == pair.user_2_id)).first()
-
-        if not user_1 or not user_2:
-            continue
-
-        sonnet_data = {
-            "sonnet_id": pair.sonnet_id,
-            "pair_id": pair.id,
-            "source_line_start": pair.source_line_start,
-            "lines": [{"text": line.text, "is_source": line.line_number in [1, 14]} for line in lines],
-            "authors": f"{user_1.pen_name} & {user_2.pen_name}"
-        }
-        crown_sonnets.append(sonnet_data)
-
-    return templates.TemplateResponse("crown.html", {
-        "request": request,
-        "user": user,
-        "crown": crown,
-        "source_sonnet": source_sonnet,
-        "seed_first_line": seed_first_line,
-        "seed_authors": seed_authors,
-        "crown_sonnets": crown_sonnets,
-        "pairs_with_sonnets": len(pairs)
-    })
-
-
-@app.get("/crown/{crown_id}")
-async def crown_view_by_id(request: Request, crown_id: int, u: str = None, session: Session = Depends(get_viz_session)):
-    """Crown scroll view for specific crown ID"""
-    user = None
-    if u:
-        user = session.exec(select(User).where(User.code == u)).first()
-
-    crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
-    if not crown:
-        return templates.TemplateResponse("crown.html", {
-            "request": request,
-            "user": user,
-            "error": f"Crown {crown_id} not found"
-        })
-
-    source_sonnet = session.exec(
-        select(SourceSonnet).where(SourceSonnet.id == crown.source_sonnet_id)
-    ).first()
-
-    # Get seed first line and authors
-    seed_first_line = None
-    seed_authors = None
-    if source_sonnet:
-        first_line_obj = session.exec(
-            select(SourceLine)
-            .where(SourceLine.source_sonnet_id == source_sonnet.id)
-            .where(SourceLine.line_number == 1)
-        ).first()
-        if first_line_obj:
-            seed_first_line = first_line_obj.text
-
-        # Get authors based on source type
-        if source_sonnet.source_type == "classic":
-            seed_authors = source_sonnet.title
-        elif source_sonnet.source_type == "collaborative" and source_sonnet.parent_sonnet_id:
-            parent_pair = session.exec(
-                select(Pair).where(Pair.sonnet_id == source_sonnet.parent_sonnet_id)
-            ).first()
-            if parent_pair:
-                user1 = session.exec(select(User).where(User.id == parent_pair.user_1_id)).first()
-                user2 = session.exec(select(User).where(User.id == parent_pair.user_2_id)).first()
-                if user1 and user2:
-                    seed_authors = f"{user1.pen_name} & {user2.pen_name}"
-
-    pairs = session.exec(
-        select(Pair)
-        .where(Pair.crown_id == crown.id)
-        .where(Pair.status == "complete")
-        .order_by(Pair.source_line_start)
-    ).all()
-
-    crown_sonnets = []
-    for pair in pairs:
-        lines = session.exec(
-            select(Line)
-            .where(Line.sonnet_id == pair.sonnet_id)
-            .order_by(Line.line_number)
-        ).all()
-
-        user_1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
-        user_2 = session.exec(select(User).where(User.id == pair.user_2_id)).first()
-
-        if not user_1 or not user_2:
-            continue
-
-        sonnet_data = {
-            "sonnet_id": pair.sonnet_id,
-            "pair_id": pair.id,
-            "source_line_start": pair.source_line_start,
-            "lines": [{"text": line.text, "is_source": line.line_number in [1, 14]} for line in lines],
-            "authors": f"{user_1.pen_name} & {user_2.pen_name}"
-        }
-        crown_sonnets.append(sonnet_data)
-
-    return templates.TemplateResponse("crown.html", {
-        "request": request,
-        "user": user,
-        "crown": crown,
-        "source_sonnet": source_sonnet,
-        "seed_first_line": seed_first_line,
-        "seed_authors": seed_authors,
-        "crown_sonnets": crown_sonnets,
-        "pairs_with_sonnets": len(pairs)
-    })
-
-
-# VISUALIZATION API ENDPOINTS (uses viz_database for testing)
+# VISUALIZATION API ENDPOINTS
 
 @app.get("/api/crown/{crown_id}/nodes")
-async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_session)):
+async def crown_nodes_api(crown_id: int, session: Session = Depends(get_session)):
     """Return JSON data for Crown visualization"""
 
     crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
@@ -672,8 +611,9 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_sess
                 }
                 connections.append(connection)
 
-    # Get source sonnet first line for seed star
+    # Get source sonnet first line and authors for seed star
     source_first_line = None
+    source_authors = None
     if source_sonnet:
         source_lines = session.exec(
             select(SourceLine)
@@ -683,11 +623,26 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_sess
         if source_lines:
             source_first_line = source_lines[0].text
 
+        # Get authors from parent sonnet if this is a collaborative source
+        if source_sonnet.source_type == "collaborative" and source_sonnet.parent_sonnet_id:
+            parent_pair = session.exec(
+                select(Pair)
+                .where(Pair.sonnet_id == source_sonnet.parent_sonnet_id)
+            ).first()
+            if parent_pair:
+                user_1 = session.exec(select(User).where(User.id == parent_pair.user_1_id)).first()
+                user_2 = session.exec(select(User).where(User.id == parent_pair.user_2_id)).first()
+                if user_1 and user_2:
+                    source_authors = f"{user_1.pen_name} & {user_2.pen_name}"
+        elif source_sonnet.source_type == "classic":
+            source_authors = "Ted Berrigan"
+
     return {
         "crown_id": crown_id,
         "status": crown.status,
         "source_title": source_sonnet.title if source_sonnet else "Unknown",
         "source_first_line": source_first_line,
+        "source_authors": source_authors,
         "total_nodes": len(nodes),
         "nodes": nodes,
         "connections": connections
@@ -695,7 +650,7 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_viz_sess
 
 
 @app.get("/api/crown/{crown_id}/stats")
-async def crown_stats_api(crown_id: int, session: Session = Depends(get_viz_session)):
+async def crown_stats_api(crown_id: int, session: Session = Depends(get_session)):
     """Return Crown statistics for visualization"""
 
     crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
@@ -719,7 +674,7 @@ async def crown_stats_api(crown_id: int, session: Session = Depends(get_viz_sess
 
 
 @app.get("/api/crown/{crown_id}/context")
-async def crown_context_api(crown_id: int, session: Session = Depends(get_viz_session)):
+async def crown_context_api(crown_id: int, session: Session = Depends(get_session)):
     """Return Crown with full genealogical context for fractal navigation"""
 
     crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
@@ -744,9 +699,8 @@ async def crown_context_api(crown_id: int, session: Session = Depends(get_viz_se
 
         # Get authors based on source type
         if source_sonnet.source_type == "classic":
-            # For classic poems, use the title as author indicator (e.g., "Percy Shelley")
-            # Extract author from title if formatted as "Title by Author" or use title
-            source_authors = source_sonnet.title  # For now use title, can be enhanced
+            # For Ted Berrigan's "Sonnet 1", use author name
+            source_authors = "Ted Berrigan"
         elif source_sonnet.source_type == "collaborative" and source_sonnet.parent_sonnet_id:
             # For collaborative, get the parent sonnet's authors
             parent_pair = session.exec(
@@ -860,7 +814,7 @@ async def crown_context_api(crown_id: int, session: Session = Depends(get_viz_se
 
 
 @app.get("/api/sonnet/{sonnet_id}/lines")
-async def sonnet_lines_api(sonnet_id: int, session: Session = Depends(get_viz_session)):
+async def sonnet_lines_api(sonnet_id: int, session: Session = Depends(get_session)):
     """Return all lines of a specific sonnet for poetry revelation"""
 
     lines = session.exec(
@@ -898,6 +852,88 @@ async def sonnet_lines_api(sonnet_id: int, session: Session = Depends(get_viz_se
     }
 
 
+@app.get("/api/crown/{crown_id}/scroll")
+async def crown_scroll_api(crown_id: int, session: Session = Depends(get_session)):
+    """API endpoint for scroll view data"""
+    crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
+    if not crown:
+        return JSONResponse({"error": f"Crown {crown_id} not found"}, status_code=404)
+
+    source_sonnet = session.exec(
+        select(SourceSonnet).where(SourceSonnet.id == crown.source_sonnet_id)
+    ).first()
+
+    # Get seed first line and authors
+    seed_first_line = None
+    seed_authors = None
+    if source_sonnet:
+        first_line_obj = session.exec(
+            select(SourceLine)
+            .where(SourceLine.source_sonnet_id == source_sonnet.id)
+            .where(SourceLine.line_number == 1)
+        ).first()
+
+        if source_sonnet.source_type == "classic":
+            seed_first_line = source_sonnet.title
+            seed_authors = "Ted Berrigan"
+        elif source_sonnet.source_type == "collaborative" and source_sonnet.parent_sonnet_id:
+            seed_first_line = first_line_obj.text if first_line_obj else None
+            parent_pair = session.exec(
+                select(Pair).where(Pair.sonnet_id == source_sonnet.parent_sonnet_id)
+            ).first()
+            if parent_pair:
+                user1 = session.exec(select(User).where(User.id == parent_pair.user_1_id)).first()
+                user2 = session.exec(select(User).where(User.id == parent_pair.user_2_id)).first()
+                if user1 and user2:
+                    seed_authors = f"{user1.pen_name} & {user2.pen_name}"
+
+    # Get completed pairs/sonnets
+    pairs = session.exec(
+        select(Pair)
+        .where(Pair.crown_id == crown.id)
+        .where(Pair.status == "complete")
+        .order_by(Pair.source_line_start)
+    ).all()
+
+    sonnets = []
+    for pair in pairs:
+        lines = session.exec(
+            select(Line)
+            .where(Line.sonnet_id == pair.sonnet_id)
+            .order_by(Line.line_number)
+        ).all()
+
+        user_1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
+        user_2 = session.exec(select(User).where(User.id == pair.user_2_id)).first()
+
+        if not user_1 or not user_2:
+            continue
+
+        sonnets.append({
+            "id": pair.sonnet_id,
+            "authors": f"{user_1.pen_name} & {user_2.pen_name}",
+            "lines": [
+                {"text": line.text, "is_source": line.line_number in [1, 14]}
+                for line in lines
+            ]
+        })
+
+    # Calculate completion
+    pairs_with_sonnets = len(pairs)
+    total_pairs = 14
+    completion = f"{pairs_with_sonnets}/{total_pairs}"
+
+    return {
+        "crown_id": crown_id,
+        "status": crown.status,
+        "completion": completion,
+        "seed_first_line": seed_first_line,
+        "seed_authors": seed_authors,
+        "generation": crown.generation if crown.generation else 1,
+        "sonnets": sonnets
+    }
+
+
 @app.get("/crown/{crown_id}/visualize")
 async def crown_visualization(request: Request, crown_id: int, u: str = None, session: Session = Depends(get_session)):
     """Crown visualization page"""
@@ -905,17 +941,22 @@ async def crown_visualization(request: Request, crown_id: int, u: str = None, se
     if u:
         user = session.exec(select(User).where(User.code == u)).first()
 
-    # Read the HTML file directly
-    import os
-    html_path = os.path.join("visualization_dev", "crown_viz.html")
-    with open(html_path, "r") as f:
-        html_content = f.read()
+    # Get all available crowns
+    available_crowns = session.exec(select(Crown)).all()
 
-    # Simple template replacement for crown_id and user
-    html_content = html_content.replace("{{ crown_id }}", str(crown_id))
-    if u:
-        html_content = html_content.replace('href="/crown/1"', f'href="/crown/1?u={u}"')
-        html_content = html_content.replace('href="/crown"', f'href="/crown?u={u}"')
+    # Verify the requested crown exists
+    crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
+    if not crown:
+        return templates.TemplateResponse("crown_visualization.html", {
+            "request": request,
+            "crown_id": 1,  # Default to Crown 1
+            "available_crowns": available_crowns,
+            "user": user
+        })
 
-    from fastapi.responses import HTMLResponse
-    return HTMLResponse(content=html_content)
+    return templates.TemplateResponse("crown_visualization.html", {
+        "request": request,
+        "crown_id": crown_id,
+        "available_crowns": available_crowns,
+        "user": user
+    })

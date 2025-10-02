@@ -41,7 +41,7 @@ export default class OrreryView {
         this.seedStarOverlay = null;
 
         // VIEW MODE: 'galaxy' or 'crown-detail'
-        this.viewMode = 'galaxy';
+        this.viewMode = 'crown-detail'; // Default to crown-detail for Jewels view
         this.currentDetailCrownId = null;
 
         // Galaxy view elements (parent + current + children seeds)
@@ -60,10 +60,10 @@ export default class OrreryView {
         this.dragStartY = 0;
         this.dragStartRotation = 0;
 
-        // Camera controls (adjusted for two-level view system)
-        this.cameraDistance = 300; // Start further back for galaxy view
+        // Camera controls (adjusted for better initial view)
+        this.cameraDistance = 180; // Slightly zoomed out (was 150, originally 300)
         this.cameraTheta = 0;
-        this.cameraPhi = Math.PI / 4; // 45 degrees for better view
+        this.cameraPhi = Math.PI / 2.5; // Even higher angle (~72°, was PI/3 = 60°)
         this.minDistance = 80; // Allow close zoom in crown detail
         this.maxDistance = 500; // Allow far zoom for galaxy overview
         this.dragStartTheta = 0;
@@ -115,26 +115,26 @@ export default class OrreryView {
 
     createLights() {
         // Much brighter ambient for overall visibility
-        const ambient = new THREE.AmbientLight(0xffffff, 1.0);
+        const ambient = new THREE.AmbientLight(0xffffff, 1.5); // Increased from 1.0 to 1.5
         this.scene.add(ambient);
 
         // Warm central glow - brighter
-        const pointLight = new THREE.PointLight(0xffe4c2, 3.0, 450, 1.5);
+        const pointLight = new THREE.PointLight(0xffe4c2, 4.0, 450, 1.5); // Increased from 3.0 to 4.0
         pointLight.position.set(0, 10, 0);
         this.scene.add(pointLight);
 
         // Brighter rim light for definition
-        const rimLight = new THREE.DirectionalLight(0xa8c5ff, 1.5);
+        const rimLight = new THREE.DirectionalLight(0xa8c5ff, 2.0); // Increased from 1.5 to 2.0
         rimLight.position.set(-60, 40, 60);
         this.scene.add(rimLight);
 
         // Brighter fill light from opposite side
-        const fillLight = new THREE.DirectionalLight(0xffd4a8, 0.8);
+        const fillLight = new THREE.DirectionalLight(0xffd4a8, 1.2); // Increased from 0.8 to 1.2
         fillLight.position.set(60, 20, -60);
         this.scene.add(fillLight);
 
         // Additional top light for depth
-        const topLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        const topLight = new THREE.DirectionalLight(0xffffff, 1.0); // Increased from 0.6 to 1.0
         topLight.position.set(0, 100, 0);
         this.scene.add(topLight);
     }
@@ -186,14 +186,19 @@ export default class OrreryView {
         context.font = 'italic 24px "EB Garamond"';
         context.textAlign = 'center';
 
-        const title = this.crownContext.source?.title || this.sourceTitle;
-        const truncated = title.length > 40 ? title.substring(0, 40) + '...' : title;
+        // For classic seed, show title; for collaborative, show first line
+        const isClassic = this.crownContext.crown?.generation === 1;
+        const displayText = isClassic
+            ? (this.crownContext.source?.title || this.sourceTitle)
+            : (this.sourceFirstLine || this.crownContext.source?.title || 'Unknown');
+        const truncated = displayText.length > 40 ? displayText.substring(0, 40) + '...' : displayText;
         context.fillText(truncated, 256, 50);
 
         context.font = '18px "EB Garamond"';
         context.fillStyle = 'rgba(43, 43, 43, 0.7)';
-        const authors = this.crownContext.source?.authors || 'Unknown';
-        const genText = this.crownContext.crown?.generation === 0 ? 'Classic Seed' : `Generation ${this.crownContext.crown?.generation || 1} Seed`;
+        const authors = this.crownContext?.source?.authors || 'Unknown';
+        const generation = this.crownContext?.crown?.generation || 1;
+        const genText = generation === 1 ? 'Classic Seed' : `Generation ${generation} Seed`;
         context.fillText(`${authors} • ${genText}`, 256, 85);
 
         const texture = new THREE.CanvasTexture(canvas);
@@ -585,67 +590,48 @@ export default class OrreryView {
 
         this.nodes.forEach((node) => {
             const firstLine = node.first_line || 'A sonnet in the making';
+            const authors = node.authors || 'Unknown';
 
-            // Create high-res canvas for text wrapping around orb
+            // Create canvas with background similar to seed star
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             canvas.width = 512;
-            canvas.height = 256;
+            canvas.height = 128;
 
-            // Elegant text rendering
-            context.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            context.font = 'italic 32px "EB Garamond", serif';
+            // Cream background
+            context.fillStyle = 'rgba(255, 251, 226, 0.92)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            // First line - italic title
+            context.fillStyle = '#2b2b2b';
+            context.font = 'italic 24px "EB Garamond"';
             context.textAlign = 'center';
-            context.textBaseline = 'middle';
-            context.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            context.shadowBlur = 4;
+            const truncated = firstLine.length > 40 ? firstLine.substring(0, 40) + '...' : firstLine;
+            context.fillText(truncated, 256, 50);
 
-            // Word wrap for long lines
-            const words = firstLine.split(' ');
-            const lines = [];
-            let currentLine = words[0];
-
-            for (let i = 1; i < words.length; i++) {
-                const testLine = currentLine + ' ' + words[i];
-                const metrics = context.measureText(testLine);
-                if (metrics.width > 450) {
-                    lines.push(currentLine);
-                    currentLine = words[i];
-                } else {
-                    currentLine = testLine;
-                }
-            }
-            lines.push(currentLine);
-
-            // Render lines centered
-            const lineHeight = 40;
-            const startY = (canvas.height - (lines.length - 1) * lineHeight) / 2;
-            lines.forEach((line, index) => {
-                context.fillText(line, canvas.width / 2, startY + index * lineHeight);
-            });
+            // Authors - smaller subtitle
+            context.font = '18px "EB Garamond"';
+            context.fillStyle = 'rgba(43, 43, 43, 0.7)';
+            context.fillText(authors, 256, 85);
 
             const texture = new THREE.CanvasTexture(canvas);
-            texture.needsUpdate = true;
-
             const spriteMaterial = new THREE.SpriteMaterial({
                 map: texture,
                 transparent: true,
-                opacity: 0,
-                depthTest: true,
-                depthWrite: false
+                opacity: 0
             });
 
             const sprite = new THREE.Sprite(spriteMaterial);
             const baseX = Math.cos(node.angle) * radius;
             const baseZ = Math.sin(node.angle) * radius;
 
-            // Position ABOVE the orb for readability
-            sprite.position.set(baseX, 8, baseZ);
-            sprite.scale.set(20, 10, 1);
+            // Position above the orb
+            sprite.position.set(baseX, 12, baseZ);
+            sprite.scale.set(20, 5, 1); // Smaller, more compact
 
             sprite.userData = {
                 nodeId: node.id,
-                basePosition: { x: baseX, y: 8, z: baseZ },
+                basePosition: { x: baseX, y: 12, z: baseZ },
                 isTextOverlay: true
             };
 
@@ -886,7 +872,7 @@ export default class OrreryView {
         // Subtitle
         context.font = 'bold 22px "EB Garamond"';
         context.fillStyle = '#333333';
-        const genText = generation === 0 ? 'Classic' : `Gen ${generation}`;
+        const genText = generation === 1 ? 'Classic' : `Gen ${generation}`;
         const label = type === 'parent' ? '↑ Parent Crown' : '↓ Child Crown';
         context.fillText(`${label} • ${genText}`, 300, 80);
 
@@ -924,7 +910,8 @@ export default class OrreryView {
         const y = this.cameraDistance * Math.cos(this.cameraPhi);
         const z = this.cameraDistance * Math.sin(this.cameraPhi) * Math.sin(this.cameraTheta);
         this.camera.position.set(x, y, z);
-        this.camera.lookAt(0, 0, 0);
+        // Look slightly down to center the Crown better in viewport
+        this.camera.lookAt(0, -20, 0);
     }
 
     setupEvents() {
@@ -1609,7 +1596,7 @@ export default class OrreryView {
 
         context.font = 'bold 32px "EB Garamond"';
         context.fillStyle = '#222222';
-        const genText = generation === 0 ? 'Classic' : `Gen ${generation}`;
+        const genText = generation === 1 ? 'Classic' : `Gen ${generation}`;
         context.fillText(`${authors} • ${genText}`, 500, 135);
 
         if (completion !== undefined) {

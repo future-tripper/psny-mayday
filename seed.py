@@ -9,7 +9,11 @@ def seed_data():
     with Session(engine) as session:
         session.exec(select(SourceSonnet)).first()
 
-        source_sonnet = SourceSonnet(title="Wind Giving Presence")
+        source_sonnet = SourceSonnet(
+            title="Sonnet 1",
+            source_type="classic",
+            parent_sonnet_id=None
+        )
         session.add(source_sonnet)
         session.commit()
         session.refresh(source_sonnet)
@@ -41,7 +45,12 @@ def seed_data():
 
         session.commit()
 
-        crown = Crown(source_sonnet_id=source_sonnet.id, status="forming")
+        crown = Crown(
+            source_sonnet_id=source_sonnet.id,
+            generation=1,
+            parent_sonnet_id=None,
+            status="forming"
+        )
         session.add(crown)
         session.commit()
 

@@ -2,12 +2,11 @@
 Generate multi-generation Crown test data for fractal visualization testing.
 
 Structure:
-- Gen 0: 1 classic seed sonnet (Ozymandias)
-- Gen 1: Crown 1 with 14 complete sonnets
+- Gen 1: 1 classic seed sonnet (Ted Berrigan's Sonnet 1)
+- Gen 1: Crown 1 with 14 complete sonnets from seed
 - Gen 2:
-  - Crown 2 from sonnet #1 (14 sonnets complete)
-  - Crown 3 from sonnet #2 (7 sonnets complete)
-  - Crown 4 from sonnet #3 (2 sonnets complete)
+  - Crown 2 from sonnet #1 of Crown 1 (14 sonnets complete)
+  - Crown 3 from sonnet #2 of Crown 1 (7 sonnets complete, partial)
 """
 
 import sys
@@ -57,9 +56,9 @@ def create_source_sonnet_from_completed(sonnet, session):
     if len(lines) < 14:
         return None
 
-    # Create SourceSonnet
+    # Create SourceSonnet - title is the full first line
     source_sonnet = SourceSonnet(
-        title=f"{lines[0].text[:40]}...",
+        title=lines[0].text,
         source_type="collaborative",
         parent_sonnet_id=sonnet.id
     )
@@ -125,11 +124,11 @@ def main():
     SQLModel.metadata.create_all(engine)
 
     with Session(engine) as session:
-        # ===== GENERATION 0: Classic Seed =====
-        print("📜 Generation 0: Creating classic seed sonnet (Ozymandias)")
+        # ===== GENERATION 1: Classic Seed =====
+        print("📜 Generation 1: Creating classic seed sonnet (Ted Berrigan's Sonnet 1)")
 
         seed_sonnet = SourceSonnet(
-            title="Ozymandias",
+            title="Sonnet 1",
             source_type="classic",
             parent_sonnet_id=None
         )
@@ -137,25 +136,25 @@ def main():
         session.commit()
         session.refresh(seed_sonnet)
 
-        # Ozymandias lines
-        ozymandias_lines = [
-            "I met a traveller from an antique land,",
-            "Who said—'Two vast and trunkless legs of stone",
-            "Stand in the desert. . . . Near them, on the sand,",
-            "Half sunk a shattered visage lies, whose frown,",
-            "And wrinkled lip, and sneer of cold command,",
-            "Tell that its sculptor well those passions read",
-            "Which yet survive, stamped on these lifeless things,",
-            "The hand that mocked them, and the heart that fed;",
-            "And on the pedestal, these words appear:",
-            "My name is Ozymandias, King of Kings;",
-            "Look on my Works, ye Mighty, and despair!",
-            "Nothing beside remains. Round the decay",
-            "Of that colossal Wreck, boundless and bare",
-            "The lone and level sands stretch far away.'"
+        # Ted Berrigan's Sonnet 1
+        berrigan_lines = [
+            "His piercing pince-nez. Some dim frieze",
+            "Hands point to a dim frieze, in the dark night.",
+            "In the book of his music the corners have straightened:",
+            "Which owe their presence to our sleeping hands.",
+            "The ox-blood from the hands which play",
+            "For fire for warmth for hands for growth",
+            "Is there room in the room that you room in?",
+            "Upon his structured tomb:",
+            "Still they mean something. For the dance",
+            "And the architecture.",
+            "Weave among incidents",
+            "May be portentous to him",
+            "We are the sleeping fragments of his sky,",
+            "Wind giving presence to fragments."
         ]
 
-        for i, text in enumerate(ozymandias_lines, 1):
+        for i, text in enumerate(berrigan_lines, 1):
             source_line = SourceLine(
                 source_sonnet_id=seed_sonnet.id,
                 line_number=i,
@@ -240,24 +239,31 @@ def main():
             session.add(user_2)
 
             # Add bookend lines
-            source_lines = session.exec(
+            # Get the two source lines: start line and the next line (wrapping at 14)
+            start_line = session.exec(
                 select(SourceLine)
                 .where(SourceLine.source_sonnet_id == seed_sonnet.id)
-                .where(SourceLine.line_number.in_([source_line_start, (source_line_start % 14) + 1]))
-                .order_by(SourceLine.line_number)
-            ).all()
+                .where(SourceLine.line_number == source_line_start)
+            ).first()
+
+            end_line_num = (source_line_start % 14) + 1
+            end_line = session.exec(
+                select(SourceLine)
+                .where(SourceLine.source_sonnet_id == seed_sonnet.id)
+                .where(SourceLine.line_number == end_line_num)
+            ).first()
 
             line_1 = Line(
                 sonnet_id=sonnet.id,
                 line_number=1,
-                text=source_lines[0].text,
+                text=start_line.text,
                 author_user_id=user_1.id,
                 created_at=start_date + timedelta(days=pair_num)
             )
             line_14 = Line(
                 sonnet_id=sonnet.id,
                 line_number=14,
-                text=source_lines[1].text if len(source_lines) > 1 else source_lines[0].text,
+                text=end_line.text,
                 author_user_id=user_2.id,
                 created_at=start_date + timedelta(days=pair_num)
             )
@@ -290,16 +296,13 @@ def main():
         print("  Creating Crown 3 from Gen1 Sonnet #2 (7/14 complete)")
         create_gen2_crown(gen1_sonnets[1], 3, 7, session)
 
-        # Crown 4: Spawned from sonnet #3, JUST STARTED (2 sonnets)
-        print("  Creating Crown 4 from Gen1 Sonnet #3 (2/14 complete)")
-        create_gen2_crown(gen1_sonnets[2], 4, 2, session)
-
         print(f"\n✅ Multi-generation test data complete!")
         print(f"📊 Summary:")
-        print(f"   - Gen 0: 1 classic seed")
-        print(f"   - Gen 1: 1 Crown (14 sonnets, all complete)")
-        print(f"   - Gen 2: 3 Crowns (14, 7, and 2 sonnets)")
-        print(f"   - Total: 37 sonnets across 3 generations")
+        print(f"   - Gen 1: 1 classic seed (Ted Berrigan's Sonnet 1)")
+        print(f"   - Gen 1: Crown 1 with 14 complete sonnets")
+        print(f"   - Gen 2: Crown 2 with 14 complete sonnets (from Crown 1, Sonnet 1)")
+        print(f"   - Gen 2: Crown 3 with 7 partial sonnets (from Crown 1, Sonnet 2)")
+        print(f"   - Total: 35 sonnets across 2 generations + 3 Crowns")
 
 def create_gen2_crown(parent_data, crown_num, num_complete, session):
     """Create a generation 2 Crown with specified number of complete sonnets."""
@@ -377,24 +380,30 @@ def create_gen2_crown(parent_data, crown_num, num_complete, session):
         session.add(user_2)
 
         # Add bookend lines
-        source_lines = session.exec(
+        start_line = session.exec(
             select(SourceLine)
             .where(SourceLine.source_sonnet_id == parent_source.id)
-            .where(SourceLine.line_number.in_([source_line_start, (source_line_start % 14) + 1]))
-            .order_by(SourceLine.line_number)
-        ).all()
+            .where(SourceLine.line_number == source_line_start)
+        ).first()
+
+        end_line_num = (source_line_start % 14) + 1
+        end_line = session.exec(
+            select(SourceLine)
+            .where(SourceLine.source_sonnet_id == parent_source.id)
+            .where(SourceLine.line_number == end_line_num)
+        ).first()
 
         line_1 = Line(
             sonnet_id=sonnet.id,
             line_number=1,
-            text=source_lines[0].text,
+            text=start_line.text,
             author_user_id=user_1.id,
             created_at=start_date + timedelta(days=pair_num)
         )
         line_14 = Line(
             sonnet_id=sonnet.id,
             line_number=14,
-            text=source_lines[1].text if len(source_lines) > 1 else source_lines[0].text,
+            text=end_line.text,
             author_user_id=user_2.id,
             created_at=start_date + timedelta(days=pair_num)
         )

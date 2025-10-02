@@ -1,6 +1,7 @@
 import OrreryView from './views/OrreryView.js';
 import GalaxyGraphView from './views/GalaxyGraphView.js';
 import LineageTunnelView from './views/LineageTunnelView.js';
+import ScrollView from './views/ScrollView.js';
 import PoetStudioView from './views/PoetStudioView.js';
 import PagesView from './views/PagesView.js';
 import { formatDuration, formatPercent } from './utils/formatters.js';
@@ -22,6 +23,7 @@ export default class ExperienceDirector {
             graph: 'graph-stage',
             orbit: 'orrery-stage',
             lineage: 'lineage-stage',
+            scroll: 'scroll-stage',
             studio: 'orrery-stage',
             pages: 'pages-stage'
         };
@@ -77,6 +79,13 @@ export default class ExperienceDirector {
             nodes: this.nodes
         });
         this.lineageView.render();
+
+        this.scrollView = new ScrollView({
+            container: document.getElementById('scroll-content'),
+            state: this.state,
+            crownId: this.crownId
+        });
+        await this.scrollView.initialize();
 
         this.poetStudioView = new PoetStudioView({
             container: document.getElementById('poet-studio'),
@@ -211,12 +220,31 @@ export default class ExperienceDirector {
         const panel = document.querySelector('.info-panel');
         const stageWrapper = document.querySelector('.stage-wrapper');
 
-        if (closeBtn && panel) {
-            closeBtn.addEventListener('click', () => {
+        const closePanel = () => {
+            if (panel) {
                 panel.style.display = 'none';
-                // Make visualization full width
-                if (stageWrapper) {
-                    stageWrapper.style.width = '100%';
+            }
+            // Make visualization full width
+            if (stageWrapper) {
+                stageWrapper.style.width = '100%';
+            }
+        };
+
+        // Close button click
+        if (closeBtn && panel) {
+            closeBtn.addEventListener('click', closePanel);
+        }
+
+        // Click outside to close
+        if (panel) {
+            // Use setTimeout to let the panel open first
+            document.addEventListener('mousedown', (e) => {
+                // Check if panel is actually visible (not just style.display)
+                const panelVisible = panel.style.display === 'flex';
+
+                // Only close if panel is visible and click is outside the panel
+                if (panelVisible && !panel.contains(e.target)) {
+                    closePanel();
                 }
             });
         }
@@ -388,14 +416,17 @@ export default class ExperienceDirector {
         const crown = this.contextData.crown;
 
         if (source && source.first_line) {
-            const firstLine = source.first_line;
             const authors = source.authors || 'Unknown';
             const generation = crown.generation;
-            const genLabel = generation === 0 ? 'Classic Seed' : `Generation ${generation}`;
+            const genLabel = generation === 1 ? 'Classic Seed' : `Generation ${generation}`;
 
-            // Truncate first line if too long
-            const displayLine = firstLine.length > 60 ? firstLine.substring(0, 60) + '...' : firstLine;
-            const contextText = `"${displayLine}" by ${authors} • ${genLabel}`;
+            // For classic seeds (gen 1), show title; for collaborative, show first line
+            const isClassic = generation === 1;
+            const displayText = isClassic ? source.title : source.first_line;
+
+            // Truncate if too long
+            const truncated = displayText.length > 60 ? displayText.substring(0, 60) + '...' : displayText;
+            const contextText = `"${truncated}" by ${authors} • ${genLabel}`;
 
             if (jewelsContext) {
                 jewelsContext.textContent = contextText;

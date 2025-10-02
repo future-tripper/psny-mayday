@@ -205,6 +205,7 @@
     text-align: center;
     opacity: 0;
     transition: opacity 0.3s ease;
+    display: none; /* Hidden - using Three.js overlays instead */
 }
 
 .orrery-tooltip.visible {
@@ -417,6 +418,10 @@
     justify-content: flex-end;
     align-items: center;
     background: rgba(248, 176, 152, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(15px);
 }
 
 .panel-header h3 {
@@ -890,4 +895,29 @@
         padding: 20px;
     }
 }
+
+/* ========================================
+   SCROLL VIEW (vertical list of sonnets)
+   ======================================== */
+.viz-stage--scroll {
+    background: linear-gradient(180deg, #fffbe2 0%, #fff8d5 100%);
+    padding: 40px 60px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.scroll-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.scroll-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(43, 43, 43, 0.6);
+    font-family: 'EB Garamond', serif;
+    font-size: 1.2em;
+}
+
+/* Reuse crown-collection and crown-sonnet styles from main styles.css */
 
