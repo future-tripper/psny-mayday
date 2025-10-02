@@ -1,27 +1,22 @@
-services:
-  # PostgreSQL Database
-  - type: pserv
-    name: mayday-db
-    env: docker
+databases:
+  - name: mayday-db
+    databaseName: mayday
+    user: mayday
     plan: free
     region: oregon
-    databases:
-      - name: mayday
-        databaseName: mayday
-        user: mayday
 
-  # Web Service
+services:
   - type: web
     name: psny-mayday
-    env: python
+    runtime: python
     region: oregon
     plan: free
     branch: main
-    buildCommand: pip install -r requirements.txt
+    buildCommand: ./build.sh
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: "3.11"
       - key: DATABASE_URL
         fromDatabase:
           name: mayday-db
