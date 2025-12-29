@@ -234,14 +234,238 @@ Abandoned slots naturally become available for the next pair.
 
 ---
 
+## Scenario 3: Silent Abandonment (12-Hour Timeout)
+
+**Problem:** Users don't always click "abort" — they just close their browser and never come back. We need automatic cleanup.
+
+### The Stale Detection Metric
+
+A pair is considered **stale** when:
+- Status is `"writing"` (not complete)
+- AND no line has been added for **12 hours**
+
+### Implementation Steps
+
+#### Step 1: Add Activity Tracking (Optional but Recommended)
+
+**Option A: Use existing `Line.created_at`** (no schema change)
+
+```python
+def find_stale_pairs(session: Session, threshold_hours: int = 12):
+    """Find pairs with no activity for X hours."""
+    threshold = datetime.utcnow() - timedelta(hours=threshold_hours)
+
+    active_pairs = session.exec(
+        select(Pair).where(Pair.status == "writing")
+    ).all()
+
+    stale_pairs = []
+    for pair in active_pairs:
+        latest_line = session.exec(
+            select(Line)
+            .where(Line.sonnet_id == pair.sonnet_id)
+            .order_by(Line.created_at.desc())
+            .limit(1)
+        ).first()
+
+        if latest_line and latest_line.created_at < threshold:
+            stale_pairs.append(pair)
+
+    return stale_pairs
+```
+
+**Option B: Add `last_activity_at` to Pair** (simpler queries)
+
+```python
+# models.py
+class Pair(SQLModel, table=True):
+    # ... existing fields ...
+    last_activity_at: datetime = Field(default_factory=datetime.utcnow)
+
+# app.py — Update when line is added
+pair.last_activity_at = datetime.utcnow()
+```
+
+Then the query becomes:
+```python
+stale_pairs = session.exec(
+    select(Pair)
+    .where(Pair.status == "writing")
+    .where(Pair.last_activity_at < threshold)
+).all()
+```
+
+#### Step 2: Run Cleanup Before Pairing (Lazy Cleanup)
+
+**File:** `app.py` — Add to `try_pair_users()`
+
+```python
+STALE_THRESHOLD_HOURS = 12
+
+def cleanup_stale_pairs(session: Session):
+    """Mark stale pairs as abandoned, freeing their slots."""
+    stale_pairs = find_stale_pairs(session, STALE_THRESHOLD_HOURS)
+
+    for pair in stale_pairs:
+        pair.status = "abandoned"
+
+        # Clean up incomplete sonnet
+        sonnet = session.exec(
+            select(Sonnet).where(Sonnet.id == pair.sonnet_id)
+        ).first()
+        if sonnet:
+            session.exec(delete(Line).where(Line.sonnet_id == sonnet.id))
+            session.exec(delete(Turn).where(Turn.sonnet_id == sonnet.id))
+            session.delete(sonnet)
+
+        # Reset both users to waiting
+        for user_id in [pair.user_1_id, pair.user_2_id]:
+            if user_id:
+                user = session.exec(select(User).where(User.id == user_id)).first()
+                if user:
+                    user.status = "waiting"
+                    user.pair_id = None
+                    session.add(user)
+
+    session.commit()
+    return len(stale_pairs)
+
+def try_pair_users(session: Session):
+    # FIRST: Clean up stale pairs (frees abandoned slots)
+    cleaned = cleanup_stale_pairs(session)
+    if cleaned > 0:
+        print(f"🧹 Cleaned up {cleaned} stale pair(s)")
+
+    # THEN: Proceed with normal pairing logic
+    # ... rest of function ...
+```
+
+This is **lazy cleanup** — only runs when new users sign up. No cron job needed.
+
+#### Step 3: Handle Returning Users
+
+When a user returns to `/poet?u=CODE` after their pair was marked abandoned:
+
+**File:** `app.py`
+
+```python
+@app.get("/poet")
+async def poet_page(request: Request, u: str, session: Session = Depends(get_session)):
+    user = session.exec(select(User).where(User.code == u)).first()
+    if not user:
+        return RedirectResponse("/signup", status_code=303)
+
+    # Check if they have a valid active pair
+    if user.pair_id:
+        pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
+
+        # Pair was abandoned while they were gone
+        if not pair or pair.status == "abandoned":
+            # Clear their stale reference
+            user.pair_id = None
+            user.status = "waiting"
+            session.add(user)
+            session.commit()
+
+            # Redirect to session expired page
+            return RedirectResponse(f"/session-expired?u={u}", status_code=303)
+
+    # ... rest of normal poet page logic ...
+```
+
+#### Step 4: Create Session Expired Page
+
+**File:** `app.py`
+
+```python
+@app.get("/session-expired")
+async def session_expired(request: Request, u: str, session: Session = Depends(get_session)):
+    user = session.exec(select(User).where(User.code == u)).first()
+
+    return templates.TemplateResponse("session_expired.html", {
+        "request": request,
+        "user": user
+    })
+```
+
+**File:** `templates/session_expired.html`
+
+```html
+{% extends "base.html" %}
+{% block content %}
+<div class="session-expired">
+    <h1>Your session expired</h1>
+    <p>It's been over 12 hours since your last activity, so your collaboration was reset to make room for other poets.</p>
+
+    <p>Don't worry — you can start fresh!</p>
+
+    <form action="/rejoin" method="post">
+        <input type="hidden" name="u" value="{{ user.code }}">
+        <button type="submit">Rejoin the waiting room</button>
+    </form>
+</div>
+{% endblock %}
+```
+
+**File:** `app.py`
+
+```python
+@app.post("/rejoin")
+async def rejoin_waiting(u: str = Form(...), session: Session = Depends(get_session)):
+    user = session.exec(select(User).where(User.code == u)).first()
+    if user:
+        user.status = "waiting"
+        user.pair_id = None
+        session.add(user)
+        session.commit()
+
+        # Try to pair immediately
+        try_pair_users(session)
+
+    return RedirectResponse(f"/waiting?u={u}", status_code=303)
+```
+
+### Flow Summary
+
+```
+Both users go silent for 12+ hours
+            ↓
+New user signs up → triggers cleanup_stale_pairs()
+            ↓
+Pair marked "abandoned", sonnet deleted, slot freed
+            ↓
+New pair assigned to the slot (backfill)
+            ↓
+Original user returns to /poet?u=CODE
+            ↓
+Sees pair is abandoned → redirected to /session-expired
+            ↓
+Clicks "Rejoin" → back to waiting room
+            ↓
+Gets paired to different available slot
+```
+
+### What Gets Preserved vs. Lost
+
+| Element | When Abandoned | Notes |
+|---------|---------------|-------|
+| User account | ✅ Preserved | Their code still works |
+| Lines written | ❌ Deleted | Incomplete work is cleared |
+| Slot position | ❌ Lost | Slot given to new pair |
+| Bookend lines | ✅ Still exist | In SourceLine table |
+| Their turn | ❌ Deleted | Turn record cleaned up |
+
+---
+
 ## Decisions to Make
 
 | Decision | Options | Recommendation |
 |----------|---------|----------------|
 | What happens to aborting user? | A) Back to waiting queue B) Removed from system | A — they may want to try again |
 | Track abandonment history? | A) Delete pair B) Keep with "abandoned" status | B — useful for analytics |
-| Time limit before auto-abandon? | A) None B) 24h C) 48h D) 1 week | Start with none, add later if needed |
+| Time limit before auto-abandon? | ~~A) None B) 24h C) 48h D) 1 week~~ | ✅ **DECIDED: 12 hours** |
 | Notify remaining user? | A) Email B) In-app only C) Both | Start with B, add email later |
+| Activity tracking method? | A) Query Line.created_at B) Add Pair.last_activity_at | B is cleaner, A avoids schema change |
 
 ---
 
@@ -950,13 +1174,19 @@ For MVP, assume Gen 1-3 (under 200 crowns). Add optimization later.
 
 # Implementation Order
 
-## Phase 1: Abort/Reset Flow (Estimated: 1 session)
+## Phase 1: Abort/Reset Flow (Estimated: 1-2 sessions)
 
-1. [ ] Add status values to Pair model
-2. [ ] Create `/abort` endpoint
-3. [ ] Create reset options page
-4. [ ] Update `try_pair_users()` to prioritize orphaned pairs
-5. [ ] Test: one user aborts → other gets same slot with new partner
+1. [ ] Add status values to Pair model (`orphaned`, `abandoned`)
+2. [ ] Add `last_activity_at` field to Pair model (optional, for cleaner queries)
+3. [ ] Create `/abort` endpoint
+4. [ ] Create reset options page
+5. [ ] Update `try_pair_users()` to prioritize orphaned pairs
+6. [ ] Implement `cleanup_stale_pairs()` with 12-hour threshold
+7. [ ] Create `/session-expired` page for returning users
+8. [ ] Create `/rejoin` endpoint
+9. [ ] Test: one user aborts → other gets same slot with new partner
+10. [ ] Test: both users go silent 12h+ → slot freed for backfill
+11. [ ] Test: returning user after expiry → session expired → rejoin flow
 
 ## Phase 2: AI Pairing (Estimated: 1-2 sessions)
 
@@ -989,6 +1219,14 @@ For MVP, assume Gen 1-3 (under 200 crowns). Add optimization later.
 - [ ] Partner chooses AI → pairs with AI in same slot
 - [ ] Both abort → slot available for new pair
 - [ ] Orphaned slots get filled before new slots
+
+## Silent Abandonment (12-Hour Timeout)
+- [ ] Pair with no activity for 12h+ is marked abandoned on next signup
+- [ ] Abandoned slot becomes available for backfill
+- [ ] Returning user sees "session expired" page
+- [ ] Returning user can rejoin waiting room
+- [ ] Returning user gets new slot (not their old one)
+- [ ] User account/code still works after expiry
 
 ## AI Pairing
 - [ ] New user can choose AI from waiting screen
