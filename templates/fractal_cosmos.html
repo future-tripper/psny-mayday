@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crown of Sonnets — A Fractal Poetry Cosmos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            color: #e8e6e0;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        #cosmos {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Header with nav */
+        .cosmos-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: linear-gradient(to bottom, rgba(10, 10, 15, 0.9) 0%, transparent 100%);
+        }
+
+        .cosmos-header .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cosmos-header .psny-logo {
+            height: 40px;
+            opacity: 0.8;
+        }
+
+        .cosmos-header h1 {
+            font-family: 'Josefin Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .cosmos-header .current-view {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.35);
+            font-style: italic;
+        }
+
+        .cosmos-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .cosmos-nav a {
+            font-family: 'Josefin Sans', sans-serif;
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .cosmos-nav a:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .cosmos-nav .nav-button {
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .cosmos-nav .nav-button:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Subtle UI */
+        .ui-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            z-index: 10;
+            transition: opacity 0.5s;
+        }
+
+        /* Generation Legend */
+        .legend {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            z-index: 10;
+            text-align: right;
+        }
+
+        .legend-item {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .legend-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        /* Loading state */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0f;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 0.6s;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-text {
+            font-size: 14px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Reading Overlay */
+        .reading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 10, 0.95);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease;
+        }
+
+        .reading-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .poem-container {
+            max-width: 650px;
+            width: 90%;
+            padding: 60px 40px;
+            transform: translateY(20px);
+            transition: transform 0.6s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .reading-overlay.visible .poem-container {
+            transform: translateY(0);
+        }
+
+        .poem-header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .poem-number {
+            font-size: 11px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 12px;
+        }
+
+        .poem-title {
+            font-size: 24px;
+            font-weight: 300;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 8px;
+        }
+
+        .poem-authors {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .poem-lines {
+            line-height: 2.2;
+            font-size: 18px;
+            font-weight: 300;
+        }
+
+        .poem-line {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: lineAppear 0.4s ease forwards;
+            position: relative;
+            padding: 2px 0;
+        }
+
+        .poem-line.seed-line {
+            color: #c9a227;
+        }
+
+        .poem-line.spawn-line {
+            color: #7eb8da;
+        }
+
+        .poem-line .line-note {
+            position: absolute;
+            right: -200px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .poem-line.seed-line .line-note {
+            color: rgba(201, 162, 39, 0.6);
+        }
+
+        .poem-line.spawn-line .line-note {
+            color: rgba(126, 184, 218, 0.6);
+        }
+
+        @keyframes lineAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .poem-footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .lineage-info {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.8;
+        }
+
+        .lineage-link {
+            color: rgba(126, 184, 218, 0.8);
+            cursor: pointer;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .lineage-link:hover {
+            border-color: rgba(126, 184, 218, 0.5);
+        }
+
+        .close-poem {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-poem:hover {
+            color: rgba(255, 255, 255, 0.6);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Seed lines box */
+        .seed-lines {
+            margin-top: 16px;
+            margin-bottom: 30px;
+            padding: 16px;
+            background: rgba(201, 162, 39, 0.1);
+            border-left: 2px solid rgba(201, 162, 39, 0.4);
+            font-style: italic;
+            font-size: 13px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .seed-lines .label {
+            font-style: normal;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(201, 162, 39, 0.6);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Crown info panel */
+        .crown-info {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+
+        .crown-info.visible {
+            opacity: 1;
+        }
+
+        .crown-info h3 {
+            font-size: 16px;
+            font-weight: 400;
+            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .crown-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.35);
+            line-height: 1.6;
+        }
+
+        /* Empty state */
+        .empty-state {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .empty-state h2 {
+            font-size: 24px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .empty-state a {
+            display: inline-block;
+            padding: 12px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .empty-state a:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        @media (max-width: 768px) {
+            .cosmos-header {
+                padding: 15px 20px;
+            }
+
+            .cosmos-header h1 {
+                font-size: 12px;
+            }
+
+            .cosmos-nav {
+                gap: 10px;
+            }
+
+            .cosmos-nav a {
+                font-size: 10px;
+            }
+
+            .legend {
+                top: 80px;
+                right: 20px;
+            }
+
+            .poem-container {
+                padding: 40px 20px;
+            }
+
+            .poem-line .line-note {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="cosmos"></canvas>
+
+    <div class="loading-overlay" id="loading">
+        <div class="loading-text">Mapping the poetry cosmos...</div>
+    </div>
+
+    <header class="cosmos-header">
+        <div class="logo-section">
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <div>
+                <h1>Crown of Sonnets</h1>
+                <div class="current-view" id="current-view">Loading cosmos...</div>
+            </div>
+        </div>
+        <nav class="cosmos-nav">
+            <a href="/signup">Join</a>
+            <a href="/crown/1/visualize">Classic View</a>
+            <a href="/about">About</a>
+            <a href="https://poetrysocietyny.org/membership" class="nav-button" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+    </header>
+
+    <div class="legend" id="legend">
+        <div class="legend-item">
+            <span>Origin Crown</span>
+            <div class="legend-dot" style="background: #d4a574;"></div>
+        </div>
+        <div class="legend-item">
+            <span>Generation II</span>
+            <div class="legend-dot" style="background: #7eb8da;"></div>
+        </div>
+        <div class="legend-item">
+            <span>Generation III</span>
+            <div class="legend-dot" style="background: #8fbc8f;"></div>
+        </div>
+    </div>
+
+    <div class="crown-info" id="crown-info">
+        <h3 id="crown-name">Crown I</h3>
+        <p id="crown-desc">14 sonnets forming a ring</p>
+    </div>
+
+    <div class="ui-hint" id="ui-hint">Scroll to zoom · Drag to drift · Click a star to read</div>
+
+    <div class="empty-state" id="empty-state" style="display: none;">
+        <h2>The cosmos awaits its first poets</h2>
+        <p>No completed sonnets yet. Be the first to write!</p>
+        <a href="/signup">Begin Writing</a>
+    </div>
+
+    <!-- Reading Overlay -->
+    <div class="reading-overlay" id="reading-overlay">
+        <div class="poem-container">
+            <div class="poem-header">
+                <div class="poem-number" id="poem-number">Sonnet I of Crown I</div>
+                <h2 class="poem-title" id="poem-title">The Opening</h2>
+                <div class="poem-authors" id="poem-authors">Alice & Bob</div>
+            </div>
+
+            <div class="seed-lines" id="seed-lines">
+                <span class="label">Seeded by lines from the parent</span>
+                <div id="seed-lines-content"></div>
+            </div>
+
+            <div class="poem-lines" id="poem-lines">
+                <!-- Lines inserted dynamically -->
+            </div>
+            <div class="poem-footer">
+                <div class="lineage-info" id="lineage-info">
+                    <!-- Lineage info inserted dynamically -->
+                </div>
+                <button class="close-poem" onclick="closePoem()">Return to cosmos</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ═══════════════════════════════════════════════════════════════════════
+        // FRACTAL COSMOS - Connected to API
+        // ═══════════════════════════════════════════════════════════════════════
+
+        const CONFIG = {
+            colors: {
+                background: '#0a0a0f',
+                generations: {
+                    1: { main: '#d4a574', glow: 'rgba(212, 165, 116, 0.3)', ring: 'rgba(212, 165, 116, 0.15)' },
+                    2: { main: '#7eb8da', glow: 'rgba(126, 184, 218, 0.3)', ring: 'rgba(126, 184, 218, 0.15)' },
+                    3: { main: '#8fbc8f', glow: 'rgba(143, 188, 143, 0.3)', ring: 'rgba(143, 188, 143, 0.15)' },
+                    4: { main: '#dda0dd', glow: 'rgba(221, 160, 221, 0.3)', ring: 'rgba(221, 160, 221, 0.15)' }
+                },
+                spawn: '#c9a227',
+                text: 'rgba(255, 255, 255, 0.3)'
+            },
+            crown: {
+                radius: 70,
+                glowRadius: 120
+            },
+            stars: {
+                count: 500,
+                spread: 4000
+            },
+            zoom: {
+                min: 0.25,
+                max: 3,
+                default: 1
+            }
+        };
+
+        // State
+        let poetryData = null;
+        let canvas, ctx;
+        let width, height;
+        let camX = 0, camY = 0;
+        let zoom = 1, targetZoom = 1;
+        let dragging = false;
+        let lastX, lastY, lastMouseX = 0, lastMouseY = 0;
+        let time = 0;
+        let stars = [];
+        let hoveredStar = null;
+        let hoveredCrown = null;
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════════════
+
+        async function init() {
+            canvas = document.getElementById('cosmos');
+            ctx = canvas.getContext('2d');
+
+            resize();
+            generateBackgroundStars();
+            bindEvents();
+
+            // Fetch data from API
+            try {
+                const response = await fetch('/api/fractal/tree');
+                poetryData = await response.json();
+
+                document.getElementById('loading').classList.add('hidden');
+
+                if (!poetryData.crowns || poetryData.crowns.length === 0) {
+                    document.getElementById('empty-state').style.display = 'block';
+                    document.getElementById('legend').style.display = 'none';
+                    document.getElementById('ui-hint').style.display = 'none';
+                } else {
+                    document.getElementById('current-view').textContent = 'Viewing the cosmos';
+                }
+
+                animate();
+            } catch (error) {
+                console.error('Failed to load cosmos data:', error);
+                document.getElementById('loading').innerHTML = '<div class="loading-text">Failed to load cosmos</div>';
+            }
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        function generateBackgroundStars() {
+            stars = [];
+            for (let i = 0; i < CONFIG.stars.count; i++) {
+                stars.push({
+                    x: (Math.random() - 0.5) * CONFIG.stars.spread,
+                    y: (Math.random() - 0.5) * CONFIG.stars.spread,
+                    size: Math.random() * 1.5,
+                    brightness: Math.random() * 0.5 + 0.1,
+                    twinkleSpeed: Math.random() * 0.02 + 0.01
+                });
+            }
+        }
+
+        function bindEvents() {
+            window.addEventListener('resize', resize);
+
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('mousemove', onMouseMove);
+            canvas.addEventListener('mouseup', () => dragging = false);
+            canvas.addEventListener('mouseleave', () => dragging = false);
+            canvas.addEventListener('wheel', onWheel);
+
+            // Touch events for mobile
+            canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+            canvas.addEventListener('touchend', () => dragging = false);
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closePoem();
+            });
+
+            document.getElementById('reading-overlay').addEventListener('click', e => {
+                if (e.target.id === 'reading-overlay') closePoem();
+            });
+        }
+
+        function onMouseDown(e) {
+            if (hoveredStar) {
+                openPoem(hoveredStar.sonnet, hoveredStar.crown);
+            } else {
+                dragging = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        }
+
+        function onMouseMove(e) {
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+
+            if (dragging) {
+                const dx = (e.clientX - lastX) / zoom;
+                const dy = (e.clientY - lastY) / zoom;
+                camX -= dx;
+                camY -= dy;
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        }
+
+        function onWheel(e) {
+            e.preventDefault();
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            targetZoom = Math.max(CONFIG.zoom.min, Math.min(CONFIG.zoom.max, targetZoom * zoomFactor));
+        }
+
+        function onTouchStart(e) {
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                lastMouseX = touch.clientX;
+                lastMouseY = touch.clientY;
+
+                // Check for tap on star
+                const mouseWorld = screenToWorld(lastMouseX, lastMouseY);
+                checkHover(mouseWorld);
+
+                if (hoveredStar) {
+                    openPoem(hoveredStar.sonnet, hoveredStar.crown);
+                } else {
+                    dragging = true;
+                    lastX = touch.clientX;
+                    lastY = touch.clientY;
+                }
+            }
+        }
+
+        function onTouchMove(e) {
+            e.preventDefault();
+            if (e.touches.length === 1 && dragging) {
+                const touch = e.touches[0];
+                const dx = (touch.clientX - lastX) / zoom;
+                const dy = (touch.clientY - lastY) / zoom;
+                camX -= dx;
+                camY -= dy;
+                lastX = touch.clientX;
+                lastY = touch.clientY;
+            }
+        }
+
+        function screenToWorld(sx, sy) {
+            return {
+                x: (sx - width / 2) / zoom + camX,
+                y: (sy - height / 2) / zoom + camY
+            };
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // RENDERING
+        // ═══════════════════════════════════════════════════════════════════════
+
+        function animate() {
+            time += 0.016;
+            zoom += (targetZoom - zoom) * 0.1;
+            render();
+            requestAnimationFrame(animate);
+        }
+
+        function render() {
+            ctx.fillStyle = CONFIG.colors.background;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.save();
+            ctx.translate(width / 2, height / 2);
+            ctx.scale(zoom, zoom);
+            ctx.translate(-camX, -camY);
+
+            drawBackgroundStars();
+
+            if (poetryData && poetryData.crowns) {
+                drawLineageConnections();
+                drawCrowns();
+            }
+
+            ctx.restore();
+            updateUI();
+        }
+
+        function drawBackgroundStars() {
+            stars.forEach(star => {
+                const twinkle = Math.sin(time * star.twinkleSpeed * 10) * 0.3 + 0.7;
+                const alpha = star.brightness * twinkle;
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size / zoom, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawLineageConnections() {
+            const colors = CONFIG.colors.generations;
+
+            poetryData.crowns.forEach(crown => {
+                if (crown.parentSonnet) {
+                    const parentCrownId = crown.seedSource.parentSonnetId?.split('-sonnet-')[0];
+                    const parentCrown = poetryData.crowns.find(c => c.id === parentCrownId);
+
+                    if (parentCrown) {
+                        const parentSonnetIdx = crown.parentSonnet.position - 1;
+                        const pAngle = (parentSonnetIdx / 14) * Math.PI * 2 - Math.PI / 2;
+                        const pRadius = CONFIG.crown.radius;
+                        const px = parentCrown.x + Math.cos(pAngle) * pRadius;
+                        const py = parentCrown.y + Math.sin(pAngle) * pRadius;
+
+                        const gradient = ctx.createLinearGradient(px, py, crown.x, crown.y);
+                        gradient.addColorStop(0, (colors[parentCrown.generation] || colors[1]).glow);
+                        gradient.addColorStop(1, (colors[crown.generation] || colors[1]).glow);
+
+                        ctx.strokeStyle = gradient;
+                        ctx.lineWidth = 1.5 / zoom;
+                        ctx.setLineDash([4 / zoom, 8 / zoom]);
+                        ctx.beginPath();
+                        ctx.moveTo(px, py);
+
+                        const midX = (px + crown.x) / 2;
+                        const midY = (py + crown.y) / 2 - 40;
+                        ctx.quadraticCurveTo(midX, midY, crown.x, crown.y);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                }
+            });
+        }
+
+        function checkHover(mouseWorld) {
+            hoveredStar = null;
+            hoveredCrown = null;
+
+            if (!poetryData || !poetryData.crowns) return;
+
+            poetryData.crowns.forEach(crown => {
+                const distToCrown = Math.hypot(mouseWorld.x - crown.x, mouseWorld.y - crown.y);
+                if (distToCrown < 100) {
+                    hoveredCrown = crown;
+                }
+
+                crown.sonnets.forEach((sonnet, i) => {
+                    const angle = (i / 14) * Math.PI * 2 - Math.PI / 2;
+                    const sx = crown.x + Math.cos(angle) * CONFIG.crown.radius;
+                    const sy = crown.y + Math.sin(angle) * CONFIG.crown.radius;
+
+                    const dist = Math.hypot(mouseWorld.x - sx, mouseWorld.y - sy);
+                    if (dist < 15) {
+                        hoveredStar = { sonnet, crown, x: sx, y: sy };
+                    }
+                });
+            });
+        }
+
+        function drawCrowns() {
+            const colors = CONFIG.colors.generations;
+            const mouseWorld = screenToWorld(lastMouseX, lastMouseY);
+
+            checkHover(mouseWorld);
+
+            poetryData.crowns.forEach(crown => {
+                const crownColors = colors[crown.generation] || colors[1];
+                const crownRadius = CONFIG.crown.radius;
+
+                // Crown outer glow
+                const glowGradient = ctx.createRadialGradient(crown.x, crown.y, 0, crown.x, crown.y, CONFIG.crown.glowRadius);
+                glowGradient.addColorStop(0, `rgba(255, 255, 255, ${crown.status === 'forming' ? 0.02 : 0.03})`);
+                glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(crown.x, crown.y, CONFIG.crown.glowRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ring
+                ctx.strokeStyle = crownColors.ring;
+                ctx.lineWidth = 1 / zoom;
+                ctx.beginPath();
+                ctx.arc(crown.x, crown.y, crownRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Inter-sonnet connections
+                if (crown.sonnets.length > 1) {
+                    ctx.strokeStyle = `rgba(255, 255, 255, 0.08)`;
+                    ctx.lineWidth = 0.5 / zoom;
+                    for (let i = 0; i < crown.sonnets.length; i++) {
+                        const angle1 = (crown.sonnets[i].position - 1) / 14 * Math.PI * 2 - Math.PI / 2;
+                        const nextIdx = (i + 1) % crown.sonnets.length;
+                        const angle2 = (crown.sonnets[nextIdx].position - 1) / 14 * Math.PI * 2 - Math.PI / 2;
+
+                        const x1 = crown.x + Math.cos(angle1) * crownRadius;
+                        const y1 = crown.y + Math.sin(angle1) * crownRadius;
+                        const x2 = crown.x + Math.cos(angle2) * crownRadius;
+                        const y2 = crown.y + Math.sin(angle2) * crownRadius;
+
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    }
+                }
+
+                // Draw sonnets as stars
+                crown.sonnets.forEach((sonnet) => {
+                    const i = sonnet.position - 1;
+                    const angle = (i / 14) * Math.PI * 2 - Math.PI / 2;
+                    const sx = crown.x + Math.cos(angle) * crownRadius;
+                    const sy = crown.y + Math.sin(angle) * crownRadius;
+
+                    const isHovered = hoveredStar?.sonnet.id === sonnet.id;
+
+                    let pulse = 1;
+                    let alpha = 1;
+                    if (sonnet.status === 'forming') {
+                        pulse = 0.7 + Math.sin(time * 2 + i) * 0.3;
+                        alpha = 0.5 + Math.sin(time * 2 + i) * 0.2;
+                    }
+
+                    // Star glow
+                    const starGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, 18);
+                    starGlow.addColorStop(0, `rgba(255, 255, 255, ${0.25 * alpha * (isHovered ? 1.5 : 1)})`);
+                    starGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    ctx.fillStyle = starGlow;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 18 * pulse, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Star core
+                    const coreSize = (isHovered ? 5 : 3.5) * pulse;
+                    ctx.fillStyle = crownColors.main;
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, coreSize / zoom, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+
+                    // Spawn indicator
+                    if (sonnet.status === 'complete' && sonnet.spawnsChild) {
+                        ctx.strokeStyle = 'rgba(201, 162, 39, 0.5)';
+                        ctx.lineWidth = 1.5 / zoom;
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, (coreSize + 4) / zoom, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                });
+
+                // Crown label
+                if (zoom > 0.4) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${crown.status === 'forming' ? 0.2 : 0.3})`;
+                    ctx.font = `${11 / zoom}px 'Cormorant Garamond', serif`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(crown.name, crown.x, crown.y + 100);
+
+                    ctx.fillStyle = `rgba(255, 255, 255, 0.15)`;
+                    ctx.font = `${9 / zoom}px 'Cormorant Garamond', serif`;
+                    ctx.fillText(`${crown.sonnets.length}/14 sonnets`, crown.x, crown.y + 112);
+                }
+            });
+        }
+
+        function updateUI() {
+            const crownInfo = document.getElementById('crown-info');
+            const viewText = document.getElementById('current-view');
+
+            if (hoveredCrown) {
+                crownInfo.classList.add('visible');
+                document.getElementById('crown-name').textContent = hoveredCrown.name;
+                const status = hoveredCrown.status === 'forming' ? ' · Growing' : ' · Complete';
+                document.getElementById('crown-desc').textContent =
+                    `${hoveredCrown.sonnets.length}/14 sonnets${status}`;
+            } else {
+                crownInfo.classList.remove('visible');
+            }
+
+            if (hoveredStar) {
+                viewText.textContent = `${hoveredStar.sonnet.title} — ${hoveredStar.sonnet.authors}`;
+                canvas.style.cursor = 'pointer';
+            } else {
+                viewText.textContent = zoom < 0.5 ? 'The cosmos stretches infinitely' : 'Viewing the cosmos';
+                canvas.style.cursor = 'crosshair';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // POEM READING
+        // ═══════════════════════════════════════════════════════════════════════
+
+        function openPoem(sonnet, crown) {
+            const overlay = document.getElementById('reading-overlay');
+
+            document.getElementById('poem-number').textContent =
+                `Sonnet ${sonnet.position} of ${crown.name}`;
+            document.getElementById('poem-title').textContent = sonnet.title;
+            document.getElementById('poem-authors').textContent = sonnet.authors;
+
+            // Seed lines
+            const seedLinesEl = document.getElementById('seed-lines-content');
+            seedLinesEl.innerHTML = `
+                <div>"${sonnet.seedLines.lineA}"</div>
+                <div>"${sonnet.seedLines.lineB}"</div>
+                <div style="margin-top: 8px; font-size: 10px; color: rgba(201, 162, 39, 0.5); font-style: normal;">
+                    Lines ${sonnet.seedLines.indices} from ${crown.seedSource.type === 'original' ? 'the original seed poem' : 'the parent sonnet'}
+                </div>
+            `;
+
+            // Lines
+            const linesContainer = document.getElementById('poem-lines');
+            linesContainer.innerHTML = '';
+
+            sonnet.lines.forEach((line, i) => {
+                const lineEl = document.createElement('div');
+                lineEl.className = 'poem-line';
+                lineEl.style.animationDelay = `${0.3 + i * 0.08}s`;
+                lineEl.textContent = line;
+
+                // Highlight seed lines (1 and 14)
+                if (i === 0 || i === 1) {
+                    lineEl.classList.add('seed-line');
+                }
+
+                // Highlight if this sonnet spawned a child
+                if (i === 13 && sonnet.spawnsChild) {
+                    lineEl.classList.add('spawn-line');
+                    const note = document.createElement('span');
+                    note.className = 'line-note';
+                    note.textContent = '→ Seeds a new crown';
+                    lineEl.appendChild(note);
+                }
+
+                linesContainer.appendChild(lineEl);
+            });
+
+            // Lineage info
+            const lineageEl = document.getElementById('lineage-info');
+            let html = '';
+
+            html += `<div><strong>Parent:</strong> ${crown.seedSource.type === 'original'
+                ? `${poetryData.originalSeed?.title || 'Original Seed'} by ${poetryData.originalSeed?.author || 'Unknown'}`
+                : crown.seedSource.parentSonnetTitle || 'Parent Sonnet'}</div>`;
+
+            // Link to child crown if exists
+            if (sonnet.spawnsChild) {
+                const childCrown = poetryData.crowns.find(c => c.id === sonnet.spawnsChild);
+                if (childCrown) {
+                    html += `<div style="margin-top: 8px;">`;
+                    html += `<span class="lineage-link" onclick="navigateToCrown('${childCrown.id}')">→ Visit ${childCrown.name}</span>`;
+                    html += `</div>`;
+                }
+            }
+
+            // Link to full sonnet page
+            if (sonnet.sonnetId) {
+                html += `<div style="margin-top: 8px;">`;
+                html += `<a href="/sonnet/${sonnet.sonnetId}" class="lineage-link" target="_blank">View full sonnet page →</a>`;
+                html += `</div>`;
+            }
+
+            lineageEl.innerHTML = html;
+
+            overlay.classList.add('visible');
+            document.getElementById('ui-hint').style.opacity = '0';
+        }
+
+        window.closePoem = function() {
+            document.getElementById('reading-overlay').classList.remove('visible');
+            setTimeout(() => {
+                document.getElementById('ui-hint').style.opacity = '0.3';
+            }, 600);
+        }
+
+        window.navigateToCrown = function(crownId) {
+            const crown = poetryData.crowns.find(c => c.id === crownId);
+            if (crown) {
+                closePoem();
+                setTimeout(() => {
+                    camX = crown.x;
+                    camY = crown.y;
+                    targetZoom = 1.2;
+                }, 300);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // START
+        // ═══════════════════════════════════════════════════════════════════════
+
+        init();
+
+        setTimeout(() => {
+            document.getElementById('ui-hint').style.opacity = '0.15';
+        }, 6000);
+    </script>
+</body>
+</html>
