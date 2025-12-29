@@ -1,5 +1,6 @@
 import LineageTunnelView from './views/LineageTunnelView.js';
 import ScrollView from './views/ScrollView.js';
+import CosmosView from './views/CosmosView.js';
 import PoetStudioView from './views/PoetStudioView.js';
 import { formatDuration, formatPercent } from './utils/formatters.js';
 import MetricsTracker from './utils/metrics.js';
@@ -18,7 +19,8 @@ export default class ExperienceDirector {
 
         this.stageMap = {
             lineage: 'lineage-stage',
-            scroll: 'scroll-stage'
+            scroll: 'scroll-stage',
+            cosmos: 'cosmos-stage'
         };
     }
 
@@ -56,6 +58,20 @@ export default class ExperienceDirector {
             crownId: this.crownId
         });
         await this.scrollView.initialize();
+
+        this.cosmosView = new CosmosView({
+            container: document.getElementById('cosmos-stage'),
+            state: this.state,
+            dataService: this.dataService,
+            crownId: this.crownId
+        });
+        await this.cosmosView.initialize();
+
+        // Bind close button for cosmos overlay
+        const cosmosCloseBtn = document.querySelector('.cosmos-close-poem');
+        if (cosmosCloseBtn) {
+            cosmosCloseBtn.addEventListener('click', () => this.cosmosView.closePoem());
+        }
 
         this.poetStudioView = new PoetStudioView({
             container: document.getElementById('poet-studio'),
@@ -279,6 +295,10 @@ export default class ExperienceDirector {
 
         if (this.lineageView) {
             this.lineageView.setActive(view === 'lineage');
+        }
+
+        if (this.cosmosView) {
+            this.cosmosView.setActive(view === 'cosmos');
         }
     }
 

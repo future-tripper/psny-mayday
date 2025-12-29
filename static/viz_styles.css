@@ -921,3 +921,361 @@
 
 /* Reuse crown-collection and crown-sonnet styles from main styles.css */
 
+/* ========================================
+   COSMOS VIEW (fractal star visualization)
+   ======================================== */
+.viz-stage--cosmos {
+    background: #0a0a0f;
+    position: relative;
+    cursor: crosshair;
+}
+
+#cosmos-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.cosmos-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0a0f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: opacity 0.6s;
+}
+
+.cosmos-loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cosmos-loading-text {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    animation: cosmos-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cosmos-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
+.cosmos-legend {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    text-align: right;
+}
+
+.cosmos-legend-item {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.cosmos-legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.cosmos-crown-info {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+}
+
+.cosmos-crown-info.visible {
+    opacity: 1;
+}
+
+.cosmos-crown-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 400;
+    margin: 0 0 4px 0;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.cosmos-crown-desc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.35);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.cosmos-hint {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.25);
+    z-index: 10;
+    transition: opacity 0.5s;
+}
+
+.cosmos-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10;
+}
+
+.cosmos-empty h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0 0 16px 0;
+}
+
+.cosmos-empty p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.3);
+    margin: 0 0 30px 0;
+}
+
+.cosmos-empty a {
+    display: inline-block;
+    padding: 12px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.3s;
+}
+
+.cosmos-empty a:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Cosmos Reading Overlay */
+.cosmos-reading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(5, 5, 10, 0.95);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+}
+
+.cosmos-reading-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.cosmos-poem-container {
+    max-width: 650px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 50px;
+    animation: cosmos-fade-up 0.6s ease forwards;
+}
+
+@keyframes cosmos-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cosmos-poem-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.cosmos-poem-number {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 12px;
+}
+
+.cosmos-poem-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.cosmos-poem-authors {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.cosmos-seed-lines {
+    margin-top: 16px;
+    margin-bottom: 30px;
+    padding: 16px;
+    background: rgba(201, 162, 39, 0.1);
+    border-left: 2px solid rgba(201, 162, 39, 0.4);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 13px;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.cosmos-seed-label {
+    display: block;
+    font-family: 'Josefin Sans', sans-serif;
+    font-style: normal;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(201, 162, 39, 0.6);
+    margin-bottom: 8px;
+}
+
+.cosmos-poem-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.cosmos-poem-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    line-height: 1.9;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 4px 0;
+    opacity: 0;
+    animation: cosmos-line-reveal 0.5s ease forwards;
+}
+
+@keyframes cosmos-line-reveal {
+    to { opacity: 1; }
+}
+
+.cosmos-poem-line.seed-line {
+    color: rgba(212, 165, 116, 0.9);
+}
+
+.cosmos-poem-line.spawn-line {
+    color: rgba(201, 162, 39, 0.9);
+}
+
+.cosmos-line-note {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(201, 162, 39, 0.5);
+    margin-left: 12px;
+}
+
+.cosmos-poem-footer {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.cosmos-lineage-info {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.8;
+    text-align: center;
+}
+
+.cosmos-lineage-link {
+    color: rgba(126, 184, 218, 0.8);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.cosmos-lineage-link:hover {
+    border-color: rgba(126, 184, 218, 0.5);
+}
+
+.cosmos-close-poem {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.cosmos-close-poem:hover {
+    color: rgba(255, 255, 255, 0.6);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+    .cosmos-legend {
+        top: 10px;
+        right: 10px;
+    }
+
+    .cosmos-poem-container {
+        padding: 30px 20px;
+    }
+
+    .cosmos-line-note {
+        display: none;
+    }
+}
+

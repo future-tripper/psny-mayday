@@ -45,6 +45,7 @@
                     </select>
                     <a href="#" class="view-link active" data-view="lineage">Threads</a>
                     <a href="#" class="view-link" data-view="scroll">Scroll</a>
+                    <a href="#" class="view-link" data-view="cosmos">Cosmos</a>
                 </div>
             </div>
 
@@ -60,6 +61,66 @@
                         <div class="crown-status-badge" id="crown-status-badge-scroll"></div>
                         <div id="seed-context-scroll" class="seed-context seed-context--scroll"></div>
                         <div id="scroll-content" class="scroll-content"></div>
+                    </div>
+
+                    <!-- Cosmos View -->
+                    <div id="cosmos-stage" class="viz-stage viz-stage--cosmos" hidden>
+                        <canvas id="cosmos-canvas"></canvas>
+
+                        <div class="cosmos-loading">
+                            <div class="cosmos-loading-text">Mapping the poetry cosmos...</div>
+                        </div>
+
+                        <div class="cosmos-legend">
+                            <div class="cosmos-legend-item">
+                                <span>Origin Crown</span>
+                                <div class="cosmos-legend-dot" style="background: #d4a574;"></div>
+                            </div>
+                            <div class="cosmos-legend-item">
+                                <span>Generation II</span>
+                                <div class="cosmos-legend-dot" style="background: #7eb8da;"></div>
+                            </div>
+                            <div class="cosmos-legend-item">
+                                <span>Generation III</span>
+                                <div class="cosmos-legend-dot" style="background: #8fbc8f;"></div>
+                            </div>
+                        </div>
+
+                        <div class="cosmos-crown-info">
+                            <h3 class="cosmos-crown-name">Crown I</h3>
+                            <p class="cosmos-crown-desc">14 sonnets forming a ring</p>
+                        </div>
+
+                        <div class="cosmos-hint">Scroll to zoom - Drag to drift - Click a star to read</div>
+
+                        <div class="cosmos-empty" style="display: none;">
+                            <h2>The cosmos awaits its first poets</h2>
+                            <p>No completed sonnets yet. Be the first to write!</p>
+                            <a href="/signup">Begin Writing</a>
+                        </div>
+
+                        <!-- Reading Overlay -->
+                        <div class="cosmos-reading-overlay">
+                            <div class="cosmos-poem-container">
+                                <div class="cosmos-poem-header">
+                                    <div class="cosmos-poem-number">Sonnet I of Crown I</div>
+                                    <h2 class="cosmos-poem-title">The Opening</h2>
+                                    <div class="cosmos-poem-authors">Alice & Bob</div>
+                                </div>
+
+                                <div class="cosmos-seed-lines">
+                                    <span class="cosmos-seed-label">Seeded by lines from the parent</span>
+                                    <div class="cosmos-seed-lines-content"></div>
+                                </div>
+
+                                <div class="cosmos-poem-lines"></div>
+
+                                <div class="cosmos-poem-footer">
+                                    <div class="cosmos-lineage-info"></div>
+                                    <button class="cosmos-close-poem">Return to cosmos</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
