@@ -62,9 +62,9 @@ class Pair(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     crown_id: int = Field(foreign_key="crown.id")
     user_1_id: int = Field(foreign_key="user.id")
-    user_2_id: int = Field(foreign_key="user.id")
+    user_2_id: Optional[int] = Field(default=None, foreign_key="user.id")  # Optional for orphaned pairs
     source_line_start: int
-    sonnet_id: int = Field(foreign_key="sonnet.id")
+    sonnet_id: Optional[int] = Field(default=None, foreign_key="sonnet.id")  # Optional when waiting for new partner
     status: str = "writing"
     completion_order: Optional[int] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)

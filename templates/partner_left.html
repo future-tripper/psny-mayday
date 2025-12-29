@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Left - Mayday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/menu.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1>Mayday</h1>
+            <p class="tagline">A sonnet crown of epic proportions</p>
+        </header>
+
+        <nav class="mobile-nav">
+            <a href="/signup">Sign Up</a>
+            <a href="/crown/1/visualize">The Crown</a>
+            <a href="/about">About</a>
+            <a href="https://poetrysocietyny.org/membership" class="nav-button" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
+
+        <div class="reset-section">
+            <div class="ornament">✦</div>
+            <h2>Your partner had to step away</h2>
+            <p class="intro-text">Here's the poem you were working on together.</p>
+
+            <div class="poem-preview">
+                <h3>Your poem so far</h3>
+                <div class="lines" id="poem-lines">
+                    {% for line in lines %}
+                    <div class="line-with-number">
+                        <span class="line-number">{{ line.line_number }}</span>
+                        <div class="line {% if not line.text %}empty-line{% endif %}">
+                            {{ line.text if line.text else '...' }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="copy-button" onclick="copyPoem()">Copy poem to clipboard</button>
+            </div>
+
+            <div class="warning-box">
+                Your lines will be cleared when you continue. Copy them now if you'd like to keep them.
+            </div>
+
+            <div class="options-section">
+                <h3>What would you like to do?</h3>
+
+                <form action="/restart-same-lines" method="post">
+                    <input type="hidden" name="u" value="{{ user.code }}">
+                    <button type="submit" class="option-button">
+                        <span class="option-title">Restart this poem</span>
+                        <span class="option-desc">Keep same lines, new partner</span>
+                    </button>
+                </form>
+
+                <form action="/restart-new-lines" method="post">
+                    <input type="hidden" name="u" value="{{ user.code }}">
+                    <button type="submit" class="option-button">
+                        <span class="option-title">Get new lines</span>
+                        <span class="option-desc">Start fresh with a new partner</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="secondary-options">
+                <p>Need to step away completely?</p>
+                <form action="/leave-completely" method="post" style="display: inline;">
+                    <input type="hidden" name="u" value="{{ user.code }}">
+                    <button type="submit" class="secondary-link">Nah, I'm good</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyPoem() {
+            const lines = document.querySelectorAll('#poem-lines .line');
+            let poemText = '';
+            lines.forEach((line, index) => {
+                const text = line.textContent.trim();
+                if (text && text !== '...') {
+                    poemText += text + '\n';
+                }
+            });
+
+            navigator.clipboard.writeText(poemText.trim()).then(() => {
+                const btn = document.querySelector('.copy-button');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy poem to clipboard';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

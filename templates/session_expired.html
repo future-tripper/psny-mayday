@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Expired - Mayday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/menu.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1>Mayday</h1>
+            <p class="tagline">A sonnet crown of epic proportions</p>
+        </header>
+
+        <nav class="mobile-nav">
+            <a href="/signup">Sign Up</a>
+            <a href="/crown/1/visualize">The Crown</a>
+            <a href="/about">About</a>
+            <a href="https://poetrysocietyny.org/membership" class="nav-button" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
+
+        <div class="expired-section">
+            <div class="ornament">✦</div>
+            <h2>Your session expired</h2>
+            <p class="message">
+                It's been a while since your last visit, so your collaboration was
+                reset to make room for other poets. Don't worry—you can jump back in!
+            </p>
+
+            <div class="options-section">
+                <form action="/rejoin" method="post">
+                    <input type="hidden" name="u" value="{{ user.code }}">
+                    <button type="submit" class="option-button">
+                        <span class="option-title">Get a new partner</span>
+                        <span class="option-desc">Join the waiting room</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="secondary-options">
+                <p>Not right now?</p>
+                <a href="/goodbye" class="secondary-link">Nah, I'm good</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

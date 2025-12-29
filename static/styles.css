@@ -993,3 +993,282 @@ h1 {
     color: rgba(230, 81, 0, 0.9);
     border: 1px solid rgba(255, 152, 0, 0.2);
 }
+
+/* Leave collaboration styles */
+.leave-section {
+    text-align: center;
+    padding: 40px 60px 60px;
+    margin-top: 20px;
+}
+
+.leave-link {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.8em;
+    color: #999;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+}
+
+.leave-link:hover {
+    color: #666;
+}
+
+/* Reset/Abort flow pages */
+.reset-section {
+    padding: 60px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.reset-section h2 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 2.4em;
+    color: #2b2b2b;
+    margin-bottom: 20px;
+    font-weight: 300;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.reset-section .intro-text {
+    font-family: 'Josefin Sans', sans-serif;
+    text-align: center;
+    color: #555;
+    font-size: 1em;
+    margin-bottom: 35px;
+    font-weight: 300;
+    line-height: 1.6;
+}
+
+.poem-preview {
+    background: white;
+    padding: 30px;
+    border-radius: 3px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.poem-preview h3 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.85em;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    font-weight: 400;
+}
+
+.poem-preview .lines {
+    max-width: none;
+}
+
+.poem-preview .line {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1em;
+    color: #3a3a3a;
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.poem-preview .line.empty-line {
+    color: #ccc;
+    font-style: italic;
+}
+
+.copy-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background: transparent;
+    color: #2b2b2b;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.85em;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    margin-top: 15px;
+}
+
+.copy-button:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+.copy-button.copied {
+    background: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+.warning-box {
+    background: rgba(255, 193, 7, 0.1);
+    border-left: 3px solid #FFC107;
+    padding: 15px 20px;
+    margin-bottom: 35px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.9em;
+    color: #666;
+    font-weight: 300;
+}
+
+.options-section h3 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1em;
+    color: #2b2b2b;
+    margin-bottom: 20px;
+    font-weight: 400;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.option-button {
+    display: block;
+    width: 100%;
+    padding: 20px 25px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.option-button:hover {
+    border-color: #F8B098;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.option-button .option-title {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1em;
+    color: #2b2b2b;
+    font-weight: 400;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.option-button .option-desc {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.85em;
+    color: #888;
+    font-weight: 300;
+    display: block;
+}
+
+.secondary-options {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid #eee;
+    text-align: center;
+}
+
+.secondary-options p {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 15px;
+    font-weight: 300;
+}
+
+.secondary-link {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.9em;
+    color: #999;
+    text-decoration: none;
+    padding: 10px 20px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    transition: all 0.2s;
+    display: inline-block;
+}
+
+.secondary-link:hover {
+    color: #666;
+    border-color: #ccc;
+}
+
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 30px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.9em;
+    color: #888;
+    text-decoration: none;
+    font-weight: 300;
+}
+
+.back-link:hover {
+    color: #2b2b2b;
+}
+
+/* Goodbye page */
+.goodbye-section {
+    padding: 100px 60px;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.goodbye-section .moon {
+    font-size: 3em;
+    margin-bottom: 30px;
+}
+
+.goodbye-section h2 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 2.4em;
+    color: #2b2b2b;
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.goodbye-section p {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 40px;
+    font-weight: 300;
+    line-height: 1.6;
+}
+
+.goodbye-section .cta-button {
+    margin-top: 20px;
+}
+
+/* Session expired page */
+.expired-section {
+    padding: 80px 60px;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.expired-section h2 {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 2.4em;
+    color: #2b2b2b;
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.expired-section .message {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1em;
+    color: #555;
+    margin-bottom: 40px;
+    font-weight: 300;
+    line-height: 1.7;
+}
+
+.expired-section .options-section {
+    text-align: left;
+    max-width: 400px;
+    margin: 0 auto;
+}

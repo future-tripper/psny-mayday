@@ -6,6 +6,10 @@ from sqlmodel import Session, select
 from database import get_session
 from models import User, Sonnet, Line, Turn, Crown, Pair, SourceSonnet, SourceLine
 import secrets
+from datetime import datetime, timedelta
+
+# Stale pair threshold (12 hours)
+STALE_THRESHOLD_HOURS = 12
 
 app = FastAPI()
 
@@ -76,11 +80,154 @@ def spawn_source_sonnet_from_completed(sonnet_id: int, session: Session):
     return new_source
 
 
+def find_stale_pairs(session: Session, threshold_hours: int = STALE_THRESHOLD_HOURS):
+    """Find pairs with no activity for X hours."""
+    threshold = datetime.utcnow() - timedelta(hours=threshold_hours)
+
+    active_pairs = session.exec(
+        select(Pair).where(Pair.status == "writing")
+    ).all()
+
+    stale_pairs = []
+    for pair in active_pairs:
+        # Find most recent line in their sonnet
+        latest_line = session.exec(
+            select(Line)
+            .where(Line.sonnet_id == pair.sonnet_id)
+            .order_by(Line.created_at.desc())
+        ).first()
+
+        # If last line is older than threshold → stale
+        if latest_line and latest_line.created_at < threshold:
+            stale_pairs.append(pair)
+
+    return stale_pairs
+
+
+def cleanup_stale_pairs(session: Session):
+    """Mark stale pairs as abandoned, freeing their slots."""
+    stale_pairs = find_stale_pairs(session, STALE_THRESHOLD_HOURS)
+
+    for pair in stale_pairs:
+        pair.status = "abandoned"
+
+        # Clean up incomplete sonnet
+        sonnet = session.exec(
+            select(Sonnet).where(Sonnet.id == pair.sonnet_id)
+        ).first()
+        if sonnet:
+            # Delete lines
+            lines = session.exec(select(Line).where(Line.sonnet_id == sonnet.id)).all()
+            for line in lines:
+                session.delete(line)
+            # Delete turn
+            turn = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).first()
+            if turn:
+                session.delete(turn)
+            # Delete sonnet
+            session.delete(sonnet)
+
+        # Reset both users to waiting
+        for user_id in [pair.user_1_id, pair.user_2_id]:
+            if user_id:
+                user = session.exec(select(User).where(User.id == user_id)).first()
+                if user:
+                    user.status = "waiting"
+                    user.pair_id = None
+                    session.add(user)
+
+        session.add(pair)
+
+    session.commit()
+
+    if stale_pairs:
+        print(f"🧹 Cleaned up {len(stale_pairs)} stale pair(s)")
+
+    return len(stale_pairs)
+
+
 def try_pair_users(session: Session):
+    # FIRST: Clean up stale pairs (frees abandoned slots)
+    cleanup_stale_pairs(session)
+
     waiting_users = session.exec(
         select(User).where(User.status == "waiting").order_by(User.id)
     ).all()
 
+    # PRIORITY 1: Fill orphaned pairs first
+    if len(waiting_users) >= 1:
+        orphaned_pair = session.exec(
+            select(Pair).where(Pair.status == "orphaned").order_by(Pair.created_at)
+        ).first()
+
+        if orphaned_pair:
+            new_partner = waiting_users[0]
+
+            # Get the remaining user (user_1)
+            remaining_user = session.exec(
+                select(User).where(User.id == orphaned_pair.user_1_id)
+            ).first()
+
+            # Get crown and source lines for this slot
+            crown = session.exec(select(Crown).where(Crown.id == orphaned_pair.crown_id)).first()
+
+            first_line_num = orphaned_pair.source_line_start
+            second_line_num = 1 if first_line_num == 14 else first_line_num + 1
+
+            source_lines = session.exec(
+                select(SourceLine)
+                .where(SourceLine.source_sonnet_id == crown.source_sonnet_id)
+                .where(SourceLine.line_number.in_([first_line_num, second_line_num]))
+                .order_by(SourceLine.line_number)
+            ).all()
+
+            # Create fresh sonnet
+            new_sonnet = Sonnet(status="active")
+            session.add(new_sonnet)
+            session.commit()
+            session.refresh(new_sonnet)
+
+            # Add bookend lines
+            line_1 = Line(
+                sonnet_id=new_sonnet.id,
+                line_number=1,
+                text=source_lines[0].text,
+                author_user_id=remaining_user.id
+            )
+            session.add(line_1)
+
+            line_14 = Line(
+                sonnet_id=new_sonnet.id,
+                line_number=14,
+                text=source_lines[1].text,
+                author_user_id=new_partner.id
+            )
+            session.add(line_14)
+
+            # Create turn
+            turn = Turn(sonnet_id=new_sonnet.id, next_user_id=remaining_user.id)
+            session.add(turn)
+
+            # Update pair
+            orphaned_pair.user_2_id = new_partner.id
+            orphaned_pair.sonnet_id = new_sonnet.id
+            orphaned_pair.status = "writing"
+            session.add(orphaned_pair)
+
+            # Update users
+            remaining_user.status = "paired"
+            remaining_user.pair_id = orphaned_pair.id
+            new_partner.status = "paired"
+            new_partner.pair_id = orphaned_pair.id
+            session.add(remaining_user)
+            session.add(new_partner)
+
+            session.commit()
+
+            print(f"🔗 Filled orphaned pair with {new_partner.pen_name}")
+            return orphaned_pair
+
+    # PRIORITY 2: Normal pairing
     if len(waiting_users) < 2:
         return None
 
@@ -134,8 +281,11 @@ def try_pair_users(session: Session):
         print(f"🌟 Created new Crown #{crown.id} (Generation {crown.generation})")
         print(f"   Seed: \"{unused_source.title}\" ({unused_source.source_type})")
 
+    # Exclude abandoned pairs when counting slots (they can be backfilled)
     existing_pairs = session.exec(
-        select(Pair).where(Pair.crown_id == crown.id)
+        select(Pair)
+        .where(Pair.crown_id == crown.id)
+        .where(Pair.status != "abandoned")
     ).all()
 
     if len(existing_pairs) >= 14:  # Allow 14 pairs for true Crown
@@ -144,7 +294,8 @@ def try_pair_users(session: Session):
     user_1 = waiting_users[0]
     user_2 = waiting_users[1]
 
-    assigned_line_starts = {pair.source_line_start for pair in existing_pairs}
+    # Only count non-abandoned pairs for slot assignment
+    assigned_line_starts = {pair.source_line_start for pair in existing_pairs if pair.status != "abandoned"}
 
     first_line_num = None
     second_line_num = None
@@ -280,11 +431,16 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
     if not user:
         return RedirectResponse("/signup?error=User not found", status_code=303)
 
+    # User is waiting for initial pairing
     if user.status == "waiting":
         return templates.TemplateResponse("waiting.html", {
             "request": request,
             "user": user
         })
+
+    # User marked as inactive (they left completely)
+    if user.status == "inactive":
+        return RedirectResponse("/signup", status_code=303)
 
     pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
     if not pair:
@@ -293,8 +449,33 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
             "user": user
         })
 
+    # Pair completed
     if pair.status == "complete":
         return RedirectResponse(f"/complete?u={u}", status_code=303)
+
+    # Partner left - show options to remaining user (if they haven't chosen yet)
+    # Check if sonnet still exists (means they haven't made a choice)
+    if pair.status == "orphaned" and user.id == pair.user_1_id:
+        if pair.sonnet_id:
+            # Sonnet exists - show options page
+            return RedirectResponse(f"/partner-left?u={u}", status_code=303)
+        else:
+            # User already chose to restart, waiting for new partner
+            return templates.TemplateResponse("waiting.html", {
+                "request": request,
+                "user": user
+            })
+
+    # Session expired (pair was abandoned due to timeout)
+    if pair.status == "abandoned":
+        return RedirectResponse(f"/session-expired?u={u}", status_code=303)
+
+    # User is waiting for new partner (after they made a choice)
+    if user.status == "waiting_for_partner":
+        return templates.TemplateResponse("waiting.html", {
+            "request": request,
+            "user": user
+        })
 
     partner_id = pair.user_2_id if user.id == pair.user_1_id else pair.user_1_id
     partner = session.exec(select(User).where(User.id == partner_id)).first()
@@ -960,3 +1141,293 @@ async def crown_visualization(request: Request, crown_id: int, u: str = None, se
         "available_crowns": available_crowns,
         "user": user
     })
+
+
+# ============================================
+# ABORT/RESET FLOW ENDPOINTS
+# ============================================
+
+def get_poem_lines_for_display(pair, session):
+    """Get lines formatted for display in reset pages."""
+    if not pair or not pair.sonnet_id:
+        return []
+
+    lines = session.exec(
+        select(Line)
+        .where(Line.sonnet_id == pair.sonnet_id)
+        .order_by(Line.line_number)
+    ).all()
+
+    lines_dict = {line.line_number: line for line in lines}
+
+    display_lines = []
+    for i in range(1, 15):
+        if i in lines_dict:
+            display_lines.append(lines_dict[i])
+        else:
+            placeholder = type('obj', (object,), {
+                'line_number': i,
+                'text': ''
+            })()
+            display_lines.append(placeholder)
+
+    return display_lines
+
+
+@app.get("/confirm-leave")
+async def confirm_leave_page(request: Request, u: str, session: Session = Depends(get_session)):
+    """Page shown when user clicks 'Leave collaboration'"""
+    user = session.exec(select(User).where(User.code == u)).first()
+    if not user:
+        return RedirectResponse("/signup", status_code=303)
+
+    pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
+    if not pair:
+        return RedirectResponse("/signup", status_code=303)
+
+    lines = get_poem_lines_for_display(pair, session)
+
+    return templates.TemplateResponse("confirm_leave.html", {
+        "request": request,
+        "user": user,
+        "lines": lines
+    })
+
+
+@app.get("/partner-left")
+async def partner_left_page(request: Request, u: str, session: Session = Depends(get_session)):
+    """Page shown when user's partner has left (pair is orphaned)"""
+    user = session.exec(select(User).where(User.code == u)).first()
+    if not user:
+        return RedirectResponse("/signup", status_code=303)
+
+    pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
+    if not pair:
+        return RedirectResponse("/signup", status_code=303)
+
+    lines = get_poem_lines_for_display(pair, session)
+
+    return templates.TemplateResponse("partner_left.html", {
+        "request": request,
+        "user": user,
+        "lines": lines
+    })
+
+
+@app.get("/session-expired")
+async def session_expired_page(request: Request, u: str, session: Session = Depends(get_session)):
+    """Page shown when user returns after 12h timeout"""
+    user = session.exec(select(User).where(User.code == u)).first()
+    if not user:
+        return RedirectResponse("/signup", status_code=303)
+
+    return templates.TemplateResponse("session_expired.html", {
+        "request": request,
+        "user": user
+    })
+
+
+@app.get("/goodbye")
+async def goodbye_page(request: Request):
+    """Friendly goodbye page"""
+    return templates.TemplateResponse("goodbye.html", {
+        "request": request
+    })
+
+
+@app.post("/abort")
+async def abort_collaboration(
+    request: Request,
+    u: str = Form(...),
+    action: str = Form(...),
+    session: Session = Depends(get_session)
+):
+    """User initiates leaving their collaboration"""
+    user = session.exec(select(User).where(User.code == u)).first()
+    if not user or not user.pair_id:
+        return RedirectResponse("/signup", status_code=303)
+
+    pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
+    if not pair:
+        return RedirectResponse("/signup", status_code=303)
+
+    # Get the other user (partner)
+    partner_id = pair.user_2_id if user.id == pair.user_1_id else pair.user_1_id
+    partner = session.exec(select(User).where(User.id == partner_id)).first()
+
+    # Mark pair as orphaned (partner can continue with new user)
+    pair.status = "orphaned"
+
+    # Make the partner user_1 (the one waiting for new partner)
+    if partner:
+        pair.user_1_id = partner.id
+        pair.user_2_id = None
+        partner.status = "waiting_for_partner"
+        session.add(partner)
+
+    # Reset the leaving user
+    user.status = "waiting" if action == "waiting" else "inactive"
+    user.pair_id = None
+    session.add(user)
+    session.add(pair)
+
+    # Note: We keep the sonnet/lines for the partner-left page to show
+    # They will be deleted when the partner makes their choice
+
+    session.commit()
+
+    if action == "waiting":
+        # Try to pair them immediately
+        try_pair_users(session)
+        return RedirectResponse(f"/poet?u={u}", status_code=303)
+    else:
+        return RedirectResponse("/goodbye", status_code=303)
+
+
+@app.post("/restart-same-lines")
+async def restart_same_lines(
+    u: str = Form(...),
+    session: Session = Depends(get_session)
+):
+    """Remaining user wants to restart with same bookend lines"""
+    user = session.exec(select(User).where(User.code == u)).first()
+    if not user or not user.pair_id:
+        return RedirectResponse("/signup", status_code=303)
+
+    pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
+    if not pair:
+        return RedirectResponse("/signup", status_code=303)
+
+    # Delete existing sonnet and lines
+    if pair.sonnet_id:
+        sonnet = session.exec(select(Sonnet).where(Sonnet.id == pair.sonnet_id)).first()
+        if sonnet:
+            lines = session.exec(select(Line).where(Line.sonnet_id == sonnet.id)).all()
+            for line in lines:
+                session.delete(line)
+            turn = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).first()
+            if turn:
+                session.delete(turn)
+            session.delete(sonnet)
+
+    # Keep pair as orphaned, user waits for new partner
+    pair.status = "orphaned"
+    pair.sonnet_id = None
+    pair.user_1_id = user.id
+    pair.user_2_id = None
+
+    user.status = "waiting_for_partner"
+
+    session.add(pair)
+    session.add(user)
+    session.commit()
+
+    # Try to fill the vacancy
+    try_pair_users(session)
+
+    return RedirectResponse(f"/poet?u={u}", status_code=303)
+
+
+@app.post("/restart-new-lines")
+async def restart_new_lines(
+    u: str = Form(...),
+    session: Session = Depends(get_session)
+):
+    """User wants completely fresh start with new lines"""
+    user = session.exec(select(User).where(User.code == u)).first()
+    if not user or not user.pair_id:
+        return RedirectResponse("/signup", status_code=303)
+
+    pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
+    if not pair:
+        return RedirectResponse("/signup", status_code=303)
+
+    # Delete existing sonnet and lines
+    if pair.sonnet_id:
+        sonnet = session.exec(select(Sonnet).where(Sonnet.id == pair.sonnet_id)).first()
+        if sonnet:
+            lines = session.exec(select(Line).where(Line.sonnet_id == sonnet.id)).all()
+            for line in lines:
+                session.delete(line)
+            turn = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).first()
+            if turn:
+                session.delete(turn)
+            session.delete(sonnet)
+
+    # Mark pair as abandoned (slot freed for backfill)
+    pair.status = "abandoned"
+    session.add(pair)
+
+    # Reset user to waiting
+    user.status = "waiting"
+    user.pair_id = None
+    session.add(user)
+
+    session.commit()
+
+    # Try to pair them with someone
+    try_pair_users(session)
+
+    return RedirectResponse(f"/poet?u={u}", status_code=303)
+
+
+@app.post("/leave-completely")
+async def leave_completely(
+    u: str = Form(...),
+    session: Session = Depends(get_session)
+):
+    """User wants to exit entirely"""
+    user = session.exec(select(User).where(User.code == u)).first()
+    if not user:
+        return RedirectResponse("/goodbye", status_code=303)
+
+    pair = None
+    if user.pair_id:
+        pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
+
+    if pair:
+        # Delete existing sonnet and lines
+        if pair.sonnet_id:
+            sonnet = session.exec(select(Sonnet).where(Sonnet.id == pair.sonnet_id)).first()
+            if sonnet:
+                lines = session.exec(select(Line).where(Line.sonnet_id == sonnet.id)).all()
+                for line in lines:
+                    session.delete(line)
+                turn = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).first()
+                if turn:
+                    session.delete(turn)
+                session.delete(sonnet)
+
+        # Mark pair as abandoned
+        pair.status = "abandoned"
+        session.add(pair)
+
+    # Reset user
+    user.status = "inactive"
+    user.pair_id = None
+    session.add(user)
+
+    session.commit()
+
+    return RedirectResponse("/goodbye", status_code=303)
+
+
+@app.post("/rejoin")
+async def rejoin_waiting(
+    u: str = Form(...),
+    session: Session = Depends(get_session)
+):
+    """User rejoins waiting room after session expired"""
+    user = session.exec(select(User).where(User.code == u)).first()
+    if not user:
+        return RedirectResponse("/signup", status_code=303)
+
+    user.status = "waiting"
+    user.pair_id = None
+    session.add(user)
+    session.commit()
+
+    # Try to pair immediately
+    try_pair_users(session)
+
+    return RedirectResponse(f"/poet?u={u}", status_code=303)

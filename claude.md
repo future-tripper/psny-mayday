@@ -50,6 +50,30 @@ A collaborative poetry platform for the Poetry Society of New York (PSNY) where 
 
 **Dynamic Dropdown**: Only shows Crowns that exist in database
 
+### Abort/Reset Flow (Partner Abandonment)
+When a partner leaves or goes inactive, the system handles it gracefully:
+
+**User-initiated leave:**
+1. User clicks "Leave collaboration" → `/confirm-leave` page with poem preview
+2. Can copy their work, then choose: "Go to waiting room" or "Nah, I'm good" (exit)
+3. Partner sees `/partner-left` page with options:
+   - "Restart this poem" - Keep same bookend lines, wait for new partner
+   - "Get new lines" - Release slot, join waiting room for fresh start
+   - "Nah, I'm good" - Exit completely
+
+**12-hour timeout (silent abandonment):**
+1. `cleanup_stale_pairs()` runs on each signup, marks inactive pairs as "abandoned"
+2. Abandoned slots become available for new pairs (backfill)
+3. Returning user after timeout sees `/session-expired` page
+4. Can rejoin waiting room with same account code
+
+**Key endpoints:**
+- `GET /confirm-leave` - User initiates leaving
+- `GET /partner-left` - Remaining user sees options
+- `GET /session-expired` - User returns after 12h timeout
+- `GET /goodbye` - Friendly exit page
+- `POST /abort`, `/restart-same-lines`, `/restart-new-lines`, `/leave-completely`, `/rejoin`
+
 ## Tech Stack
 - **Backend**: FastAPI + SQLModel
 - **Database**: SQLite (local), PostgreSQL (production on Render)
@@ -80,7 +104,11 @@ psny-mayday/
 │   ├── complete.html          # Sonnet completion celebration
 │   ├── crown_visualization.html # Crown viz with Jewels/Threads/Scroll
 │   ├── sonnet.html            # Individual sonnet view
-│   └── about.html             # About Mayday page
+│   ├── about.html             # About Mayday page
+│   ├── confirm_leave.html     # User confirms leaving collaboration
+│   ├── partner_left.html      # Options when partner has left
+│   ├── session_expired.html   # User returns after 12h timeout
+│   └── goodbye.html           # Friendly exit page
 │
 ├── static/
 │   ├── styles.css             # Main PSNY styling
@@ -150,11 +178,15 @@ Sonnet:
 
 Pair:
   - crown_id: int
-  - user_1_id, user_2_id: int
+  - user_1_id: int
+  - user_2_id: Optional[int] (nullable for orphaned pairs awaiting new partner)
   - source_line_start: int (1-14, which line pair starts from)
-  - sonnet_id: int
-  - status: "writing" | "complete"
+  - sonnet_id: Optional[int] (nullable when waiting for new partner)
+  - status: "writing" | "complete" | "orphaned" | "abandoned"
   - completion_order: int (1-14 within Crown)
+
+User:
+  - status: "waiting" | "paired" | "waiting_for_partner" | "inactive"
 ```
 
 ## Local Development
