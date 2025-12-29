@@ -43,8 +43,7 @@
                         <option value="{{ crown.id }}" {% if crown.id == crown_id %}selected{% endif %}>Crown {{ crown.id }}</option>
                         {% endfor %}
                     </select>
-                    <a href="#" class="view-link active" data-view="orbit">Jewels</a>
-                    <a href="#" class="view-link" data-view="lineage">Threads</a>
+                    <a href="#" class="view-link active" data-view="lineage">Threads</a>
                     <a href="#" class="view-link" data-view="scroll">Scroll</a>
                 </div>
             </div>
@@ -52,15 +51,7 @@
             <!-- Main Visualization Area -->
             <div class="viz-main">
                 <div class="stage-wrapper">
-                    <div id="orrery-stage" class="viz-stage viz-stage--orrery active" aria-live="polite">
-                        <canvas id="orrery-canvas"></canvas>
-                        <div class="crown-status-badge" id="crown-status-badge"></div>
-                        <div class="orrery-tooltip" id="orrery-tooltip">
-                            <div class="tooltip-title"></div>
-                            <div class="tooltip-subtitle"></div>
-                        </div>
-                    </div>
-                    <div id="lineage-stage" class="viz-stage viz-stage--lineage" hidden>
+                    <div id="lineage-stage" class="viz-stage viz-stage--lineage active" aria-live="polite">
                         <div class="crown-status-badge" id="crown-status-badge-threads"></div>
                         <div id="seed-context-threads" class="seed-context seed-context--threads"></div>
                         <div id="lineage-scroll" class="lineage-scroll" role="list"></div>
@@ -69,9 +60,6 @@
                         <div class="crown-status-badge" id="crown-status-badge-scroll"></div>
                         <div id="seed-context-scroll" class="seed-context seed-context--scroll"></div>
                         <div id="scroll-content" class="scroll-content"></div>
-                    </div>
-                    <div id="legacy-stage" class="viz-stage viz-stage--legacy" hidden>
-                        <div id="sigma-container" class="sigma-container"></div>
                     </div>
                 </div>
 

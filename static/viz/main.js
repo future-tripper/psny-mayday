@@ -25,7 +25,7 @@ async function boot() {
     console.log('[Mayday Viz] Crown ID:', crownId);
 
     const state = new AppState({
-        currentView: 'orbit',
+        currentView: 'lineage',
         selectedNodeId: null,
         isLoading: true
     });

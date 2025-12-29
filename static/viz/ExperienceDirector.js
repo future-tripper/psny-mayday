@@ -1,9 +1,6 @@
-import OrreryView from './views/OrreryView.js';
-import GalaxyGraphView from './views/GalaxyGraphView.js';
 import LineageTunnelView from './views/LineageTunnelView.js';
 import ScrollView from './views/ScrollView.js';
 import PoetStudioView from './views/PoetStudioView.js';
-import PagesView from './views/PagesView.js';
 import { formatDuration, formatPercent } from './utils/formatters.js';
 import MetricsTracker from './utils/metrics.js';
 
@@ -20,12 +17,8 @@ export default class ExperienceDirector {
         this.metrics = new MetricsTracker();
 
         this.stageMap = {
-            graph: 'graph-stage',
-            orbit: 'orrery-stage',
             lineage: 'lineage-stage',
-            scroll: 'scroll-stage',
-            studio: 'orrery-stage',
-            pages: 'pages-stage'
+            scroll: 'scroll-stage'
         };
     }
 
@@ -49,29 +42,6 @@ export default class ExperienceDirector {
         this.renderMetrics();
         this.renderStoryHighlights();
         this.renderCrownStatusBadge();
-
-        // Initialize Galaxy Graph View (2D tree)
-        this.galaxyGraphView = new GalaxyGraphView({
-            container: document.getElementById('graph-stage'),
-            canvas: document.getElementById('graph-canvas'),
-            state: this.state,
-            crownId: this.crownId,
-            dataService: this.dataService
-        });
-        await this.galaxyGraphView.initialize();
-
-        this.orreryView = new OrreryView({
-            container: document.getElementById('orrery-stage'),
-            canvas: document.getElementById('orrery-canvas'),
-            overlay: document.getElementById('orrery-overlay'),
-            state: this.state,
-            nodes: this.nodes,
-            connections: this.connections,
-            sourceTitle: contextData.source?.title || 'The Seed',
-            sourceFirstLine: contextData.source?.first_line || 'The source of all creation',
-            crownContext: contextData // Pass full context with parent/children
-        });
-        await this.orreryView.initialize();
 
         this.lineageView = new LineageTunnelView({
             container: document.getElementById('lineage-scroll'),
@@ -98,19 +68,6 @@ export default class ExperienceDirector {
             metrics: this.metrics
         });
 
-        this.pagesView = new PagesView({
-            container: document.getElementById('pages-stage'),
-            titleElement: document.getElementById('page-title'),
-            authorsElement: document.getElementById('page-authors'),
-            bodyElement: document.getElementById('page-body'),
-            positionElement: document.getElementById('page-position'),
-            prevButton: document.querySelector('.page-nav-prev'),
-            nextButton: document.querySelector('.page-nav-next'),
-            state: this.state,
-            dataService: this.dataService,
-            nodes: this.nodes
-        });
-
         this.state.subscribe('currentView', (view) => this.onViewChange(view));
         this.state.subscribe('selectedNodeId', (nodeId) => this.onNodeSelected(nodeId));
         this.state.subscribe('selectedCrownId', (crownId) => this.onCrownSelected(crownId));
@@ -128,11 +85,8 @@ export default class ExperienceDirector {
         if (!crownId) return;
         console.log('[ExperienceDirector] Crown selected, navigating to:', crownId);
 
-        // If clicking current Crown, just switch to Jewels view
-        if (crownId === this.crownId) {
-            this.state.set('currentView', 'orbit');
-        } else {
-            // Navigate to different Crown's visualization page
+        // Navigate to different Crown's visualization page
+        if (crownId !== this.crownId) {
             window.location.href = `/crown/${crownId}/visualize`;
         }
     }
@@ -323,20 +277,8 @@ export default class ExperienceDirector {
             stage.classList.add('active');
         }
 
-        if (this.galaxyGraphView) {
-            this.galaxyGraphView.setActive(view === 'graph');
-        }
-
-        if (this.orreryView) {
-            this.orreryView.setMode(view);
-        }
-
         if (this.lineageView) {
             this.lineageView.setActive(view === 'lineage');
-        }
-
-        if (this.pagesView) {
-            this.pagesView.setActive(view === 'pages');
         }
     }
 
@@ -360,10 +302,6 @@ export default class ExperienceDirector {
         }
 
         this.metrics.recordSelection(nodeId);
-
-        if (this.orreryView) {
-            this.orreryView.highlightNode(nodeId);
-        }
 
         if (this.lineageView) {
             this.lineageView.highlightNode(nodeId);
