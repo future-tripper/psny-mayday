@@ -396,6 +396,22 @@ async def signup(
 ):
     existing_user = session.exec(select(User).where(User.email == email)).first()
     if existing_user:
+        # Check if they have a current active pair
+        if existing_user.pair_id:
+            pair = session.exec(select(Pair).where(Pair.id == existing_user.pair_id)).first()
+            if pair and pair.status == "writing":
+                # Still working on a poem - redirect to continue
+                return RedirectResponse(f"/poet?u={existing_user.code}", status_code=303)
+
+        # Their poem is complete or they have no pair - put them back in waiting queue
+        existing_user.status = "waiting"
+        existing_user.pair_id = None
+        existing_user.pen_name = pen_name  # Allow updating pen name
+        session.add(existing_user)
+        session.commit()
+
+        try_pair_users(session)
+
         return RedirectResponse(f"/poet?u={existing_user.code}", status_code=303)
 
     code = secrets.token_urlsafe(8)
