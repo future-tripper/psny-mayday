@@ -4,3 +4,8 @@ sqlmodel
 jinja2
 python-multipart
 psycopg2-binary
+
+# Testing (dev only)
+pytest
+pytest-asyncio
+httpx
