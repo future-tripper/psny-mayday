@@ -172,6 +172,10 @@ export default class CosmosView {
     }
 
     onMouseDown(e) {
+        // Check hover state at click time to ensure accurate detection
+        const mouseWorld = this.screenToWorld(e.clientX, e.clientY);
+        this.checkHover(mouseWorld);
+
         if (this.hoveredStar) {
             this.openPoem(this.hoveredStar.sonnet, this.hoveredStar.crown);
         } else {
@@ -361,8 +365,10 @@ export default class CosmosView {
                 const sx = crown.x + Math.cos(angle) * CONFIG.crown.radius;
                 const sy = crown.y + Math.sin(angle) * CONFIG.crown.radius;
 
+                // Larger hit radius for easier clicking
+                const hitRadius = 20;
                 const dist = Math.hypot(mouseWorld.x - sx, mouseWorld.y - sy);
-                if (dist < 15) {
+                if (dist < hitRadius) {
                     this.hoveredStar = { sonnet, crown, x: sx, y: sy };
                 }
             });
@@ -428,8 +434,9 @@ export default class CosmosView {
                 let pulse = 1;
                 let alpha = 1;
                 if (sonnet.status === 'forming') {
-                    pulse = 0.7 + Math.sin(this.time * 2 + i) * 0.3;
-                    alpha = 0.5 + Math.sin(this.time * 2 + i) * 0.2;
+                    // Slow, gentle pulse (0.5 = ~8 second cycle)
+                    pulse = 0.85 + Math.sin(this.time * 0.5 + i) * 0.15;
+                    alpha = 0.7 + Math.sin(this.time * 0.5 + i) * 0.15;
                 }
 
                 // Star glow
@@ -460,17 +467,18 @@ export default class CosmosView {
                 }
             });
 
-            // Crown label
-            if (this.zoom > 0.4) {
-                this.ctx.fillStyle = `rgba(255, 255, 255, ${crown.status === 'forming' ? 0.2 : 0.3})`;
-                this.ctx.font = `${11 / this.zoom}px 'Cormorant Garamond', serif`;
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText(crown.name, crown.x, crown.y + 100);
+            // Crown label - use minimum font size so text stays readable when zoomed
+            const baseFontSize = Math.max(14, 14 / this.zoom);
+            const subFontSize = Math.max(12, 12 / this.zoom);
 
-                this.ctx.fillStyle = `rgba(255, 255, 255, 0.15)`;
-                this.ctx.font = `${9 / this.zoom}px 'Cormorant Garamond', serif`;
-                this.ctx.fillText(`${crown.sonnets.length}/14 sonnets`, crown.x, crown.y + 112);
-            }
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${crown.status === 'forming' ? 0.6 : 0.8})`;
+            this.ctx.font = `500 ${baseFontSize}px 'Josefin Sans', sans-serif`;
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(crown.name, crown.x, crown.y + 100 / this.zoom);
+
+            this.ctx.fillStyle = `rgba(255, 255, 255, 0.5)`;
+            this.ctx.font = `${subFontSize}px 'Cormorant Garamond', serif`;
+            this.ctx.fillText(`${crown.sonnets.length}/14 sonnets`, crown.x, crown.y + 118 / this.zoom);
         });
     }
 
