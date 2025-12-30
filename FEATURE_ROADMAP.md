@@ -75,17 +75,22 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 4. Quality: Add Unit Tests
-**Status:** Planned
+### 4. Quality: Expand Unit Tests
+**Status:** Setup complete, expand as needed
 **Source:** Code Review
 
-**Priority test areas:**
-- Pairing logic (`try_pair_users`)
-- Spawning logic (`spawn_source_sonnet_from_completed`)
+**Current coverage:**
+- Basic pairing tests
+- Bookend line wrap-around test
+- API endpoint tests
+
+**Priority areas to add:**
+- `try_pair_users` integration
+- `spawn_source_sonnet_from_completed` logic
 - Turn management
 - Abort/Reset flows
 
-**Framework:** pytest + pytest-asyncio
+**See:** `TESTING.md` for how to run and write tests
 
 ---
 
@@ -138,6 +143,7 @@ Allow users to collaborate with Claude when no human partner is available.
 - Poetic global exception handler (graceful error page with logging)
 - N+1 query fix in fractal API (7 queries instead of 300+)
 - Hover detection optimization in CosmosView (only on mouse move, not every frame)
+- Unit test framework setup (pytest + sample tests + TESTING.md guide)
 
 ### Phase 1: Abort/Reset Flow
 - User-initiated leave with poem preview
