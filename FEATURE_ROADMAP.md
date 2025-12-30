@@ -75,17 +75,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 4. Performance: N+1 Queries in Fractal API
-**Status:** Planned
-**Source:** Code Review
-
-**Problem:** `/api/fractal/tree` makes many individual queries per crown.
-
-**Fix:** Use eager loading with `selectinload`.
-
----
-
-### 5. Performance: Hover Detection in CosmosView
+### 4. Performance: Hover Detection in CosmosView
 **Status:** Planned
 **Source:** Code Review
 
@@ -95,7 +85,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 6. Quality: Add Unit Tests
+### 5. Quality: Add Unit Tests
 **Status:** Planned
 **Source:** Code Review
 
@@ -109,7 +99,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 7. Operations: Error Alerting
+### 6. Operations: Error Alerting
 **Status:** Planned
 **Source:** Discussion
 
@@ -156,6 +146,7 @@ Allow users to collaborate with Claude when no human partner is available.
 - Returning user re-pairing flow (can sign up again after completing a poem)
 - Line wrap-around fix: Pair 14 now correctly receives lines 14 and 1 (completing the crown)
 - Poetic global exception handler (graceful error page with logging)
+- N+1 query fix in fractal API (7 queries instead of 300+)
 
 ### Phase 1: Abort/Reset Flow
 - User-initiated leave with poem preview
