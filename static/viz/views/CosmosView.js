@@ -196,6 +196,10 @@ export default class CosmosView {
             this.camY -= dy;
             this.lastX = e.clientX;
             this.lastY = e.clientY;
+        } else {
+            // Only check hover when mouse moves (not every frame)
+            const mouseWorld = this.screenToWorld(e.clientX, e.clientY);
+            this.checkHover(mouseWorld);
         }
     }
 
@@ -377,9 +381,6 @@ export default class CosmosView {
 
     drawCrowns() {
         const colors = CONFIG.colors.generations;
-        const mouseWorld = this.screenToWorld(this.lastMouseX, this.lastMouseY);
-
-        this.checkHover(mouseWorld);
 
         this.poetryData.crowns.forEach(crown => {
             const crownColors = colors[crown.generation] || colors[1];
