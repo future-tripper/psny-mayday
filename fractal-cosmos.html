@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crown of Sonnets — A Fractal Poetry Cosmos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            color: #e8e6e0;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        #cosmos {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Subtle UI */
+        .ui-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            z-index: 10;
+            transition: opacity 0.5s;
+        }
+
+        .title-overlay {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            z-index: 10;
+        }
+
+        .title-overlay h1 {
+            font-size: 14px;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 4px;
+        }
+
+        .title-overlay .current-view {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.25);
+            font-style: italic;
+        }
+
+        /* Generation Legend - very subtle */
+        .legend {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 10;
+            text-align: right;
+        }
+
+        .legend-item {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .legend-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        /* Reading Overlay */
+        .reading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 10, 0.95);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease;
+        }
+
+        .reading-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .poem-container {
+            max-width: 650px;
+            width: 90%;
+            padding: 60px 40px;
+            transform: translateY(20px);
+            transition: transform 0.6s ease;
+        }
+
+        .reading-overlay.visible .poem-container {
+            transform: translateY(0);
+        }
+
+        .poem-header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .poem-number {
+            font-size: 11px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 12px;
+        }
+
+        .poem-title {
+            font-size: 24px;
+            font-weight: 300;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 8px;
+        }
+
+        .poem-authors {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .poem-lines {
+            line-height: 2.2;
+            font-size: 18px;
+            font-weight: 300;
+        }
+
+        .poem-line {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: lineAppear 0.4s ease forwards;
+            position: relative;
+            padding: 2px 0;
+        }
+
+        .poem-line.seed-line {
+            color: #c9a227;
+        }
+
+        .poem-line.spawn-line {
+            color: #7eb8da;
+        }
+
+        .poem-line .line-note {
+            position: absolute;
+            right: -200px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .poem-line.seed-line .line-note {
+            color: rgba(201, 162, 39, 0.6);
+        }
+
+        .poem-line.spawn-line .line-note {
+            color: rgba(126, 184, 218, 0.6);
+        }
+
+        @keyframes lineAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .poem-footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .lineage-info {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.8;
+        }
+
+        .lineage-link {
+            color: rgba(126, 184, 218, 0.8);
+            cursor: pointer;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .lineage-link:hover {
+            border-color: rgba(126, 184, 218, 0.5);
+        }
+
+        .close-poem {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-poem:hover {
+            color: rgba(255, 255, 255, 0.6);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Crown info panel */
+        .crown-info {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+
+        .crown-info.visible {
+            opacity: 1;
+        }
+
+        .crown-info h3 {
+            font-size: 16px;
+            font-weight: 400;
+            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .crown-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.35);
+            line-height: 1.6;
+        }
+
+        .seed-lines {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(201, 162, 39, 0.1);
+            border-left: 2px solid rgba(201, 162, 39, 0.4);
+            font-style: italic;
+            font-size: 13px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .seed-lines .label {
+            font-style: normal;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(201, 162, 39, 0.6);
+            margin-bottom: 8px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="cosmos"></canvas>
+
+    <div class="title-overlay">
+        <h1>Crown of Sonnets</h1>
+        <div class="current-view" id="current-view">Viewing the cosmos</div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <span>Origin Crown</span>
+            <div class="legend-dot" style="background: #d4a574;"></div>
+        </div>
+        <div class="legend-item">
+            <span>Generation II</span>
+            <div class="legend-dot" style="background: #7eb8da;"></div>
+        </div>
+        <div class="legend-item">
+            <span>Generation III</span>
+            <div class="legend-dot" style="background: #8fbc8f;"></div>
+        </div>
+    </div>
+
+    <div class="crown-info" id="crown-info">
+        <h3 id="crown-name">Crown I</h3>
+        <p id="crown-desc">14 sonnets forming a ring</p>
+    </div>
+
+    <div class="ui-hint" id="ui-hint">Scroll to zoom • Drag to drift • Click a star to read</div>
+
+    <!-- Reading Overlay -->
+    <div class="reading-overlay" id="reading-overlay">
+        <div class="poem-container">
+            <div class="poem-header">
+                <div class="poem-number" id="poem-number">Sonnet I of Crown I</div>
+                <h2 class="poem-title" id="poem-title">The Opening</h2>
+                <div class="poem-authors" id="poem-authors">Alice & Bob</div>
+            </div>
+            
+            <div class="seed-lines" id="seed-lines">
+                <span class="label">Seeded by lines from the parent</span>
+                <div id="seed-lines-content"></div>
+            </div>
+            
+            <div class="poem-lines" id="poem-lines">
+                <!-- Lines inserted dynamically -->
+            </div>
+            <div class="poem-footer">
+                <div class="lineage-info" id="lineage-info">
+                    <!-- Lineage info inserted dynamically -->
+                </div>
+                <button class="close-poem" onclick="closePoem()">Return to cosmos</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════════════
+        // FRACTAL CROWN OF SONNETS - CORRECT STRUCTURE
+        // ═══════════════════════════════════════════════════════════════════════
+        //
+        // SEED POEM (14 lines) spawns 14 sonnets via overlapping line pairs:
+        //   Lines 1-2 → Sonnet 1
+        //   Lines 2-3 → Sonnet 2
+        //   Lines 3-4 → Sonnet 3
+        //   ...
+        //   Lines 13-14 → Sonnet 13
+        //   Lines 14-1 → Sonnet 14 (wraps back to complete the crown!)
+        //
+        // Each of those 14 sonnets becomes a seed for a NEW crown.
+        // This creates exponential, fractal growth.
+        // ═══════════════════════════════════════════════════════════════════════
+
+        // The original seed poem (Ted Berrigan's Sonnet 1, or similar)
+        const ORIGINAL_SEED = {
+            title: "Sonnet I",
+            author: "Ted Berrigan",
+            lines: [
+                "His piercing pince-nez. Some dim frieze",
+                "playing slowly. Double-Loss. And Wham!",
+                "Blow the man down! (or their faces off)",
+                "That's all Folks! (and then some) or else I",
+                "Was never born. Red River Valley: a",
+                "Cowboy ode? (no, just 1 man 1 phone & 1 woman)",
+                "Dear Chris, hello. I'm just now writing",
+                "you after a long sleep in a comfortable",
+                "chair by the window in the sun, the wood-",
+                "en chair painted green: I've been to Boston",
+                "and seen Ted, who's blossomed into a regular",
+                "Old Master! He made me his delicious eggs. &",
+                "The light falls heavy on the morning page.",
+                "Some dim frieze playing slowly. His piercing pince-nez."
+            ]
+        };
+
+        // Generate the fractal data structure
+        function generateFractalData() {
+            const crowns = [];
+            
+            // Crown I - the origin, spawned from the original seed poem
+            const crown1 = {
+                id: "crown-1",
+                name: "Crown I",
+                generation: 1,
+                status: "complete",
+                x: 0, 
+                y: 0,
+                seedSource: {
+                    type: "original",
+                    title: ORIGINAL_SEED.title,
+                    author: ORIGINAL_SEED.author
+                },
+                sonnets: []
+            };
+
+            // Generate 14 sonnets for Crown I, each from overlapping line pairs
+            for (let i = 0; i < 14; i++) {
+                const lineA = i;
+                const lineB = (i + 1) % 14; // Wraps: 13→14→0 (14-1 becomes 0-indexed 13→0)
+                
+                crown1.sonnets.push({
+                    id: `crown-1-sonnet-${i + 1}`,
+                    position: i + 1,
+                    title: `Sonnet ${romanize(i + 1)}`,
+                    authors: getRandomAuthors(i),
+                    status: "complete",
+                    seedLines: {
+                        lineA: ORIGINAL_SEED.lines[lineA],
+                        lineB: ORIGINAL_SEED.lines[lineB],
+                        indices: `${lineA + 1}-${lineB + 1 === 15 ? 1 : lineB + 1}`
+                    },
+                    spawnsChild: `crown-1-${i + 1}`, // Each sonnet spawns a child crown
+                    lines: generateSonnetLines(ORIGINAL_SEED.lines[lineA], ORIGINAL_SEED.lines[lineB])
+                });
+            }
+            
+            crowns.push(crown1);
+
+            // Generate some Gen 2 crowns (children of Crown I sonnets)
+            // In reality ALL 14 would spawn, but for demo we show a few
+            const gen2Positions = [
+                { parentSonnet: 1, x: 400, y: -250 },
+                { parentSonnet: 3, x: 450, y: 150 },
+                { parentSonnet: 7, x: -400, y: -200 },
+                { parentSonnet: 10, x: -350, y: 250 },
+            ];
+
+            gen2Positions.forEach((pos, idx) => {
+                const parentSonnet = crown1.sonnets[pos.parentSonnet - 1];
+                const childCrown = generateChildCrown(
+                    `crown-1-${pos.parentSonnet}`,
+                    `Crown I-${pos.parentSonnet}`,
+                    2,
+                    pos.x,
+                    pos.y,
+                    parentSonnet
+                );
+                crowns.push(childCrown);
+
+                // Add a couple Gen 3 crowns
+                if (idx === 0 && childCrown.sonnets.length > 0) {
+                    const gen3Crown = generateChildCrown(
+                        `crown-1-${pos.parentSonnet}-1`,
+                        `Crown I-${pos.parentSonnet}-1`,
+                        3,
+                        pos.x + 350,
+                        pos.y - 150,
+                        childCrown.sonnets[0],
+                        "forming"
+                    );
+                    crowns.push(gen3Crown);
+                }
+            });
+
+            return { crowns, originalSeed: ORIGINAL_SEED };
+        }
+
+        function generateChildCrown(id, name, generation, x, y, parentSonnet, status = "complete") {
+            const crown = {
+                id,
+                name,
+                generation,
+                status,
+                x,
+                y,
+                seedSource: {
+                    type: "sonnet",
+                    parentSonnetId: parentSonnet.id,
+                    parentSonnetTitle: parentSonnet.title
+                },
+                parentSonnet,
+                sonnets: []
+            };
+
+            // For demo, generate fewer sonnets for child crowns
+            const sonnetCount = status === "forming" ? Math.floor(Math.random() * 8) + 3 : 14;
+            
+            for (let i = 0; i < sonnetCount; i++) {
+                const lineA = i;
+                const lineB = (i + 1) % 14;
+                
+                crown.sonnets.push({
+                    id: `${id}-sonnet-${i + 1}`,
+                    position: i + 1,
+                    title: `Sonnet ${romanize(i + 1)}`,
+                    authors: getRandomAuthors(i + generation * 10),
+                    status: i < sonnetCount - 2 ? "complete" : (status === "forming" ? "forming" : "complete"),
+                    seedLines: {
+                        lineA: parentSonnet.lines[lineA] || `Line ${lineA + 1} from parent...`,
+                        lineB: parentSonnet.lines[lineB] || `Line ${lineB + 1} from parent...`,
+                        indices: `${lineA + 1}-${lineB + 1 === 15 ? 1 : lineB + 1}`
+                    },
+                    spawnsChild: `${id}-${i + 1}`,
+                    lines: generateSonnetLines(
+                        parentSonnet.lines[lineA] || "From the parent poem's verse...",
+                        parentSonnet.lines[lineB] || "These lines were born anew..."
+                    )
+                });
+            }
+
+            return crown;
+        }
+
+        function generateSonnetLines(seedLineA, seedLineB) {
+            // First line inspired by seedLineA, some middle lines, last connects back
+            const lines = [
+                seedLineA, // Line 1 - the first seed line
+                seedLineB, // Line 2 - the second seed line (from the pair)
+            ];
+            
+            // Generate middle lines (3-13)
+            const middleTemplates = [
+                "And from these words a new world starts to form,",
+                "Where meaning shifts like light through morning glass,",
+                "The poets write in turn, line after line,",
+                "Each voice a thread within the larger weave,",
+                "What started as a whisper grows to song,",
+                "Through collaboration, something new is born,",
+                "The crown takes shape, each sonnet linked to each,",
+                "In overlapping verse the pattern holds,",
+                "From two lines, fourteen poems find their way,",
+                "And each of those will seed another crown,",
+                "The fractal blooms eternal, ever-growing,"
+            ];
+            
+            for (let i = 0; i < 11; i++) {
+                lines.push(middleTemplates[i]);
+            }
+            
+            // Line 14 - will become seed for the next generation
+            lines.push("These final words become another's first.");
+            
+            return lines;
+        }
+
+        function romanize(num) {
+            const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV'];
+            return roman[num - 1] || num;
+        }
+
+        function getRandomAuthors(seed) {
+            const names = [
+                "Alice", "Bob", "Carol", "Dan", "Eve", "Frank", "Grace", "Henry",
+                "Iris", "James", "Kim", "Leo", "Maya", "Noah", "Olive", "Pete",
+                "Quinn", "Rosa", "Sam", "Tara", "Uma", "Victor", "Wendy", "Xavier"
+            ];
+            const i = (seed * 7) % names.length;
+            const j = (seed * 11 + 5) % names.length;
+            return `${names[i]} & ${names[j === i ? (j + 1) % names.length : j]}`;
+        }
+
+        // Generate the data
+        const poetryData = generateFractalData();
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // VISUALIZATION STATE
+        // ═══════════════════════════════════════════════════════════════════════
+
+        const canvas = document.getElementById('cosmos');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let camX = 0, camY = 0;
+        let zoom = 1;
+        let targetZoom = 1;
+        let dragging = false;
+        let lastX, lastY;
+        let lastMouseX = 0, lastMouseY = 0;
+        let time = 0;
+        let stars = [];
+        let hoveredStar = null;
+        let hoveredCrown = null;
+
+        const COLORS = {
+            1: { main: '#d4a574', glow: 'rgba(212, 165, 116, 0.3)', ring: 'rgba(212, 165, 116, 0.15)' },
+            2: { main: '#7eb8da', glow: 'rgba(126, 184, 218, 0.3)', ring: 'rgba(126, 184, 218, 0.15)' },
+            3: { main: '#8fbc8f', glow: 'rgba(143, 188, 143, 0.3)', ring: 'rgba(143, 188, 143, 0.15)' }
+        };
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════════════
+
+        function init() {
+            resize();
+            generateBackgroundStars();
+            animate();
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        function generateBackgroundStars() {
+            stars = [];
+            for (let i = 0; i < 500; i++) {
+                stars.push({
+                    x: (Math.random() - 0.5) * 4000,
+                    y: (Math.random() - 0.5) * 4000,
+                    size: Math.random() * 1.5,
+                    brightness: Math.random() * 0.5 + 0.1,
+                    twinkleSpeed: Math.random() * 0.02 + 0.01
+                });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // RENDERING
+        // ═══════════════════════════════════════════════════════════════════════
+
+        function animate() {
+            time += 0.016;
+            zoom += (targetZoom - zoom) * 0.1;
+            render();
+            requestAnimationFrame(animate);
+        }
+
+        function render() {
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.save();
+            ctx.translate(width / 2, height / 2);
+            ctx.scale(zoom, zoom);
+            ctx.translate(-camX, -camY);
+
+            drawBackgroundStars();
+            drawLineageConnections();
+            drawCrowns();
+
+            ctx.restore();
+            updateUI();
+        }
+
+        function drawBackgroundStars() {
+            stars.forEach(star => {
+                const twinkle = Math.sin(time * star.twinkleSpeed * 10) * 0.3 + 0.7;
+                const alpha = star.brightness * twinkle;
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size / zoom, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawLineageConnections() {
+            poetryData.crowns.forEach(crown => {
+                if (crown.parentSonnet) {
+                    // Find parent crown
+                    const parentCrownId = crown.seedSource.parentSonnetId.split('-sonnet-')[0];
+                    const parentCrown = poetryData.crowns.find(c => c.id === parentCrownId);
+                    
+                    if (parentCrown) {
+                        const parentSonnetIdx = crown.parentSonnet.position - 1;
+                        const pAngle = (parentSonnetIdx / 14) * Math.PI * 2 - Math.PI / 2;
+                        const pRadius = 70;
+                        const px = parentCrown.x + Math.cos(pAngle) * pRadius;
+                        const py = parentCrown.y + Math.sin(pAngle) * pRadius;
+
+                        // Ethereal connection line
+                        const gradient = ctx.createLinearGradient(px, py, crown.x, crown.y);
+                        gradient.addColorStop(0, COLORS[parentCrown.generation].glow);
+                        gradient.addColorStop(1, COLORS[crown.generation].glow);
+
+                        ctx.strokeStyle = gradient;
+                        ctx.lineWidth = 1.5 / zoom;
+                        ctx.setLineDash([4 / zoom, 8 / zoom]);
+                        ctx.beginPath();
+                        ctx.moveTo(px, py);
+                        
+                        // Curved line - stable arc
+                        const midX = (px + crown.x) / 2;
+                        const midY = (py + crown.y) / 2 - 40;
+                        ctx.quadraticCurveTo(midX, midY, crown.x, crown.y);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                }
+            });
+        }
+
+        function drawCrowns() {
+            hoveredStar = null;
+            hoveredCrown = null;
+
+            const mouseWorld = screenToWorld(lastMouseX, lastMouseY);
+
+            poetryData.crowns.forEach(crown => {
+                const colors = COLORS[crown.generation] || COLORS[1];
+                const crownRadius = 70;
+
+                // Crown outer glow
+                const glowGradient = ctx.createRadialGradient(crown.x, crown.y, 0, crown.x, crown.y, 120);
+                glowGradient.addColorStop(0, `rgba(255, 255, 255, ${crown.status === 'forming' ? 0.02 : 0.03})`);
+                glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(crown.x, crown.y, 120, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw the RING connecting all 14 sonnet positions
+                ctx.strokeStyle = colors.ring;
+                ctx.lineWidth = 1 / zoom;
+                ctx.beginPath();
+                ctx.arc(crown.x, crown.y, crownRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Check crown hover
+                const distToCrown = Math.hypot(mouseWorld.x - crown.x, mouseWorld.y - crown.y);
+                if (distToCrown < 100) {
+                    hoveredCrown = crown;
+                }
+
+                // Draw inter-sonnet connections (the crown weave)
+                if (crown.sonnets.length > 1) {
+                    ctx.strokeStyle = `rgba(255, 255, 255, 0.08)`;
+                    ctx.lineWidth = 0.5 / zoom;
+                    for (let i = 0; i < crown.sonnets.length; i++) {
+                        const angle1 = (i / 14) * Math.PI * 2 - Math.PI / 2;
+                        const nextIdx = (i + 1) % crown.sonnets.length;
+                        const angle2 = (nextIdx / 14) * Math.PI * 2 - Math.PI / 2;
+                        
+                        const x1 = crown.x + Math.cos(angle1) * crownRadius;
+                        const y1 = crown.y + Math.sin(angle1) * crownRadius;
+                        const x2 = crown.x + Math.cos(angle2) * crownRadius;
+                        const y2 = crown.y + Math.sin(angle2) * crownRadius;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    }
+                }
+
+                // Draw sonnets as stars on the ring
+                crown.sonnets.forEach((sonnet, i) => {
+                    const angle = (i / 14) * Math.PI * 2 - Math.PI / 2;
+                    const sx = crown.x + Math.cos(angle) * crownRadius;
+                    const sy = crown.y + Math.sin(angle) * crownRadius;
+
+                    const dist = Math.hypot(mouseWorld.x - sx, mouseWorld.y - sy);
+                    const isHovered = dist < 15;
+                    if (isHovered) {
+                        hoveredStar = { sonnet, crown, x: sx, y: sy };
+                    }
+
+                    // Pulse for forming
+                    let pulse = 1;
+                    let alpha = 1;
+                    if (sonnet.status === 'forming') {
+                        pulse = 0.7 + Math.sin(time * 2 + i) * 0.3;
+                        alpha = 0.5 + Math.sin(time * 2 + i) * 0.2;
+                    }
+
+                    // Star glow
+                    const starGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, 18);
+                    starGlow.addColorStop(0, `rgba(255, 255, 255, ${0.25 * alpha * (isHovered ? 1.5 : 1)})`);
+                    starGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    ctx.fillStyle = starGlow;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 18 * pulse, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Star core
+                    const coreSize = (isHovered ? 5 : 3.5) * pulse;
+                    ctx.fillStyle = colors.main;
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, coreSize / zoom, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+
+                    // All completed sonnets can spawn - show subtle indicator
+                    if (sonnet.status === 'complete') {
+                        ctx.strokeStyle = 'rgba(201, 162, 39, 0.3)';
+                        ctx.lineWidth = 1 / zoom;
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, (coreSize + 4) / zoom, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                });
+
+                // Crown label
+                if (zoom > 0.4) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${crown.status === 'forming' ? 0.2 : 0.3})`;
+                    ctx.font = `${11 / zoom}px 'Cormorant Garamond', serif`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(crown.name, crown.x, crown.y + 100);
+                    
+                    // Sonnet count
+                    ctx.fillStyle = `rgba(255, 255, 255, 0.15)`;
+                    ctx.font = `${9 / zoom}px 'Cormorant Garamond', serif`;
+                    ctx.fillText(`${crown.sonnets.length}/14 sonnets`, crown.x, crown.y + 112);
+                }
+            });
+        }
+
+        function updateUI() {
+            const crownInfo = document.getElementById('crown-info');
+            const viewText = document.getElementById('current-view');
+
+            if (hoveredCrown) {
+                crownInfo.classList.add('visible');
+                document.getElementById('crown-name').textContent = hoveredCrown.name;
+                const status = hoveredCrown.status === 'forming' ? ' • Growing' : ' • Complete';
+                document.getElementById('crown-desc').textContent = 
+                    `${hoveredCrown.sonnets.length}/14 sonnets${status}`;
+            } else {
+                crownInfo.classList.remove('visible');
+            }
+
+            if (hoveredStar) {
+                viewText.textContent = `${hoveredStar.sonnet.title} — ${hoveredStar.sonnet.authors}`;
+                canvas.style.cursor = 'pointer';
+            } else {
+                viewText.textContent = zoom < 0.5 ? 'The cosmos stretches infinitely' : 'Viewing the cosmos';
+                canvas.style.cursor = 'crosshair';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // INTERACTION
+        // ═══════════════════════════════════════════════════════════════════════
+
+        function screenToWorld(sx, sy) {
+            return {
+                x: (sx - width / 2) / zoom + camX,
+                y: (sy - height / 2) / zoom + camY
+            };
+        }
+
+        canvas.addEventListener('mousedown', e => {
+            if (hoveredStar) {
+                openPoem(hoveredStar.sonnet, hoveredStar.crown);
+            } else {
+                dragging = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            
+            if (dragging) {
+                const dx = (e.clientX - lastX) / zoom;
+                const dy = (e.clientY - lastY) / zoom;
+                camX -= dx;
+                camY -= dy;
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => dragging = false);
+        canvas.addEventListener('mouseleave', () => dragging = false);
+
+        canvas.addEventListener('wheel', e => {
+            e.preventDefault();
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            targetZoom = Math.max(0.25, Math.min(3, targetZoom * zoomFactor));
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // POEM READING
+        // ═══════════════════════════════════════════════════════════════════════
+
+        function openPoem(sonnet, crown) {
+            const overlay = document.getElementById('reading-overlay');
+            
+            // Header
+            document.getElementById('poem-number').textContent = 
+                `Sonnet ${sonnet.position} of ${crown.name}`;
+            document.getElementById('poem-title').textContent = sonnet.title;
+            document.getElementById('poem-authors').textContent = sonnet.authors;
+
+            // Seed lines (the two lines this sonnet was born from)
+            const seedLinesEl = document.getElementById('seed-lines-content');
+            seedLinesEl.innerHTML = `
+                <div>"${sonnet.seedLines.lineA}"</div>
+                <div>"${sonnet.seedLines.lineB}"</div>
+                <div style="margin-top: 8px; font-size: 10px; color: rgba(201, 162, 39, 0.5); font-style: normal;">
+                    Lines ${sonnet.seedLines.indices} from ${crown.seedSource.type === 'original' ? 'the original seed poem' : 'the parent sonnet'}
+                </div>
+            `;
+
+            // Lines with animation delay
+            const linesContainer = document.getElementById('poem-lines');
+            linesContainer.innerHTML = '';
+            
+            sonnet.lines.forEach((line, i) => {
+                const lineEl = document.createElement('div');
+                lineEl.className = 'poem-line';
+                lineEl.style.animationDelay = `${0.3 + i * 0.08}s`;
+                lineEl.textContent = line;
+
+                // Highlight lines that become seeds for child crowns
+                // The WHOLE sonnet becomes a seed, but we highlight the pairs
+                if (i === 13) {
+                    lineEl.classList.add('spawn-line');
+                    const note = document.createElement('span');
+                    note.className = 'line-note';
+                    note.textContent = '→ This sonnet seeds a new crown';
+                    lineEl.appendChild(note);
+                }
+
+                linesContainer.appendChild(lineEl);
+            });
+
+            // Lineage info
+            const lineageEl = document.getElementById('lineage-info');
+            let html = '';
+            
+            html += `<div><strong>Parent:</strong> ${crown.seedSource.type === 'original' 
+                ? `${poetryData.originalSeed.title} by ${poetryData.originalSeed.author}`
+                : crown.seedSource.parentSonnetTitle}</div>`;
+            
+            if (sonnet.status === 'complete') {
+                html += `<div style="margin-top: 8px;"><strong>This sonnet will seed:</strong> A new crown of 14 sonnets</div>`;
+            }
+            
+            // Check if child crown exists
+            const childCrown = poetryData.crowns.find(c => c.id === sonnet.spawnsChild);
+            if (childCrown) {
+                html += `<div style="margin-top: 4px;">`;
+                html += `<span class="lineage-link" onclick="navigateToCrown('${childCrown.id}')">→ Visit ${childCrown.name}</span>`;
+                html += `</div>`;
+            }
+            
+            lineageEl.innerHTML = html;
+
+            overlay.classList.add('visible');
+            document.getElementById('ui-hint').style.opacity = '0';
+        }
+
+        function closePoem() {
+            document.getElementById('reading-overlay').classList.remove('visible');
+            setTimeout(() => {
+                document.getElementById('ui-hint').style.opacity = '0.3';
+            }, 600);
+        }
+
+        function navigateToCrown(crownId) {
+            const crown = poetryData.crowns.find(c => c.id === crownId);
+            if (crown) {
+                closePoem();
+                setTimeout(() => {
+                    camX = crown.x;
+                    camY = crown.y;
+                    targetZoom = 1.2;
+                }, 300);
+            }
+        }
+
+        // Keyboard
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closePoem();
+        });
+
+        document.getElementById('reading-overlay').addEventListener('click', e => {
+            if (e.target.id === 'reading-overlay') closePoem();
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // START
+        // ═══════════════════════════════════════════════════════════════════════
+
+        window.addEventListener('resize', resize);
+        init();
+
+        setTimeout(() => {
+            document.getElementById('ui-hint').style.opacity = '0.15';
+        }, 6000);
+    </script>
+</body>
+</html>

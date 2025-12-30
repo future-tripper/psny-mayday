@@ -17,7 +17,13 @@ A collaborative poetry platform for the Poetry Society of New York (PSNY) where 
 - **Crown 2-15** (Generation 2): Seeded from Crown 1's 14 completed sonnets
 - **Crown 16+** (Generation 3+): Seeded from Crown 2's sonnets, and so on...
 
-## Current Status: ✅ PRODUCTION READY (Local Testing)
+## Current Status: ✅ DEPLOYED ON RENDER
+
+**Known Issues & Roadmap:** See `FEATURE_ROADMAP.md` for:
+- 🔴 High priority security/data issues to address
+- 🟡 Medium priority bugs and improvements
+- 🟢 Low priority optimizations
+- 🚀 Future features (AI writing partner, etc.)
 
 ### Unified System Architecture
 - **One database**: `mayday.db` (SQLite with fractal Crown schema)
