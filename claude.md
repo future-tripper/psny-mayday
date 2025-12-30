@@ -20,8 +20,7 @@ A collaborative poetry platform for the Poetry Society of New York (PSNY) where 
 ## Current Status: ✅ DEPLOYED ON RENDER
 
 **Known Issues & Roadmap:** See `FEATURE_ROADMAP.md` for:
-- 🔴 High priority security/data issues to address
-- 🟡 Medium priority bugs and improvements
+- 🔴 High priority: Change seed poem before launch
 - 🟢 Low priority optimizations
 - 🚀 Future features (AI writing partner, etc.)
 
@@ -30,16 +29,26 @@ A collaborative poetry platform for the Poetry Society of New York (PSNY) where 
 - **One seamless flow**: Signup → Writing → Visualization
 - **Auto-spawning**: Sonnets → SourceSonnets → new Crowns (all automatic)
 - **Full lineage tracking**: Every element traceable through generations
+- **No accounts**: Pen name + code only, no authentication friction
 
 ### User Journey
-1. **Sign Up** → `/signup` - Join and get paired with a partner
-2. **Writing** → `/poet?u=CODE` - Collaborate on your sonnet (turn-based)
-3. **Completion** → Celebration page when sonnet finishes
-4. **View Crown** → `/crown/{id}/visualize` - Three integrated views:
+1. **Enter** → `/signup` - Enter pen name (email optional), get a secret code
+2. **Wait** → Waiting room until paired with another poet
+3. **Write** → `/poet?u=CODE` - Collaborate on your sonnet (turn-based)
+4. **Return** → Use your code to return to poem in progress
+5. **Complete** → Celebration page when sonnet finishes
+6. **View Crown** → `/crown/{id}/visualize` - Three integrated views:
    - **THREADS**: Horizontal scrolling cards with lineage timeline
    - **SCROLL**: Vertical list of all sonnets with bookend lines highlighted
    - **COSMOS**: Canvas star-field visualization of fractal crown system
-5. **About** → `/about` - Learn about Mayday and Crown of Sonnets
+7. **About** → `/about` - Learn about Mayday and Crown of Sonnets
+
+### Authentication Model
+- **No accounts** - Just enter a pen name and go
+- **Pen name** = attribution for THIS poem only (not a persistent identity)
+- **Code** = 128-bit secure token, key to return to THIS poem only
+- **Email** = optional, just for PSNY CRM ("Stay in touch")
+- Same pen name used by 100 people? Fine - it's communal poetry
 
 ### Visualization Features
 **THREADS View**: Horizontal scrolling cards showing each sonnet as a card
@@ -194,6 +203,9 @@ Pair:
   - completion_order: int (1-14 within Crown)
 
 User:
+  - email: Optional[str] (for PSNY CRM, not required)
+  - pen_name: str (attribution for this poem)
+  - code: str (128-bit secure token, unique)
   - status: "waiting" | "paired" | "waiting_for_partner" | "inactive"
 ```
 

@@ -57,39 +57,63 @@ class TestFractalAPI:
 class TestSignupFlow:
     """Tests for the signup flow."""
 
-    def test_signup_creates_user(self, client):
-        """Submitting the signup form should create a user."""
+    def test_signup_with_pen_name_only(self, client):
+        """Signup works with just a pen name (no email required)."""
+        response = client.post(
+            "/signup",
+            data={"pen_name": "New Poet"},
+            follow_redirects=False
+        )
+
+        # Should show the your_code.html page
+        assert response.status_code == 200
+        assert "Your Secret Code" in response.text
+        assert "New Poet" in response.text
+
+    def test_signup_with_email(self, client):
+        """Signup works with optional email provided."""
         response = client.post(
             "/signup",
             data={
-                "email": "newuser@test.com",
-                "pen_name": "New Poet"
+                "pen_name": "Email Poet",
+                "email": "poet@test.com"
             },
             follow_redirects=False
         )
 
-        # Should redirect to poet page
-        assert response.status_code == 303
-        assert "/poet?u=" in response.headers["location"]
+        assert response.status_code == 200
+        assert "Your Secret Code" in response.text
+        assert "Email Poet" in response.text
 
-    def test_returning_user_recognized(self, client):
-        """A returning user with same email should be recognized."""
-        # First signup
+    def test_return_with_valid_code(self, client):
+        """Returning with a valid code should redirect to poet page."""
+        # First signup to get a code
         response1 = client.post(
             "/signup",
-            data={"email": "returning@test.com", "pen_name": "Poet"},
+            data={"pen_name": "Return Poet"},
             follow_redirects=False
         )
-        first_redirect = response1.headers["location"]
+        # Extract code from the page (it's in the HTML)
+        import re
+        match = re.search(r'id="secret-code">([^<]+)</div>', response1.text)
+        assert match, "Could not find secret code in response"
+        code = match.group(1)
 
-        # Second signup with same email
+        # Now return with that code
         response2 = client.post(
-            "/signup",
-            data={"email": "returning@test.com", "pen_name": "Poet"},
+            "/return",
+            data={"code": code},
             follow_redirects=False
         )
-        second_redirect = response2.headers["location"]
+        assert response2.status_code == 303
+        assert f"/poet?u={code}" in response2.headers["location"]
 
-        # Should get the same user code
-        assert "/poet?u=" in first_redirect
-        assert "/poet?u=" in second_redirect
+    def test_return_with_invalid_code(self, client):
+        """Returning with an invalid code should show an error."""
+        response = client.post(
+            "/return",
+            data={"code": "invalid-code-12345"},
+            follow_redirects=False
+        )
+        assert response.status_code == 200
+        assert "Code not found" in response.text

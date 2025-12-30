@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import FastAPI, Request, Form, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -455,34 +456,29 @@ async def signup_page(request: Request, error: str = None):
 @app.post("/signup")
 async def signup(
     request: Request,
-    email: str = Form(...),
     pen_name: str = Form(...),
+    email: Optional[str] = Form(None),
     session: Session = Depends(get_session)
 ):
-    existing_user = session.exec(select(User).where(User.email == email)).first()
-    if existing_user:
-        # Check if they have a current active pair
-        if existing_user.pair_id:
-            pair = session.exec(select(Pair).where(Pair.id == existing_user.pair_id)).first()
-            if pair and pair.status == "writing":
-                # Still working on a poem - redirect to continue
-                return RedirectResponse(f"/poet?u={existing_user.code}", status_code=303)
+    # Input validation
+    pen_name = pen_name.strip()
+    if not pen_name or len(pen_name) > 100:
+        return templates.TemplateResponse("signup.html", {
+            "request": request,
+            "error": "Pen name must be between 1 and 100 characters."
+        })
 
-        # Their poem is complete or they have no pair - put them back in waiting queue
-        existing_user.status = "waiting"
-        existing_user.pair_id = None
-        existing_user.pen_name = pen_name  # Allow updating pen name
-        session.add(existing_user)
-        session.commit()
+    if email and len(email) > 254:  # RFC 5321 max email length
+        return templates.TemplateResponse("signup.html", {
+            "request": request,
+            "error": "Email address is too long."
+        })
 
-        try_pair_users(session)
-
-        return RedirectResponse(f"/poet?u={existing_user.code}", status_code=303)
-
-    code = secrets.token_urlsafe(8)
+    # Generate secure token (16 bytes = 128 bits of entropy)
+    code = secrets.token_urlsafe(16)
 
     new_user = User(
-        email=email,
+        email=email if email and email.strip() else None,
         pen_name=pen_name,
         code=code,
         status="waiting"
@@ -493,7 +489,29 @@ async def signup(
 
     try_pair_users(session)
 
-    return RedirectResponse(f"/poet?u={new_user.code}", status_code=303)
+    # Show the user their secret code before continuing
+    return templates.TemplateResponse("your_code.html", {
+        "request": request,
+        "user": new_user
+    })
+
+
+@app.post("/return")
+async def return_to_poem(
+    request: Request,
+    code: str = Form(...),
+    session: Session = Depends(get_session)
+):
+    # Look up user by their secret code
+    user = session.exec(select(User).where(User.code == code.strip())).first()
+    if not user:
+        return templates.TemplateResponse("signup.html", {
+            "request": request,
+            "error": "Code not found. Please check your code and try again."
+        })
+
+    # Redirect to their poet page
+    return RedirectResponse(f"/poet?u={user.code}", status_code=303)
 
 
 @app.get("/about")
@@ -620,6 +638,12 @@ async def add_line(
     text: str = Form(...),
     session: Session = Depends(get_session)
 ):
+    # Input validation - poem lines should be reasonable length
+    text = text.strip()
+    if not text or len(text) > 500:
+        # Redirect back with the line rejected (too long or empty)
+        return RedirectResponse(f"/poet?u={u}", status_code=303)
+
     user = session.exec(select(User).where(User.code == u)).first()
     if not user:
         return RedirectResponse(f"/poet?u={u}", status_code=303)
@@ -650,7 +674,7 @@ async def add_line(
     new_line = Line(
         sonnet_id=sonnet.id,
         line_number=next_line_number,
-        text=text.strip(),
+        text=text,  # Already stripped in validation above
         author_user_id=user.id
     )
     session.add(new_line)

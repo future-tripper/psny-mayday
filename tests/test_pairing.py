@@ -10,7 +10,7 @@ These tests verify that:
 import pytest
 from sqlmodel import select
 from models import User, Pair, Crown
-from conftest import create_test_user, create_test_pair
+from tests.conftest import create_test_user, create_test_pair
 
 
 class TestPairing:
@@ -18,12 +18,20 @@ class TestPairing:
 
     def test_create_user(self, session):
         """Basic test: can we create a user?"""
-        user = create_test_user(session, "test@example.com", "Test Poet")
+        user = create_test_user(session, "Test Poet")
+
+        assert user.id is not None
+        assert user.email is None  # Email is optional now
+        assert user.pen_name == "Test Poet"
+        assert user.status == "waiting"
+
+    def test_create_user_with_email(self, session):
+        """Users can optionally provide an email."""
+        user = create_test_user(session, "Test Poet", email="test@example.com")
 
         assert user.id is not None
         assert user.email == "test@example.com"
         assert user.pen_name == "Test Poet"
-        assert user.status == "waiting"
 
     def test_two_users_can_be_paired(self, seeded_session):
         """When two users exist, they can be paired together."""
@@ -32,9 +40,9 @@ class TestPairing:
         # Get the crown
         crown = session.exec(select(Crown)).first()
 
-        # Create two users
-        user1 = create_test_user(session, "alice@test.com", "Alice")
-        user2 = create_test_user(session, "bob@test.com", "Bob")
+        # Create two users (no email needed)
+        user1 = create_test_user(session, "Alice")
+        user2 = create_test_user(session, "Bob")
 
         # Create a pair
         pair, sonnet = create_test_pair(session, crown.id, user1, user2, source_line_start=1)

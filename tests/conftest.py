@@ -110,8 +110,8 @@ def seeded_session_fixture(session):
 
 
 # Helper functions for creating test data
-def create_test_user(session, email, pen_name, status="waiting"):
-    """Helper to create a user for testing."""
+def create_test_user(session, pen_name, email=None, status="waiting"):
+    """Helper to create a user for testing. Email is optional."""
     import secrets
     user = User(
         email=email,
@@ -141,12 +141,18 @@ def create_test_pair(session, crown_id, user1, user2, source_line_start):
         status="writing"
     )
     session.add(pair)
+    session.commit()
+    session.refresh(pair)
 
+    # Update users with pair_id (now that pair has an ID)
     user1.status = "paired"
     user1.pair_id = pair.id
     user2.status = "paired"
     user2.pair_id = pair.id
-
+    session.add(user1)
+    session.add(user2)
     session.commit()
-    session.refresh(pair)
+    session.refresh(user1)
+    session.refresh(user2)
+
     return pair, sonnet

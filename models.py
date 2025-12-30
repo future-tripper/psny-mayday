@@ -5,7 +5,7 @@ from typing import Optional
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    email: str = Field(unique=True, index=True)
+    email: Optional[str] = Field(default=None, index=True)  # Optional - for PSNY CRM
     pen_name: str
     code: str = Field(unique=True, index=True)
     status: str = Field(default="waiting", index=True)

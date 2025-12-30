@@ -6,34 +6,24 @@
 
 ## 🔴 High Priority Issues
 
-### 1. Security: Email Session Vulnerability
-**Status:** Planned
-**Source:** Code Review
+### Change Seed Poem Before Launch
+**Status:** TODO
+**Source:** Discussion
 
-**Problem:** Anyone who knows/guesses an email can hijack that user's session by signing up with the same email. No verification required.
+Replace Ted Berrigan's "Sonnet 1" with the desired seed poem for Crown 1.
 
-```python
-# app.py:397-399 - Current vulnerable code
-existing_user = session.exec(select(User).where(User.email == email)).first()
-if existing_user:
-    return RedirectResponse(f"/poet?u={existing_user.code}", status_code=303)
-```
-
-**Options:**
-1. **Magic links** - Email a login link each time (requires email service: Resend, SendGrid)
-2. **Password protection** - Add traditional login credentials
-3. **Unique signup URLs** - Generate `/signup/abc123` links, distribute via PSNY channels
-4. **Increased token entropy + rate limiting** - Quick partial fix
-
-**Decision:** TBD - requires email service setup for proper fix
+**Steps:**
+1. Update `seed.py` with new poem title and 14 lines
+2. Update `app.py` - search for "Ted Berrigan" (appears in author attribution) and replace
+3. Reset/reseed the production database on Render
 
 ---
 
-### 2. Code Organization: Monolithic app.py
+### Code Organization: Monolithic app.py
 **Status:** Planned
 **Source:** Code Review
 
-**Problem:** `app.py` is 1672 lines containing routing, business logic, helpers, and API endpoints. Hard to navigate and test.
+**Problem:** `app.py` is ~1700 lines containing routing, business logic, helpers, and API endpoints. Hard to navigate and test.
 
 **Recommended structure:**
 ```
@@ -60,22 +50,7 @@ app/
 
 ## 🟢 Low Priority Issues
 
-### 3. Security: Increase Token Entropy
-**Status:** Planned (bundle with Issue #1)
-**Source:** Code Review
-
-**Current:** 8 bytes (48 bits after base64)
-**Recommended:** 16+ bytes (96 bits)
-
-```python
-code = secrets.token_urlsafe(16)  # Instead of 8
-```
-
-**Note:** This is a partial fix. Real protection comes from Issue #1 (magic links). Do both together when setting up email service.
-
----
-
-### 4. Quality: Expand Unit Tests
+### Quality: Expand Unit Tests
 **Status:** Setup complete, expand as needed
 **Source:** Code Review
 
@@ -94,7 +69,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 5. Operations: Error Alerting
+### Operations: Error Alerting
 **Status:** Planned
 **Source:** Discussion
 
@@ -134,8 +109,19 @@ Allow users to collaborate with Claude when no human partner is available.
 
 ## ✅ Completed
 
+### Simplified Pen Name + Code Flow (Dec 30, 2025)
+- **No accounts, no authentication friction** - just enter pen name and go
+- Email made optional ("Stay in touch with PSNY") - for CRM collection only
+- Pen name = attribution for THIS poem only (not a persistent identity)
+- Code = key to return to THIS poem only (128-bit secure token)
+- Same pen name used by multiple people? Fine - it's communal poetry
+- Two-section signup: "Start a New Sonnet" + "Return to Your Poem"
+- POST /return endpoint for code-based poem access
+- Input validation: pen name max 100 chars, email max 254 chars, poem lines max 500 chars
+- Updated tests for optional email flow
+
 ### Database Integrity & Launch Prep (Dec 30, 2025)
-- Unique constraints on User.email and User.code
+- Unique constraint on User.code (email is now optional, not unique)
 - Database indexes on frequently queried fields (User.email, code, status, pair_id; Pair.crown_id, status)
 - seed.py duplicate prevention (won't double-seed)
 - Returning user re-pairing flow (can sign up again after completing a poem)

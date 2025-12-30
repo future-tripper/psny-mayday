@@ -50,36 +50,59 @@
             <div class="error">{{ error }}</div>
             {% endif %}
 
-            <form method="POST" action="/signup" class="signup-form">
-                <div class="form-group">
-                    <label for="email">Email or Phone</label>
-                    <input
-                        type="text"
-                        id="email"
-                        name="email"
-                        placeholder="your@email.com"
-                        required
-                        autofocus
-                    >
-                </div>
+            <!-- Section 1: Start a New Sonnet -->
+            <div class="signup-box">
+                <h3>Start a New Sonnet</h3>
+                <form method="POST" action="/signup" class="signup-form">
+                    <div class="form-group">
+                        <label for="pen_name">Pen Name</label>
+                        <input
+                            type="text"
+                            id="pen_name"
+                            name="pen_name"
+                            placeholder="How should we call you?"
+                            required
+                        >
+                    </div>
 
-                <div class="form-group">
-                    <label for="pen_name">Pen Name</label>
-                    <input
-                        type="text"
-                        id="pen_name"
-                        name="pen_name"
-                        placeholder="How should we call you?"
-                        required
-                    >
-                </div>
+                    <div class="form-group optional-field">
+                        <label for="email">Email <span class="optional-label">(optional)</span></label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="Stay in touch with PSNY"
+                        >
+                    </div>
 
-                <button type="submit" class="submit-btn">Join the Crown</button>
-            </form>
+                    <button type="submit" class="submit-btn">Begin</button>
+                </form>
+                <p class="hint">
+                    You'll be paired with another poet to weave your thread into the Crown.
+                </p>
+            </div>
 
-            <p class="hint">
-                After signing up, you'll be paired with another poet to weave your thread into the Crown.
-            </p>
+            <!-- Section 2: Return to Poem in Progress -->
+            <div class="signup-box return-box">
+                <h3>Return to Your Poem</h3>
+                <p class="return-description">Already have a poem in progress? Enter your secret code below.</p>
+                <form method="POST" action="/return" class="signup-form">
+                    <div class="form-group">
+                        <label for="code">Your Secret Code</label>
+                        <input
+                            type="text"
+                            id="code"
+                            name="code"
+                            placeholder="Enter your code"
+                            required
+                            autocomplete="off"
+                            spellcheck="false"
+                        >
+                    </div>
+
+                    <button type="submit" class="submit-btn secondary-btn">Go to My Poem</button>
+                </form>
+            </div>
         </div>
     </div>
 </body>
