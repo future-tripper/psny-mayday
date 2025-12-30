@@ -58,30 +58,9 @@ app/
 
 ---
 
-## 🟡 Medium Priority Issues
-
-### 3. Reliability: Add Global Exception Handler
-**Status:** Planned
-**Source:** Code Review
-
-**Problem:** Unhandled exceptions return raw error messages, potentially exposing internal details.
-
-**Fix:**
-```python
-@app.exception_handler(Exception)
-async def generic_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled error: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"error": "An internal error occurred. Please try again."}
-    )
-```
-
----
-
 ## 🟢 Low Priority Issues
 
-### 4. Security: Increase Token Entropy
+### 3. Security: Increase Token Entropy
 **Status:** Planned
 **Source:** Code Review
 
@@ -94,7 +73,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 5. Performance: N+1 Queries in Fractal API
+### 4. Performance: N+1 Queries in Fractal API
 **Status:** Planned
 **Source:** Code Review
 
@@ -104,7 +83,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 6. Performance: Hover Detection in CosmosView
+### 5. Performance: Hover Detection in CosmosView
 **Status:** Planned
 **Source:** Code Review
 
@@ -114,7 +93,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 7. Quality: Add Unit Tests
+### 6. Quality: Add Unit Tests
 **Status:** Planned
 **Source:** Code Review
 
@@ -159,6 +138,7 @@ Allow users to collaborate with Claude when no human partner is available.
 - seed.py duplicate prevention (won't double-seed)
 - Returning user re-pairing flow (can sign up again after completing a poem)
 - Line wrap-around fix: Pair 14 now correctly receives lines 14 and 1 (completing the crown)
+- Poetic global exception handler (graceful error page with logging)
 
 ### Phase 1: Abort/Reset Flow
 - User-initiated leave with poem preview
