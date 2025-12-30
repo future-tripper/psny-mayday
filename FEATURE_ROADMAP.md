@@ -29,29 +29,7 @@ if existing_user:
 
 ---
 
-### 2. Database: Missing Unique Constraints
-**Status:** Planned
-**Source:** Code Review
-
-**Problem:** Schema allows duplicate emails and codes, risking data integrity.
-
-```python
-# models.py - Current
-email: str    # Should be unique
-code: str     # Should be unique
-```
-
-**Fix:**
-```python
-email: str = Field(unique=True)
-code: str = Field(unique=True)
-```
-
-**Note:** Requires database migration for existing data.
-
----
-
-### 3. Code Organization: Monolithic app.py
+### 2. Code Organization: Monolithic app.py
 **Status:** Planned
 **Source:** Code Review
 
@@ -82,28 +60,7 @@ app/
 
 ## 🟡 Medium Priority Issues
 
-### 4. Database: Missing Indexes
-**Status:** Planned
-**Source:** Code Review
-
-**Problem:** Frequently queried fields lack indexes, will slow queries as data grows.
-
-**Fix:**
-```python
-class User(SQLModel, table=True):
-    email: str = Field(index=True)
-    code: str = Field(index=True)
-    status: str = Field(index=True)
-    pair_id: Optional[int] = Field(index=True)
-
-class Pair(SQLModel, table=True):
-    crown_id: int = Field(index=True)
-    status: str = Field(index=True)
-```
-
----
-
-### 5. Bug: Line Wrap-Around Edge Case
+### 3. Bug: Line Wrap-Around Edge Case
 **Status:** Planned
 **Source:** Code Review
 
@@ -119,7 +76,7 @@ second_line = 1 if pair.source_line_start == 14 else pair.source_line_start + 1
 
 ---
 
-### 6. Reliability: Add Global Exception Handler
+### 4. Reliability: Add Global Exception Handler
 **Status:** Planned
 **Source:** Code Review
 
@@ -138,25 +95,9 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 ---
 
-### 7. Operations: Fix seed.py Duplicate Prevention
-**Status:** Planned
-**Source:** Code Review
-
-**Problem:** Running `seed.py` multiple times creates duplicate data.
-
-**Fix:**
-```python
-existing = session.exec(select(SourceSonnet)).first()
-if existing:
-    print("Database already seeded. Skipping.")
-    return
-```
-
----
-
 ## 🟢 Low Priority Issues
 
-### 8. Security: Increase Token Entropy
+### 5. Security: Increase Token Entropy
 **Status:** Planned
 **Source:** Code Review
 
@@ -169,7 +110,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 9. Performance: N+1 Queries in Fractal API
+### 6. Performance: N+1 Queries in Fractal API
 **Status:** Planned
 **Source:** Code Review
 
@@ -179,7 +120,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 10. Performance: Hover Detection in CosmosView
+### 7. Performance: Hover Detection in CosmosView
 **Status:** Planned
 **Source:** Code Review
 
@@ -189,7 +130,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 11. Quality: Add Unit Tests
+### 8. Quality: Add Unit Tests
 **Status:** Planned
 **Source:** Code Review
 
@@ -227,6 +168,12 @@ Allow users to collaborate with Claude when no human partner is available.
 ---
 
 ## ✅ Completed
+
+### Database Integrity & Launch Prep (Dec 30, 2025)
+- Unique constraints on User.email and User.code
+- Database indexes on frequently queried fields (User.email, code, status, pair_id; Pair.crown_id, status)
+- seed.py duplicate prevention (won't double-seed)
+- Returning user re-pairing flow (can sign up again after completing a poem)
 
 ### Phase 1: Abort/Reset Flow
 - User-initiated leave with poem preview
