@@ -1531,8 +1531,14 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
     """
     Return the complete fractal tree structure for cosmos visualization.
     Maps database to the format expected by fractal-cosmos.js
+
+    Optimized to use batch queries instead of N+1 pattern.
     """
-    # Get all crowns ordered by generation then ID
+    import math
+
+    # === BATCH FETCH ALL DATA UPFRONT ===
+
+    # Get all crowns
     crowns = session.exec(
         select(Crown).order_by(Crown.generation, Crown.id)
     ).all()
@@ -1540,36 +1546,77 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
     if not crowns:
         return {"crowns": [], "originalSeed": None}
 
-    # Get the original seed poem (first SourceSonnet, which should be classic)
-    original_source = session.exec(
-        select(SourceSonnet).where(SourceSonnet.source_type == "classic").order_by(SourceSonnet.id)
-    ).first()
+    # Get all source sonnets and build lookup
+    all_source_sonnets = session.exec(select(SourceSonnet)).all()
+    source_sonnet_lookup = {ss.id: ss for ss in all_source_sonnets}
+
+    # Get all source lines and group by source_sonnet_id
+    all_source_lines = session.exec(
+        select(SourceLine).order_by(SourceLine.source_sonnet_id, SourceLine.line_number)
+    ).all()
+    source_lines_by_sonnet = {}
+    for sl in all_source_lines:
+        if sl.source_sonnet_id not in source_lines_by_sonnet:
+            source_lines_by_sonnet[sl.source_sonnet_id] = []
+        source_lines_by_sonnet[sl.source_sonnet_id].append(sl)
+
+    # Get all pairs and group by crown_id
+    all_pairs = session.exec(select(Pair)).all()
+    pairs_by_crown = {}
+    pairs_by_sonnet_id = {}
+    for pair in all_pairs:
+        if pair.crown_id not in pairs_by_crown:
+            pairs_by_crown[pair.crown_id] = []
+        pairs_by_crown[pair.crown_id].append(pair)
+        if pair.sonnet_id:
+            pairs_by_sonnet_id[pair.sonnet_id] = pair
+
+    # Get all users and build lookup
+    all_users = session.exec(select(User)).all()
+    user_lookup = {u.id: u for u in all_users}
+
+    # Get all lines and group by sonnet_id
+    all_lines = session.exec(
+        select(Line).order_by(Line.sonnet_id, Line.line_number)
+    ).all()
+    lines_by_sonnet = {}
+    for line in all_lines:
+        if line.sonnet_id not in lines_by_sonnet:
+            lines_by_sonnet[line.sonnet_id] = []
+        lines_by_sonnet[line.sonnet_id].append(line)
+
+    # Get all sonnets and build lookup
+    all_sonnets = session.exec(select(Sonnet)).all()
+    sonnet_lookup = {s.id: s for s in all_sonnets}
+
+    # Build crown lookup for child crown detection
+    crown_by_source_sonnet = {c.source_sonnet_id: c for c in crowns}
+
+    # === BUILD ORIGINAL SEED ===
+
+    original_source = next(
+        (ss for ss in all_source_sonnets if ss.source_type == "classic"),
+        None
+    )
 
     original_seed = None
     if original_source:
-        source_lines = session.exec(
-            select(SourceLine)
-            .where(SourceLine.source_sonnet_id == original_source.id)
-            .order_by(SourceLine.line_number)
-        ).all()
+        source_lines = source_lines_by_sonnet.get(original_source.id, [])
         original_seed = {
             "title": original_source.title,
-            "author": "Ted Berrigan",  # Hardcoded for the classic seed
+            "author": "Ted Berrigan",
             "lines": [sl.text for sl in source_lines]
         }
 
-    # Layout positions - arrange crowns in a pattern
-    # Gen 1 at center, Gen 2+ spread outward
+    # === CALCULATE POSITIONS ===
+
     def calculate_positions(crowns_list):
-        """Calculate x, y positions for crowns based on generation."""
         positions = {}
         gen_counts = {}
 
         for crown in crowns_list:
             gen = crown.generation
-            if gen not in gen_counts:
-                gen_counts[gen] = 0
-            gen_counts[gen] += 1
+            gen_counts[gen] = gen_counts.get(gen, 0) + 1
 
         gen_indices = {}
         for crown in crowns_list:
@@ -1578,22 +1625,14 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
                 gen_indices[gen] = 0
 
             if gen == 1:
-                # Center
                 positions[crown.id] = (0, 0)
             else:
-                # Spread outward in a pattern
                 count_in_gen = gen_counts[gen]
                 idx = gen_indices[gen]
-
-                # Calculate angle and radius
-                import math
                 angle = (idx / max(count_in_gen, 1)) * 2 * math.pi - math.pi / 2
-                radius = 350 * (gen - 1)  # 350px per generation level
-
-                # Add some variation based on index
+                radius = 350 * (gen - 1)
                 x = math.cos(angle) * radius + (idx % 2) * 50
                 y = math.sin(angle) * radius + ((idx + 1) % 2) * 50
-
                 positions[crown.id] = (x, y)
 
             gen_indices[gen] += 1
@@ -1602,23 +1641,13 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
 
     positions = calculate_positions(crowns)
 
-    # Build crown data
+    # === BUILD CROWN DATA (no additional queries!) ===
+
     crown_data = []
 
     for crown in crowns:
-        # Get source sonnet for this crown
-        source_sonnet = session.exec(
-            select(SourceSonnet).where(SourceSonnet.id == crown.source_sonnet_id)
-        ).first()
-
-        # Get source lines
-        source_lines = []
-        if source_sonnet:
-            source_lines = session.exec(
-                select(SourceLine)
-                .where(SourceLine.source_sonnet_id == source_sonnet.id)
-                .order_by(SourceLine.line_number)
-            ).all()
+        source_sonnet = source_sonnet_lookup.get(crown.source_sonnet_id)
+        source_lines = source_lines_by_sonnet.get(crown.source_sonnet_id, [])
 
         # Build seed source info
         seed_source = {"type": "original", "title": "", "author": ""}
@@ -1631,63 +1660,43 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
                     "title": source_sonnet.title,
                     "author": "Ted Berrigan"
                 }
-            else:
-                # Collaborative - get parent sonnet info
-                if source_sonnet.parent_sonnet_id:
-                    parent_pair = session.exec(
-                        select(Pair).where(Pair.sonnet_id == source_sonnet.parent_sonnet_id)
-                    ).first()
+            elif source_sonnet.parent_sonnet_id:
+                parent_pair = pairs_by_sonnet_id.get(source_sonnet.parent_sonnet_id)
 
-                    if parent_pair:
-                        user1 = session.exec(select(User).where(User.id == parent_pair.user_1_id)).first()
-                        user2 = session.exec(select(User).where(User.id == parent_pair.user_2_id)).first()
+                if parent_pair:
+                    user1 = user_lookup.get(parent_pair.user_1_id)
+                    user2 = user_lookup.get(parent_pair.user_2_id)
+                    parent_lines = lines_by_sonnet.get(source_sonnet.parent_sonnet_id, [])
 
-                        # Get parent sonnet lines
-                        parent_lines = session.exec(
-                            select(Line)
-                            .where(Line.sonnet_id == source_sonnet.parent_sonnet_id)
-                            .order_by(Line.line_number)
-                        ).all()
+                    parent_sonnet_data = {
+                        "id": f"crown-{parent_pair.crown_id}-sonnet-{parent_pair.source_line_start}",
+                        "title": f"Sonnet {romanize(parent_pair.source_line_start)}",
+                        "authors": f"{user1.pen_name} & {user2.pen_name}" if user1 and user2 else "Unknown",
+                        "lines": [l.text for l in parent_lines]
+                    }
 
-                        parent_sonnet_data = {
-                            "id": f"crown-{parent_pair.crown_id}-sonnet-{parent_pair.source_line_start}",
-                            "title": f"Sonnet {romanize(parent_pair.source_line_start)}",
-                            "authors": f"{user1.pen_name} & {user2.pen_name}" if user1 and user2 else "Unknown",
-                            "lines": [l.text for l in parent_lines]
-                        }
+                    seed_source = {
+                        "type": "sonnet",
+                        "parentSonnetId": parent_sonnet_data["id"],
+                        "parentSonnetTitle": parent_sonnet_data["title"]
+                    }
 
-                        seed_source = {
-                            "type": "sonnet",
-                            "parentSonnetId": parent_sonnet_data["id"],
-                            "parentSonnetTitle": parent_sonnet_data["title"]
-                        }
-
-        # Get pairs/sonnets for this crown
-        pairs = session.exec(
-            select(Pair)
-            .where(Pair.crown_id == crown.id)
-            .where(Pair.sonnet_id.isnot(None))
-            .order_by(Pair.source_line_start)
-        ).all()
+        # Get pairs for this crown (already filtered and sorted)
+        crown_pairs = [
+            p for p in pairs_by_crown.get(crown.id, [])
+            if p.sonnet_id is not None
+        ]
+        crown_pairs.sort(key=lambda p: p.source_line_start)
 
         sonnets_data = []
-        for pair in pairs:
-            # Get users
-            user1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
-            user2 = session.exec(select(User).where(User.id == pair.user_2_id)).first() if pair.user_2_id else None
+        for pair in crown_pairs:
+            user1 = user_lookup.get(pair.user_1_id)
+            user2 = user_lookup.get(pair.user_2_id) if pair.user_2_id else None
+            sonnet_lines = lines_by_sonnet.get(pair.sonnet_id, [])
 
-            # Get sonnet lines
-            sonnet_lines = session.exec(
-                select(Line)
-                .where(Line.sonnet_id == pair.sonnet_id)
-                .order_by(Line.line_number)
-            ).all()
-
-            # Get the seed line indices for this pair
             first_line_num = pair.source_line_start
             second_line_num = 1 if first_line_num == 14 else first_line_num + 1
 
-            # Get seed lines from source
             seed_line_a = ""
             seed_line_b = ""
             for sl in source_lines:
@@ -1697,17 +1706,13 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
                     seed_line_b = sl.text
 
             # Check if this sonnet spawned a child crown
-            sonnet_obj = session.exec(select(Sonnet).where(Sonnet.id == pair.sonnet_id)).first()
+            sonnet_obj = sonnet_lookup.get(pair.sonnet_id)
             spawns_child = None
             if sonnet_obj and sonnet_obj.spawned_source_sonnet_id:
-                # Find the crown that uses this as a seed
-                child_crown = session.exec(
-                    select(Crown).where(Crown.source_sonnet_id == sonnet_obj.spawned_source_sonnet_id)
-                ).first()
+                child_crown = crown_by_source_sonnet.get(sonnet_obj.spawned_source_sonnet_id)
                 if child_crown:
                     spawns_child = f"crown-{child_crown.id}"
 
-            # Determine status
             sonnet_status = "complete" if pair.status == "complete" else "forming"
 
             sonnets_data.append({
@@ -1723,7 +1728,7 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
                 },
                 "spawnsChild": spawns_child,
                 "lines": [l.text for l in sonnet_lines],
-                "sonnetId": pair.sonnet_id  # Include actual DB ID for linking
+                "sonnetId": pair.sonnet_id
             })
 
         x, y = positions.get(crown.id, (0, 0))
@@ -1738,7 +1743,7 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
             "seedSource": seed_source,
             "parentSonnet": parent_sonnet_data,
             "sonnets": sonnets_data,
-            "crownId": crown.id  # Include actual DB ID
+            "crownId": crown.id
         })
 
     return {
