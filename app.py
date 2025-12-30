@@ -687,10 +687,12 @@ async def sonnet_view(request: Request, sonnet_id: int, u: str = None, session: 
     crown = session.exec(select(Crown).where(Crown.id == pair.crown_id)).first()
 
     # Get source lines that this pair was writing between
+    # Handle wrap-around: pair 14 gets lines 14 and 1 (completing the crown)
+    second_line = 1 if pair.source_line_start == 14 else pair.source_line_start + 1
     source_lines = session.exec(
         select(SourceLine)
         .where(SourceLine.source_sonnet_id == crown.source_sonnet_id)
-        .where(SourceLine.line_number.in_([pair.source_line_start, pair.source_line_start + 1]))
+        .where(SourceLine.line_number.in_([pair.source_line_start, second_line]))
         .order_by(SourceLine.line_number)
     ).all()
 
