@@ -75,17 +75,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 4. Performance: Hover Detection in CosmosView
-**Status:** Planned
-**Source:** Code Review
-
-**Problem:** Hover detection runs every frame (~60/sec).
-
-**Fix:** Only check on mouse move, consider spatial indexing for large datasets.
-
----
-
-### 5. Quality: Add Unit Tests
+### 4. Quality: Add Unit Tests
 **Status:** Planned
 **Source:** Code Review
 
@@ -99,7 +89,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 6. Operations: Error Alerting
+### 5. Operations: Error Alerting
 **Status:** Planned
 **Source:** Discussion
 
@@ -147,6 +137,7 @@ Allow users to collaborate with Claude when no human partner is available.
 - Line wrap-around fix: Pair 14 now correctly receives lines 14 and 1 (completing the crown)
 - Poetic global exception handler (graceful error page with logging)
 - N+1 query fix in fractal API (7 queries instead of 300+)
+- Hover detection optimization in CosmosView (only on mouse move, not every frame)
 
 ### Phase 1: Abort/Reset Flow
 - User-initiated leave with poem preview
