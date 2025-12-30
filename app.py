@@ -1,12 +1,17 @@
 from fastapi import FastAPI, Request, Form, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 from sqlmodel import Session, select
 from database import get_session
 from models import User, Sonnet, Line, Turn, Crown, Pair, SourceSonnet, SourceLine
 import secrets
+import logging
 from datetime import datetime, timedelta
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Stale pair threshold (12 hours)
 STALE_THRESHOLD_HOURS = 12
@@ -16,6 +21,66 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
+
+
+# Global exception handler - catch unexpected errors gracefully
+@app.exception_handler(Exception)
+async def poetic_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error at {request.url}: {exc}", exc_info=True)
+
+    error_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>A Momentary Pause | Mayday</title>
+        <style>
+            body {
+                font-family: 'EB Garamond', Georgia, serif;
+                background: #FFFBE2;
+                color: #2b2b2b;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 20px;
+                text-align: center;
+            }
+            .container {
+                max-width: 500px;
+            }
+            h1 {
+                font-family: 'Josefin Sans', sans-serif;
+                font-size: 1.5rem;
+                margin-bottom: 2rem;
+                color: #F8B098;
+            }
+            .poem {
+                font-style: italic;
+                line-height: 1.8;
+                margin-bottom: 2rem;
+            }
+            a {
+                color: #2b2b2b;
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>A Momentary Pause</h1>
+            <p class="poem">
+                Even sonnets stumble mid-verse,<br>
+                a breath between the words—<br>
+                the page awaits, patient as always.<br>
+                Try again, dear poet.
+            </p>
+            <p><a href="/signup">Return to the beginning</a></p>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=error_html, status_code=500)
 
 
 def spawn_source_sonnet_from_completed(sonnet_id: int, session: Session):
