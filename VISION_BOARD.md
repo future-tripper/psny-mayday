@@ -164,6 +164,41 @@ Pairing Logic:
 
 ---
 
+### AI Integration Possibilities
+
+**The Concept:**
+Integrate AI (Claude) into the poetry collaboration experience in thoughtful ways.
+
+**Potential Roles for AI:**
+
+1. **AI as Writing Partner**
+   - Option when human partner unavailable or user prefers AI collaboration
+   - Could match writing style/tone of seed lines
+   - Respectful of the human creative process - enhances, doesn't replace
+
+2. **AI as Seed Generator**
+   - Generate new source sonnets to expand the cosmos
+   - Could create themed seeds (seasonal, topical, style-based)
+   - Curated by PSNY before becoming official seeds
+
+3. **AI as Style Guide/Coach**
+   - Help poets match tone/meter of seed lines
+   - Suggest rhyme schemes, syllable counts
+   - Gentle feedback without being prescriptive
+
+4. **AI as Moderator**
+   - Review submissions for quality/appropriateness
+   - Flag potential issues for human review
+   - Ensure safe, welcoming environment
+
+**Considerations:**
+- Always transparent when AI is involved
+- Human creativity remains central
+- AI as tool/assistant, not replacement
+- Could be opt-in feature
+
+---
+
 ### Communication Between Poetry Partners
 
 **The Concept:**
