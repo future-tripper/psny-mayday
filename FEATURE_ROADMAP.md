@@ -61,7 +61,7 @@ app/
 ## 🟢 Low Priority Issues
 
 ### 3. Security: Increase Token Entropy
-**Status:** Planned
+**Status:** Planned (bundle with Issue #1)
 **Source:** Code Review
 
 **Current:** 8 bytes (48 bits after base64)
@@ -70,6 +70,8 @@ app/
 ```python
 code = secrets.token_urlsafe(16)  # Instead of 8
 ```
+
+**Note:** This is a partial fix. Real protection comes from Issue #1 (magic links). Do both together when setting up email service.
 
 ---
 
