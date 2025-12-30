@@ -60,23 +60,7 @@ app/
 
 ## 🟡 Medium Priority Issues
 
-### 3. Bug: Line Wrap-Around Edge Case
-**Status:** Planned
-**Source:** Code Review
-
-**Location:** `app.py:676-678`
-
-**Problem:** When `source_line_start` is 14, queries for lines 14 and 15. Line 15 doesn't exist.
-
-**Fix:**
-```python
-first_line = pair.source_line_start
-second_line = 1 if pair.source_line_start == 14 else pair.source_line_start + 1
-```
-
----
-
-### 4. Reliability: Add Global Exception Handler
+### 3. Reliability: Add Global Exception Handler
 **Status:** Planned
 **Source:** Code Review
 
@@ -97,7 +81,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 ## 🟢 Low Priority Issues
 
-### 5. Security: Increase Token Entropy
+### 4. Security: Increase Token Entropy
 **Status:** Planned
 **Source:** Code Review
 
@@ -110,7 +94,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 6. Performance: N+1 Queries in Fractal API
+### 5. Performance: N+1 Queries in Fractal API
 **Status:** Planned
 **Source:** Code Review
 
@@ -120,7 +104,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 7. Performance: Hover Detection in CosmosView
+### 6. Performance: Hover Detection in CosmosView
 **Status:** Planned
 **Source:** Code Review
 
@@ -130,7 +114,7 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
-### 8. Quality: Add Unit Tests
+### 7. Quality: Add Unit Tests
 **Status:** Planned
 **Source:** Code Review
 
@@ -174,6 +158,7 @@ Allow users to collaborate with Claude when no human partner is available.
 - Database indexes on frequently queried fields (User.email, code, status, pair_id; Pair.crown_id, status)
 - seed.py duplicate prevention (won't double-seed)
 - Returning user re-pairing flow (can sign up again after completing a poem)
+- Line wrap-around fix: Pair 14 now correctly receives lines 14 and 1 (completing the crown)
 
 ### Phase 1: Abort/Reset Flow
 - User-initiated leave with poem preview
