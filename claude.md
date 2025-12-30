@@ -223,16 +223,14 @@ uvicorn app:app --reload
 5. Crown 2 seed = first completed sonnet from Crown 1
 6. Repeat to test Crown 3, 4, etc.
 
-## Next: Deploy to Render
+## Production Deployment
 
-### Database Migration (SQLite → PostgreSQL)
-- Will need to migrate schema and seed data
-- Update `database.py` to use PostgreSQL connection string
-- Update `models.py` if any Postgres-specific changes needed
+**Live URL:** https://psny-mayday.onrender.com
 
-### Environment Variables for Render
-- `DATABASE_URL`: PostgreSQL connection string (auto-provided by Render)
-- Any other config as needed
+**Render Setup:**
+- Web Service: `psny-mayday` (auto-deploys from main branch)
+- Database: PostgreSQL `mayday-db` (Oregon region)
+- Environment: `DATABASE_URL` auto-configured by Render
 
 ## Important Notes
 
@@ -257,4 +255,4 @@ When users sign up after a Crown completes:
 
 ---
 
-**Status**: Ready for local testing → Deploy to Render
+**Status**: ✅ Live on Render | See `FEATURE_ROADMAP.md` for known issues and planned features
