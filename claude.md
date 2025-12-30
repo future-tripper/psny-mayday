@@ -30,25 +30,27 @@ A collaborative poetry platform for the Poetry Society of New York (PSNY) where 
 2. **Writing** → `/poet?u=CODE` - Collaborate on your sonnet (turn-based)
 3. **Completion** → Celebration page when sonnet finishes
 4. **View Crown** → `/crown/{id}/visualize` - Three integrated views:
-   - **JEWELS**: 3D immersive orbital visualization (Three.js)
-   - **THREADS**: Horizontal timeline of lineage
-   - **SCROLL**: Vertical list of all sonnets
+   - **THREADS**: Horizontal scrolling cards with lineage timeline
+   - **SCROLL**: Vertical list of all sonnets with bookend lines highlighted
+   - **COSMOS**: Canvas star-field visualization of fractal crown system
 5. **About** → `/about` - Learn about Mayday and Crown of Sonnets
 
 ### Visualization Features
-**JEWELS View** (Three.js WebGL):
-- Golden seed star at center with pulsing rays
-- 14 breathing orbs (varied geometry based on depth)
-- Hover overlays show first line + authors
-- Click orbs to open side panel with full sonnet
-- Drag to rotate, scroll to zoom
-- Click outside panel to close
-
-**THREADS View**: Horizontal scrolling cards with lineage timeline
+**THREADS View**: Horizontal scrolling cards showing each sonnet as a card
 
 **SCROLL View**: Vertical list of all sonnets with bookend lines highlighted
 
+**COSMOS View** (Canvas 2D):
+- Star-field background with twinkling stars
+- Crowns displayed as rings of 14 sonnet-stars
+- Generation colors: Gold (Gen 1), Blue (Gen 2), Green (Gen 3)
+- Click stars to open reading overlay with full poem
+- Drag to pan, scroll to zoom
+- Lineage connections between parent/child crowns
+
 **Dynamic Dropdown**: Only shows Crowns that exist in database
+
+**Standalone Cosmos**: `/cosmos` - Full-screen cosmos experience with all crowns
 
 ### Abort/Reset Flow (Partner Abandonment)
 When a partner leaves or goes inactive, the system handles it gracefully:
@@ -123,7 +125,7 @@ psny-mayday/
 │       │   ├── AppState.js    # Reactive state management
 │       │   └── CrownDataService.js # API data fetching
 │       ├── views/
-│       │   ├── OrreryView.js       # 3D Jewels view (Three.js)
+│       │   ├── CosmosView.js       # Cosmos star-field view (Canvas 2D)
 │       │   ├── LineageTunnelView.js # Threads timeline view
 │       │   ├── ScrollView.js       # Scroll vertical list view
 │       │   └── PoetStudioView.js   # Side panel poem reader
