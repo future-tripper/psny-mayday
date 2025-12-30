@@ -5,11 +5,11 @@ from typing import Optional
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    email: str
+    email: str = Field(unique=True, index=True)
     pen_name: str
-    code: str
-    status: str = "waiting"
-    pair_id: Optional[int] = Field(default=None, foreign_key="pair.id")
+    code: str = Field(unique=True, index=True)
+    status: str = Field(default="waiting", index=True)
+    pair_id: Optional[int] = Field(default=None, foreign_key="pair.id", index=True)
 
 
 class Sonnet(SQLModel, table=True):
@@ -60,11 +60,11 @@ class Crown(SQLModel, table=True):
 
 class Pair(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    crown_id: int = Field(foreign_key="crown.id")
+    crown_id: int = Field(foreign_key="crown.id", index=True)
     user_1_id: int = Field(foreign_key="user.id")
     user_2_id: Optional[int] = Field(default=None, foreign_key="user.id")  # Optional for orphaned pairs
     source_line_start: int
     sonnet_id: Optional[int] = Field(default=None, foreign_key="sonnet.id")  # Optional when waiting for new partner
-    status: str = "writing"
+    status: str = Field(default="writing", index=True)
     completion_order: Optional[int] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)

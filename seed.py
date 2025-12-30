@@ -7,7 +7,12 @@ def seed_data():
     create_db_and_tables()
 
     with Session(engine) as session:
-        session.exec(select(SourceSonnet)).first()
+        # Check if database is already seeded
+        existing = session.exec(select(SourceSonnet)).first()
+        if existing:
+            print("⚠️  Database already seeded. Skipping.")
+            print(f"   Found existing source sonnet: '{existing.title}'")
+            return
 
         source_sonnet = SourceSonnet(
             title="Sonnet 1",
