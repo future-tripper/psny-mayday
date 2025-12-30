@@ -107,6 +107,21 @@ code = secrets.token_urlsafe(16)  # Instead of 8
 
 ---
 
+### 7. Operations: Error Alerting
+**Status:** Planned
+**Source:** Discussion
+
+**Problem:** Currently no way to know when errors occur unless manually checking Render logs.
+
+**Options:**
+- Render Notifications (deploy failures only)
+- Sentry (full error tracking, free tier: 5K errors/month)
+- Email on exception (requires email service setup)
+
+**Recommendation:** Start with Render notifications, upgrade to Sentry if needed.
+
+---
+
 ## 🚀 Future Features
 
 ### AI Writing Partner
