@@ -170,19 +170,25 @@ export default class ExperienceDirector {
     }
 
     setupCrownSelector() {
-        const selector = document.getElementById('crown-selector');
-        if (!selector) return;
+        // Setup prev/next arrow navigation
+        const prevBtn = document.getElementById('prev-crown');
+        const nextBtn = document.getElementById('next-crown');
 
-        // Set current Crown as selected
-        selector.value = this.crownId;
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                const targetCrown = parseInt(prevBtn.dataset.crown);
+                if (targetCrown >= 1) {
+                    window.location.href = `/crown/${targetCrown}/visualize`;
+                }
+            });
+        }
 
-        // Navigate on change
-        selector.addEventListener('change', (event) => {
-            const newCrownId = parseInt(event.target.value);
-            if (newCrownId !== this.crownId) {
-                window.location.href = `/crown/${newCrownId}/visualize`;
-            }
-        });
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                const targetCrown = parseInt(nextBtn.dataset.crown);
+                window.location.href = `/crown/${targetCrown}/visualize`;
+            });
+        }
     }
 
     setupPanelControls() {

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contributors - Mayday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/menu.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/images/psny-logo.png" alt="PSNY Logo" class="psny-logo">
+            <a href="https://poetrysocietyny.org/membership" class="membership-button" target="_blank" rel="noopener noreferrer">Membership</a>
+            <button class="hamburger-menu" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1>Mayday</h1>
+            <p class="tagline">A sonnet crown of epic proportions</p>
+        </header>
+
+        <nav class="mobile-nav">
+            <a href="/signup">Sign Up</a>
+            <a href="/crown/1/visualize">The Crown</a>
+            <a href="/contributors">Contributors</a>
+            <a href="/about">About</a>
+            <a href="https://poetrysocietyny.org/membership" class="nav-button" target="_blank" rel="noopener noreferrer">Membership</a>
+        </nav>
+        <div class="mobile-nav-overlay"></div>
+
+        <div class="contributors-content">
+            <div class="contributors-hero">
+                <div class="ornament">&#10022;</div>
+                <h2>Contributors</h2>
+                <p class="contributors-subtitle">The poets who have woven their voices into the Crown</p>
+                {% if total_authors > 0 %}
+                <p class="contributors-count">{{ total_authors }} contributor{% if total_authors != 1 %}s{% endif %}</p>
+                {% endif %}
+            </div>
+
+            {% if authors %}
+            <div class="contributors-grid">
+                {% for author in authors %}
+                <div class="contributor-card">
+                    <h3 class="contributor-name">{{ author.pen_name }}</h3>
+                    <p class="contributor-count">{{ author.count }} sonnet{% if author.count != 1 %}s{% endif %}</p>
+                    <ul class="contributor-sonnets">
+                        {% for sonnet in author.sonnets %}
+                        <li>
+                            <a href="/sonnet/{{ sonnet.id }}" class="sonnet-link">
+                                <span class="sonnet-preview">{{ sonnet.first_line[:40] }}{% if sonnet.first_line|length > 40 %}...{% endif %}</span>
+                                <span class="sonnet-meta">with {{ sonnet.partner }} &middot; Crown {{ sonnet.crown_id }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="contributors-empty">
+                <p>No completed sonnets yet.</p>
+                <p>Be the first to <a href="/signup">join the Crown</a>!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

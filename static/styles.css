@@ -1444,3 +1444,131 @@ h1 {
     color: #888;
     font-size: 0.85em;
 }
+
+/* Contributors Page */
+.contributors-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.contributors-hero {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.contributors-hero h2 {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 2.5em;
+    font-weight: 400;
+    color: #2b2b2b;
+    margin: 20px 0 15px;
+}
+
+.contributors-subtitle {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.1em;
+    color: #666;
+    font-style: italic;
+}
+
+.contributors-count {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.9em;
+    color: #888;
+    margin-top: 10px;
+    letter-spacing: 0.5px;
+}
+
+.contributors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.contributor-card {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.contributor-name {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.4em;
+    font-weight: 500;
+    color: #2b2b2b;
+    margin: 0 0 8px;
+}
+
+.contributor-count {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.8em;
+    color: #888;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+}
+
+.contributor-sonnets {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.contributor-sonnets li {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.contributor-sonnets li:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.sonnet-link {
+    text-decoration: none;
+    display: block;
+}
+
+.sonnet-preview {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1em;
+    color: #2b2b2b;
+    font-style: italic;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.sonnet-link:hover .sonnet-preview {
+    color: #F8B098;
+}
+
+.sonnet-meta {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.75em;
+    color: #999;
+    letter-spacing: 0.3px;
+}
+
+.contributors-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.contributors-empty p {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.1em;
+    margin: 10px 0;
+}
+
+.contributors-empty a {
+    color: #F8B098;
+    text-decoration: none;
+}
+
+.contributors-empty a:hover {
+    text-decoration: underline;
+}

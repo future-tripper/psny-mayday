@@ -28,6 +28,7 @@
         <nav class="mobile-nav">
             <a href="/signup">Sign Up</a>
             <a href="/crown/{{ crown_id }}/visualize">The Crown</a>
+            <a href="/contributors">Contributors</a>
             <a href="/about">About</a>
             <a href="https://poetrysocietyny.org/membership" class="nav-button" target="_blank" rel="noopener noreferrer">Membership</a>
         </nav>
@@ -38,11 +39,11 @@
             <div class="viz-header">
                 <h2>The Crown</h2>
                 <div class="view-controls">
-                    <select id="crown-selector" class="crown-selector">
-                        {% for crown in available_crowns %}
-                        <option value="{{ crown.id }}" {% if crown.id == crown_id %}selected{% endif %}>Crown {{ crown.id }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="crown-nav">
+                        <button class="crown-nav-arrow" id="prev-crown" {% if crown_id <= 1 %}disabled{% endif %} data-crown="{{ crown_id - 1 }}">‹</button>
+                        <span class="crown-nav-label">Crown {{ crown_id }}</span>
+                        <button class="crown-nav-arrow" id="next-crown" {% if crown_id >= max_crown_id %}disabled{% endif %} data-crown="{{ crown_id + 1 }}">›</button>
+                    </div>
                     <a href="#" class="view-link active" data-view="lineage">Threads</a>
                     <a href="#" class="view-link" data-view="scroll">Scroll</a>
                     <a href="#" class="view-link" data-view="cosmos">Cosmos</a>

@@ -527,6 +527,71 @@ async def about_page(request: Request):
     })
 
 
+@app.get("/contributors")
+async def contributors_page(request: Request, session: Session = Depends(get_session)):
+    """Contributors page - lists all authors with their sonnets"""
+    # Get all completed pairs with their users and sonnets
+    completed_pairs = session.exec(
+        select(Pair)
+        .where(Pair.status == "complete")
+    ).all()
+
+    # Build author data
+    author_map = {}  # pen_name -> {sonnets: [], count: 0}
+
+    for pair in completed_pairs:
+        # Get both users
+        user_1 = session.exec(select(User).where(User.id == pair.user_1_id)).first()
+        user_2 = session.exec(select(User).where(User.id == pair.user_2_id)).first() if pair.user_2_id else None
+
+        # Get sonnet first line
+        sonnet = session.exec(select(Sonnet).where(Sonnet.id == pair.sonnet_id)).first() if pair.sonnet_id else None
+        first_line = None
+        if sonnet:
+            line = session.exec(
+                select(Line)
+                .where(Line.sonnet_id == sonnet.id)
+                .order_by(Line.line_number)
+            ).first()
+            first_line = line.text if line else None
+
+        sonnet_info = {
+            "id": pair.sonnet_id,
+            "first_line": first_line or "Untitled",
+            "crown_id": pair.crown_id,
+            "partner": user_2.pen_name if user_2 else "Unknown"
+        }
+
+        # Add to user_1's list
+        if user_1:
+            if user_1.pen_name not in author_map:
+                author_map[user_1.pen_name] = {"sonnets": [], "count": 0}
+            sonnet_info_1 = {**sonnet_info, "partner": user_2.pen_name if user_2 else "Unknown"}
+            author_map[user_1.pen_name]["sonnets"].append(sonnet_info_1)
+            author_map[user_1.pen_name]["count"] += 1
+
+        # Add to user_2's list
+        if user_2:
+            if user_2.pen_name not in author_map:
+                author_map[user_2.pen_name] = {"sonnets": [], "count": 0}
+            sonnet_info_2 = {**sonnet_info, "partner": user_1.pen_name if user_1 else "Unknown"}
+            author_map[user_2.pen_name]["sonnets"].append(sonnet_info_2)
+            author_map[user_2.pen_name]["count"] += 1
+
+    # Convert to sorted list
+    authors = [
+        {"pen_name": name, "sonnets": data["sonnets"], "count": data["count"]}
+        for name, data in author_map.items()
+    ]
+    authors.sort(key=lambda a: a["pen_name"].lower())
+
+    return templates.TemplateResponse("contributors.html", {
+        "request": request,
+        "authors": authors,
+        "total_authors": len(authors)
+    })
+
+
 @app.get("/poet")
 async def poet_home(request: Request, u: str = None, session: Session = Depends(get_session)):
     if not u:
@@ -1235,8 +1300,9 @@ async def crown_visualization(request: Request, crown_id: int, u: str = None, se
     if u:
         user = session.exec(select(User).where(User.code == u)).first()
 
-    # Get all available crowns
+    # Get all available crowns and find max ID
     available_crowns = session.exec(select(Crown)).all()
+    max_crown_id = max((c.id for c in available_crowns), default=1)
 
     # Verify the requested crown exists
     crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
@@ -1244,6 +1310,7 @@ async def crown_visualization(request: Request, crown_id: int, u: str = None, se
         return templates.TemplateResponse("crown_visualization.html", {
             "request": request,
             "crown_id": 1,  # Default to Crown 1
+            "max_crown_id": max_crown_id,
             "available_crowns": available_crowns,
             "user": user
         })
@@ -1251,6 +1318,7 @@ async def crown_visualization(request: Request, crown_id: int, u: str = None, se
     return templates.TemplateResponse("crown_visualization.html", {
         "request": request,
         "crown_id": crown_id,
+        "max_crown_id": max_crown_id,
         "available_crowns": available_crowns,
         "user": user
     })
