@@ -110,6 +110,8 @@ export default class CosmosView {
                 if (this.emptyEl) this.emptyEl.style.display = 'block';
                 if (this.legendEl) this.legendEl.style.display = 'none';
                 if (this.hintEl) this.hintEl.style.display = 'none';
+            } else {
+                this.generateLegend();
             }
         } catch (error) {
             console.error('[CosmosView] Failed to load data:', error);
@@ -117,6 +119,37 @@ export default class CosmosView {
                 this.loadingEl.innerHTML = '<div class="cosmos-loading-text">Failed to load cosmos</div>';
             }
         }
+    }
+
+    generateLegend() {
+        if (!this.legendEl || !this.poetryData.crowns) return;
+
+        // Get unique generations from the data
+        const generations = [...new Set(this.poetryData.crowns.map(c => c.generation))].sort((a, b) => a - b);
+
+        // Generation labels
+        const genLabels = {
+            1: 'Origin Crown',
+            2: 'Generation II',
+            3: 'Generation III',
+            4: 'Generation IV',
+            5: 'Generation V'
+        };
+
+        // Build legend HTML
+        let html = '';
+        generations.forEach(gen => {
+            const colors = CONFIG.colors.generations[gen] || CONFIG.colors.generations[1];
+            const label = genLabels[gen] || `Generation ${gen}`;
+            html += `
+                <div class="cosmos-legend-item">
+                    <span>${label}</span>
+                    <div class="cosmos-legend-dot" style="background: ${colors.main};"></div>
+                </div>
+            `;
+        });
+
+        this.legendEl.innerHTML = html;
     }
 
     resize() {
