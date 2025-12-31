@@ -468,9 +468,9 @@ export default class CosmosView {
                 }
             });
 
-            // Crown label - use minimum font size so text stays readable when zoomed
-            const baseFontSize = Math.max(14, 14 / this.zoom);
-            const subFontSize = Math.max(12, 12 / this.zoom);
+            // Crown label - smaller text to not dominate the view
+            const baseFontSize = Math.max(10, 10 / this.zoom);
+            const subFontSize = Math.max(8, 8 / this.zoom);
 
             this.ctx.fillStyle = `rgba(255, 255, 255, ${crown.status === 'forming' ? 0.6 : 0.8})`;
             this.ctx.font = `500 ${baseFontSize}px 'Josefin Sans', sans-serif`;

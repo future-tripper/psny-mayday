@@ -984,19 +984,19 @@
 
 .cosmos-legend-item {
     font-family: 'Josefin Sans', sans-serif;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 0.1em;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 10px;
     color: rgba(255, 255, 255, 0.3);
 }
 
 .cosmos-legend-dot {
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
 }
 
