@@ -501,18 +501,13 @@ export default class CosmosView {
                 }
             });
 
-            // Crown label - smaller text to not dominate the view
-            const baseFontSize = Math.max(10, 10 / this.zoom);
-            const subFontSize = Math.max(8, 8 / this.zoom);
+            // Crown label - subtle text below the ring
+            const fontSize = Math.max(8, 8 / this.zoom);
 
-            this.ctx.fillStyle = `rgba(255, 255, 255, ${crown.status === 'forming' ? 0.6 : 0.8})`;
-            this.ctx.font = `500 ${baseFontSize}px 'Josefin Sans', sans-serif`;
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${crown.status === 'forming' ? 0.4 : 0.5})`;
+            this.ctx.font = `300 ${fontSize}px 'Josefin Sans', sans-serif`;
             this.ctx.textAlign = 'center';
-            this.ctx.fillText(crown.name, crown.x, crown.y + 100 / this.zoom);
-
-            this.ctx.fillStyle = `rgba(255, 255, 255, 0.5)`;
-            this.ctx.font = `${subFontSize}px 'Cormorant Garamond', serif`;
-            this.ctx.fillText(`${crown.sonnets.length}/14 sonnets`, crown.x, crown.y + 118 / this.zoom);
+            this.ctx.fillText(crown.name, crown.x, crown.y + 95 / this.zoom);
         });
     }
 
