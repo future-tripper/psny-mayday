@@ -1318,16 +1318,18 @@ h1 {
 }
 
 .code-value {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 2em;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.1em;
     color: #2b2b2b;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     padding: 15px 20px;
     background: #f8f8f8;
     border-radius: 3px;
     margin-bottom: 20px;
     user-select: all;
     cursor: text;
+    word-break: break-all;
+    overflow-wrap: break-word;
 }
 
 .copy-btn {

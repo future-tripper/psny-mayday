@@ -925,9 +925,10 @@
    COSMOS VIEW (fractal star visualization)
    ======================================== */
 .viz-stage--cosmos {
-    background: #0a0a0f;
+    background: #0a0a0f !important;
     position: relative;
     cursor: crosshair;
+    overflow: hidden;
 }
 
 #cosmos-canvas {
