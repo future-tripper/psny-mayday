@@ -1574,14 +1574,14 @@ h1 {
 }
 
 /* Streamlined Signup Page */
-.signup-section--streamlined {
+.signup-section.signup-section--streamlined {
     padding: 60px 30px;
-    max-width: 480px;
+    max-width: 500px;
     margin: 0 auto;
     text-align: center;
 }
 
-.signup-intro {
+.signup-section--streamlined .signup-intro {
     font-family: 'EB Garamond', Georgia, serif;
     font-size: 1.3em;
     color: #333;
@@ -1590,101 +1590,110 @@ h1 {
     font-style: italic;
 }
 
-.signup-box--primary {
+.signup-section--streamlined .signup-box--primary {
     background: white;
     padding: 35px 40px;
     border-radius: 3px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
     margin-bottom: 0;
+    max-width: none;
 }
 
-.signup-box--primary .signup-form {
+.signup-section--streamlined .signup-box--primary .signup-form {
     margin-top: 0;
 }
 
-.signup-box--primary .submit-btn {
+.signup-section--streamlined .signup-box--primary .submit-btn {
     width: 100%;
     padding: 16px 24px;
     font-size: 1em;
     margin-top: 10px;
 }
 
-.signup-divider {
+.signup-section--streamlined .signup-divider {
     display: flex;
     align-items: center;
     margin: 30px 0;
+    width: 100%;
 }
 
-.signup-divider::before,
-.signup-divider::after {
+.signup-section--streamlined .signup-divider::before,
+.signup-section--streamlined .signup-divider::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: #ddd;
+    background: #ccc;
 }
 
-.signup-divider span {
+.signup-section--streamlined .signup-divider span {
     padding: 0 20px;
-    color: #999;
-    font-size: 0.85em;
+    color: #888;
+    font-size: 0.9em;
     font-weight: 400;
     text-transform: lowercase;
 }
 
-.signup-return {
+.signup-section--streamlined .signup-return {
     text-align: center;
+    width: 100%;
 }
 
-.return-form {
+.signup-section--streamlined .return-form {
     display: flex;
     gap: 10px;
-    max-width: 400px;
-    margin: 0 auto;
+    width: 100%;
+    justify-content: center;
 }
 
-.return-form input {
+.signup-section--streamlined .return-form input {
     flex: 1;
+    max-width: 280px;
     padding: 12px 16px;
     border: 1px solid #ddd;
     border-radius: 3px;
     font-size: 0.9em;
+    font-family: 'Josefin Sans', sans-serif;
     background: white;
 }
 
-.return-form input:focus {
+.signup-section--streamlined .return-form input:focus {
     outline: none;
     border-color: #E8B4A4;
 }
 
-.return-form input::placeholder {
+.signup-section--streamlined .return-form input::placeholder {
     color: #999;
 }
 
-.return-btn {
+.signup-section--streamlined .return-btn {
     padding: 12px 20px;
     background: transparent;
     border: 1px solid #2b2b2b;
     color: #2b2b2b;
     border-radius: 3px;
     font-family: 'Josefin Sans', sans-serif;
-    font-size: 0.85em;
+    font-size: 0.9em;
     font-weight: 400;
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s;
 }
 
-.return-btn:hover {
+.signup-section--streamlined .return-btn:hover {
     background: #2b2b2b;
     color: white;
 }
 
 @media (max-width: 500px) {
-    .return-form {
+    .signup-section--streamlined .return-form {
         flex-direction: column;
     }
 
-    .return-btn {
+    .signup-section--streamlined .return-form input {
+        max-width: none;
+    }
+
+    .signup-section--streamlined .return-btn {
         width: 100%;
     }
 }
