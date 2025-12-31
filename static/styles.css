@@ -1572,3 +1572,119 @@ h1 {
 .contributors-empty a:hover {
     text-decoration: underline;
 }
+
+/* Streamlined Signup Page */
+.signup-section--streamlined {
+    padding: 60px 30px;
+    max-width: 480px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.signup-intro {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.3em;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    font-style: italic;
+}
+
+.signup-box--primary {
+    background: white;
+    padding: 35px 40px;
+    border-radius: 3px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 0;
+}
+
+.signup-box--primary .signup-form {
+    margin-top: 0;
+}
+
+.signup-box--primary .submit-btn {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 1em;
+    margin-top: 10px;
+}
+
+.signup-divider {
+    display: flex;
+    align-items: center;
+    margin: 30px 0;
+}
+
+.signup-divider::before,
+.signup-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #ddd;
+}
+
+.signup-divider span {
+    padding: 0 20px;
+    color: #999;
+    font-size: 0.85em;
+    font-weight: 400;
+    text-transform: lowercase;
+}
+
+.signup-return {
+    text-align: center;
+}
+
+.return-form {
+    display: flex;
+    gap: 10px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.return-form input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 0.9em;
+    background: white;
+}
+
+.return-form input:focus {
+    outline: none;
+    border-color: #E8B4A4;
+}
+
+.return-form input::placeholder {
+    color: #999;
+}
+
+.return-btn {
+    padding: 12px 20px;
+    background: transparent;
+    border: 1px solid #2b2b2b;
+    color: #2b2b2b;
+    border-radius: 3px;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.85em;
+    font-weight: 400;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.return-btn:hover {
+    background: #2b2b2b;
+    color: white;
+}
+
+@media (max-width: 500px) {
+    .return-form {
+        flex-direction: column;
+    }
+
+    .return-btn {
+        width: 100%;
+    }
+}

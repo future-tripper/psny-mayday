@@ -33,27 +33,16 @@
         </nav>
         <div class="mobile-nav-overlay"></div>
 
-        <div class="signup-section">
-            <h2>Join the Crown</h2>
-            <p class="description">
-                If there is one thing we're learning, it's that it is okay to not be okay.
-                It is good to call out for help—for a friend, for a word, or a string of words
-                like pearls, for something beautiful to connect us to one another in the face of sorrow.
-            </p>
-            <p class="description">
-                The Poetry Society of New York invites you to answer the call: <em>m'aider</em>, come help me.
-                Together, we'll weave a Crown—poets from around the world, writing between the lines of
-                existing sonnets, creating an epic tapestry of interconnected verse. At PSNY, poetry is
-                never a lonely artform. The more voices, the greater the Crown.
+        <div class="signup-section signup-section--streamlined">
+            <p class="signup-intro">
+                Write sonnets with strangers. Each completed poem seeds new ones, building an infinite fractal of interconnected verse.
             </p>
 
             {% if error %}
             <div class="error">{{ error }}</div>
             {% endif %}
 
-            <!-- Section 1: Start a New Sonnet -->
-            <div class="signup-box">
-                <h3>Start a New Sonnet</h3>
+            <div class="signup-box signup-box--primary">
                 <form method="POST" action="/signup" class="signup-form">
                     <div class="form-group">
                         <label for="pen_name">Pen Name</label>
@@ -76,32 +65,26 @@
                         >
                     </div>
 
-                    <button type="submit" class="submit-btn">Begin</button>
+                    <button type="submit" class="submit-btn">Get Paired & Start Writing</button>
                 </form>
-                <p class="hint">
-                    You'll be paired with another poet to weave your thread into the Crown.
-                </p>
             </div>
 
-            <!-- Section 2: Return to Poem in Progress -->
-            <div class="signup-box return-box">
-                <h3>Return to Your Poem</h3>
-                <p class="return-description">Already have a poem in progress? Enter your secret code below.</p>
-                <form method="POST" action="/return" class="signup-form">
-                    <div class="form-group">
-                        <label for="code">Your Secret Code</label>
-                        <input
-                            type="text"
-                            id="code"
-                            name="code"
-                            placeholder="Enter your code"
-                            required
-                            autocomplete="off"
-                            spellcheck="false"
-                        >
-                    </div>
+            <div class="signup-divider">
+                <span>or</span>
+            </div>
 
-                    <button type="submit" class="submit-btn secondary-btn">Go to My Poem</button>
+            <div class="signup-return">
+                <form method="POST" action="/return" class="return-form">
+                    <input
+                        type="text"
+                        id="code"
+                        name="code"
+                        placeholder="Enter your secret code"
+                        required
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <button type="submit" class="return-btn">Return to Poem</button>
                 </form>
             </div>
         </div>
