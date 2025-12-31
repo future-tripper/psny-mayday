@@ -995,14 +995,15 @@
 
 .cosmos-legend-item {
     font-family: 'Josefin Sans', sans-serif;
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 500;
     letter-spacing: 0.1em;
     margin-bottom: 8px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .cosmos-legend-dot {
