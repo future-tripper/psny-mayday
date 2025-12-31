@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, create_engine, Session
+from sqlalchemy import text
 import os
 
 # Use DATABASE_URL from environment (Render sets this automatically)
@@ -22,3 +23,19 @@ def create_db_and_tables():
 def get_session():
     with Session(engine) as session:
         yield session
+
+
+def run_migrations():
+    """Run any pending database migrations."""
+    with engine.connect() as conn:
+        # Check if we're on PostgreSQL (Render) vs SQLite (local)
+        if not DATABASE_URL.startswith("sqlite"):
+            # Make email column nullable (migration for optional email feature)
+            try:
+                conn.execute(text('ALTER TABLE "user" ALTER COLUMN email DROP NOT NULL'))
+                conn.commit()
+                print("Migration: Made email column nullable")
+            except Exception as e:
+                # Column might already be nullable, that's fine
+                if "already" not in str(e).lower():
+                    print(f"Migration note: {e}")

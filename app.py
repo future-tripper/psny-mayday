@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 from sqlmodel import Session, select
-from database import get_session
+from database import get_session, run_migrations
 from models import User, Sonnet, Line, Turn, Crown, Pair, SourceSonnet, SourceLine
 import secrets
 import logging
@@ -22,6 +22,12 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
+
+
+# Run migrations on startup
+@app.on_event("startup")
+def on_startup():
+    run_migrations()
 
 
 # Global exception handler - catch unexpected errors gracefully
