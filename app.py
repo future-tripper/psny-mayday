@@ -1891,9 +1891,10 @@ async def admin_reset_database(
     try:
         # Truncate all tables in correct order (respecting foreign keys)
         # Using raw SQL for CASCADE support
+        # SQLModel creates lowercase table names: SourceSonnet -> sourcesonnet
         from database import engine
         with engine.connect() as conn:
-            conn.execute(text('TRUNCATE line, sonnet, pair, "user", source_line, crown, source_sonnet RESTART IDENTITY CASCADE'))
+            conn.execute(text('TRUNCATE line, sonnet, pair, "user", sourceline, crown, sourcesonnet RESTART IDENTITY CASCADE'))
             conn.commit()
 
         # Re-seed with Lady Mary Wroth's poem
