@@ -243,6 +243,38 @@ uvicorn app:app --reload
 - Database: PostgreSQL `mayday-db` (Oregon region)
 - Environment: `DATABASE_URL` auto-configured by Render
 
+## Admin Tools
+
+### Database Reset & Reseed
+To completely reset the database and reseed with Lady Mary Wroth's poem:
+
+```bash
+curl -X POST "https://psny-mayday.onrender.com/admin/reset?key=YOUR_ADMIN_SECRET"
+```
+
+**Requirements:**
+- `ADMIN_SECRET` environment variable must be set on Render
+- Returns JSON confirmation with seed poem details
+
+**Use cases:**
+- Before testing cycles
+- After corrupted data
+- Resetting for demos
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Database reset and reseeded",
+  "seed_poem": {
+    "title": "In this strange labyrinth how shall I turn",
+    "author": "Lady Mary Wroth",
+    "lines": 14
+  },
+  "crown_id": 1
+}
+```
+
 ## Important Notes
 
 ### Changing the Seed Poem

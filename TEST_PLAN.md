@@ -13,10 +13,14 @@ Before testing, reset the database to start fresh:
 rm mayday.db
 python seed.py
 
-# Production (Render)
-# 1. Truncate all tables via SQL or delete/recreate database
-# 2. Run: python seed.py
+# Production (Render) - Use the admin reset endpoint:
+curl -X POST "https://psny-mayday.onrender.com/admin/reset?key=YOUR_ADMIN_SECRET"
+
+# Expected response:
+# {"success": true, "message": "Database reset and reseeded", ...}
 ```
+
+**Note:** The `ADMIN_SECRET` is stored as an environment variable on Render. Contact the project owner for the key.
 
 ---
 
