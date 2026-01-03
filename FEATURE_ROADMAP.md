@@ -6,19 +6,6 @@
 
 ## 🔴 High Priority Issues
 
-### Change Seed Poem Before Launch
-**Status:** TODO
-**Source:** Discussion
-
-Replace Ted Berrigan's "Sonnet 1" with the desired seed poem for Crown 1.
-
-**Steps:**
-1. Update `seed.py` with new poem title and 14 lines
-2. Update `app.py` - search for "Ted Berrigan" (appears in author attribution) and replace
-3. Reset/reseed the production database on Render
-
----
-
 ### Code Organization: Monolithic app.py
 **Status:** Planned
 **Source:** Code Review
@@ -109,6 +96,11 @@ Allow users to collaborate with Claude when no human partner is available.
 
 ## ✅ Completed
 
+### Changed Seed Poem to Lady Mary Wroth (Jan 3, 2026)
+- Replaced Ted Berrigan's "Sonnet 1" with Lady Mary Wroth's "In this strange labyrinth how shall I turn"
+- Updated `seed.py`, `app.py`, test fixtures, and frontend fallback data
+- Reset production database required before launch
+
 ### Simplified Pen Name + Code Flow (Dec 30, 2025)
 - **No accounts, no authentication friction** - just enter pen name and go
 - Email made optional ("Stay in touch with PSNY") - for CRM collection only
@@ -148,4 +140,4 @@ Allow users to collaborate with Claude when no human partner is available.
 
 ---
 
-*Last updated: December 30, 2025*
+*Last updated: January 3, 2026*

@@ -13,14 +13,13 @@ A collaborative poetry platform for the Poetry Society of New York (PSNY) where 
 5. **Pattern repeats infinitely** → Fractal tree of poetry grows organically
 
 ### Crown Structure
-- **Crown 1** (Generation 1): Seeded from Ted Berrigan's "Sonnet 1" (classic)
+- **Crown 1** (Generation 1): Seeded from Lady Mary Wroth's "In this strange labyrinth how shall I turn" (classic)
 - **Crown 2-15** (Generation 2): Seeded from Crown 1's 14 completed sonnets
 - **Crown 16+** (Generation 3+): Seeded from Crown 2's sonnets, and so on...
 
 ## Current Status: ✅ DEPLOYED ON RENDER
 
 **Known Issues & Roadmap:** See `FEATURE_ROADMAP.md` for:
-- 🔴 High priority: Change seed poem before launch
 - 🟢 Low priority optimizations
 - 🚀 Future features (AI writing partner, etc.)
 
@@ -106,7 +105,7 @@ psny-mayday/
 ├── app.py                      # Main FastAPI server with fractal auto-spawning
 ├── models.py                   # Database models with fractal Crown schema
 ├── database.py                 # Database connection
-├── seed.py                     # Seeds DB with Ted Berrigan's "Sonnet 1"
+├── seed.py                     # Seeds DB with Lady Mary Wroth's seed sonnet
 ├── create_crown.py             # Manual Crown creation tool
 ├── mayday.db                   # Production SQLite database (gitignored)
 ├── requirements.txt            # Python dependencies
@@ -220,7 +219,7 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 # Install dependencies
 pip install fastapi uvicorn sqlmodel jinja2 python-multipart
 
-# Seed database with Ted Berrigan's "Sonnet 1"
+# Seed database with the source sonnet
 python seed.py
 
 # Run server
@@ -247,10 +246,10 @@ uvicorn app:app --reload
 ## Important Notes
 
 ### Changing the Seed Poem
-To use a different classic seed poem (not Ted Berrigan's "Sonnet 1"):
+To use a different classic seed poem:
 
 1. **Update `seed.py`**: Change title and all 14 lines
-2. **Update `app.py`**: Search for `"Ted Berrigan"` (appears 4 times) and replace with new author name
+2. **Update `app.py`**: Search for `"Lady Mary Wroth"` (appears 4 times) and replace with new author name
 
 All other titles, first lines, and authors for collaborative sonnets are **fully dynamic** from database.
 

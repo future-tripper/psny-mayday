@@ -15,7 +15,7 @@ def seed_data():
             return
 
         source_sonnet = SourceSonnet(
-            title="Sonnet 1",
+            title="In this strange labyrinth how shall I turn",
             source_type="classic",
             parent_sonnet_id=None
         )
@@ -24,20 +24,20 @@ def seed_data():
         session.refresh(source_sonnet)
 
         lines = [
-            "His piercing pince-nez. Some dim frieze",
-            "Hands point to a dim frieze, in the dark night.",
-            "In the book of his music the corners have straightened:",
-            "Which owe their presence to our sleeping hands.",
-            "The ox-blood from the hands which play",
-            "For fire for warmth for hands for growth",
-            "Is there room in the room that you room in?",
-            "Upon his structured tomb:",
-            "Still they mean something. For the dance",
-            "And the architecture.",
-            "Weave among incidents",
-            "May be portentous to him",
-            "We are the sleeping fragments of his sky,",
-            "Wind giving presence to fragments."
+            "In this strange labyrinth, how shall I turn?",
+            "Paths lie on every side, yet still I stray.",
+            "If to the right, there love makes me burn;",
+            "If I go forward, danger bars the way.",
+            "If to the left, suspicion spoils all bliss;",
+            "If I turn back, shame cries that I should return.",
+            "I dare not faint, though crosses strike my fate;",
+            "To stand still is hardest, though it leads to mourn.",
+            "So let me take the right or left-hand way,",
+            "Go forward, stand still, or backward retreat;",
+            "These doubts I must endure without delay,",
+            "With no relief, but travel as my fate.",
+            "Yet what most stirs my troubled heart above",
+            "Is leaving all, to take the thread of Love."
         ]
 
         for i, line_text in enumerate(lines, start=1):

@@ -994,7 +994,7 @@ async def crown_nodes_api(crown_id: int, session: Session = Depends(get_session)
                 if user_1 and user_2:
                     source_authors = f"{user_1.pen_name} & {user_2.pen_name}"
         elif source_sonnet.source_type == "classic":
-            source_authors = "Ted Berrigan"
+            source_authors = "Lady Mary Wroth"
 
     return {
         "crown_id": crown_id,
@@ -1058,8 +1058,8 @@ async def crown_context_api(crown_id: int, session: Session = Depends(get_sessio
 
         # Get authors based on source type
         if source_sonnet.source_type == "classic":
-            # For Ted Berrigan's "Sonnet 1", use author name
-            source_authors = "Ted Berrigan"
+            # For classic source sonnet, use author name
+            source_authors = "Lady Mary Wroth"
         elif source_sonnet.source_type == "collaborative" and source_sonnet.parent_sonnet_id:
             # For collaborative, get the parent sonnet's authors
             parent_pair = session.exec(
@@ -1702,7 +1702,7 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
         source_lines = source_lines_by_sonnet.get(original_source.id, [])
         original_seed = {
             "title": original_source.title,
-            "author": "Ted Berrigan",
+            "author": "Lady Mary Wroth",
             "lines": [sl.text for sl in source_lines]
         }
 
@@ -1756,7 +1756,7 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
                 seed_source = {
                     "type": "original",
                     "title": source_sonnet.title,
-                    "author": "Ted Berrigan"
+                    "author": "Lady Mary Wroth"
                 }
             elif source_sonnet.parent_sonnet_id:
                 parent_pair = pairs_by_sonnet_id.get(source_sonnet.parent_sonnet_id)
