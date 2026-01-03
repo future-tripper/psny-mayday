@@ -1,9 +1,11 @@
+import os
 from typing import Optional
-from fastapi import FastAPI, Request, Form, Depends
+from fastapi import FastAPI, Request, Form, Depends, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 from sqlmodel import Session, select
+from sqlalchemy import text
 from database import get_session, run_migrations
 from models import User, Sonnet, Line, Turn, Crown, Pair, SourceSonnet, SourceLine
 import secrets
@@ -1856,3 +1858,106 @@ async def cosmos_view(request: Request, session: Session = Depends(get_session))
     return templates.TemplateResponse("fractal_cosmos.html", {
         "request": request
     })
+
+
+# =============================================================================
+# ADMIN ENDPOINTS
+# =============================================================================
+
+@app.post("/admin/reset")
+async def admin_reset_database(
+    key: str = Query(..., description="Admin secret key"),
+    session: Session = Depends(get_session)
+):
+    """
+    Reset and reseed the database. Requires ADMIN_SECRET env var.
+
+    Usage: curl -X POST "https://psny-mayday.onrender.com/admin/reset?key=YOUR_SECRET"
+    """
+    admin_secret = os.getenv("ADMIN_SECRET")
+
+    if not admin_secret:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "ADMIN_SECRET not configured on server"}
+        )
+
+    if key != admin_secret:
+        return JSONResponse(
+            status_code=403,
+            content={"error": "Invalid admin key"}
+        )
+
+    try:
+        # Truncate all tables in correct order (respecting foreign keys)
+        # Using raw SQL for CASCADE support
+        from database import engine
+        with engine.connect() as conn:
+            conn.execute(text('TRUNCATE line, sonnet, pair, "user", source_line, crown, source_sonnet RESTART IDENTITY CASCADE'))
+            conn.commit()
+
+        # Re-seed with Lady Mary Wroth's poem
+        source_sonnet = SourceSonnet(
+            title="In this strange labyrinth how shall I turn",
+            source_type="classic",
+            parent_sonnet_id=None
+        )
+        session.add(source_sonnet)
+        session.commit()
+        session.refresh(source_sonnet)
+
+        lines = [
+            "In this strange labyrinth, how shall I turn?",
+            "Paths lie on every side, yet still I stray.",
+            "If to the right, there love makes me burn;",
+            "If I go forward, danger bars the way.",
+            "If to the left, suspicion spoils all bliss;",
+            "If I turn back, shame cries that I should return.",
+            "I dare not faint, though crosses strike my fate;",
+            "To stand still is hardest, though it leads to mourn.",
+            "So let me take the right or left-hand way,",
+            "Go forward, stand still, or backward retreat;",
+            "These doubts I must endure without delay,",
+            "With no relief, but travel as my fate.",
+            "Yet what most stirs my troubled heart above",
+            "Is leaving all, to take the thread of Love."
+        ]
+
+        for i, line_text in enumerate(lines, start=1):
+            source_line = SourceLine(
+                source_sonnet_id=source_sonnet.id,
+                line_number=i,
+                text=line_text
+            )
+            session.add(source_line)
+
+        session.commit()
+
+        crown = Crown(
+            source_sonnet_id=source_sonnet.id,
+            generation=1,
+            parent_sonnet_id=None,
+            status="forming"
+        )
+        session.add(crown)
+        session.commit()
+
+        logger.info("Database reset and reseeded successfully")
+
+        return JSONResponse(content={
+            "success": True,
+            "message": "Database reset and reseeded",
+            "seed_poem": {
+                "title": source_sonnet.title,
+                "author": "Lady Mary Wroth",
+                "lines": len(lines)
+            },
+            "crown_id": crown.id
+        })
+
+    except Exception as e:
+        logger.error(f"Database reset failed: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Reset failed: {str(e)}"}
+        )
