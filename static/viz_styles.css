@@ -66,13 +66,15 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    width: 100%;
 }
 
 .crown-nav-arrow {
     font-family: 'Josefin Sans', sans-serif;
     font-size: 1.2em;
     font-weight: 300;
+    line-height: 1;
     width: 32px;
     height: 32px;
     border: 1px solid #F8B098;
