@@ -1697,3 +1697,124 @@ h1 {
         width: 100%;
     }
 }
+
+/* =============================================================================
+   COLLABORATION PAGE - Clean Redesign
+   ============================================================================= */
+
+/* Clean header without decorative blobs */
+.collab-header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+.collab-welcome {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.1em;
+    font-weight: 300;
+    color: #2b2b2b;
+    margin: 0 0 8px 0;
+}
+
+.collab-partner {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.95em;
+    font-weight: 300;
+    color: #666;
+    margin: 0 0 20px 0;
+}
+
+.collab-crown-link {
+    display: inline-block;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.85em;
+    font-weight: 400;
+    color: #2b2b2b;
+    text-decoration: none;
+    padding: 10px 20px;
+    border: 1px solid #2b2b2b;
+    border-radius: 3px;
+    transition: all 0.2s;
+}
+
+.collab-crown-link:hover {
+    background: #2b2b2b;
+    color: white;
+}
+
+/* Arrow submit button */
+.submit-btn--arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    min-width: 50px;
+    height: 50px;
+    padding: 0;
+    background: #2b2b2b;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.submit-btn--arrow:hover {
+    background: #1a1a1a;
+    transform: scale(1.05);
+}
+
+.submit-btn--arrow svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Mobile collaboration page fixes */
+@media (max-width: 600px) {
+    /* Reduce sonnet padding */
+    .sonnet {
+        padding: 25px 15px 20px;
+    }
+
+    /* Smaller, left-aligned line numbers */
+    .line-number {
+        min-width: 20px;
+        font-size: 0.75em;
+        color: #bbb;
+    }
+
+    .line-with-number {
+        gap: 8px;
+    }
+
+    /* Stack input and button vertically */
+    .line-form {
+        flex-direction: column;
+        padding: 0 15px 30px;
+        gap: 12px;
+    }
+
+    .line-input {
+        width: 100%;
+        font-size: 1em;
+        padding: 14px 16px;
+    }
+
+    .submit-btn--arrow {
+        width: 100%;
+        border-radius: 3px;
+        height: 48px;
+    }
+
+    /* Turn indicator */
+    .turn-indicator {
+        margin: 20px 15px;
+    }
+
+    /* Collab header */
+    .collab-header {
+        padding: 30px 15px 20px;
+    }
+}

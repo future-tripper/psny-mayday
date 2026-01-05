@@ -49,12 +49,13 @@
         </div>
         {% endif %}
 
-        <div class="user-info">
-            <p>Welcome, <strong>{{ current_user.pen_name }}</strong> | Your partner is <strong>{{ partner.pen_name }}</strong> | <a href="/crown/1/visualize?u={{ current_user.code }}" class="link">View the Crown</a></p>
+        <div class="collab-header">
+            <p class="collab-welcome">Welcome, <strong>{{ current_user.pen_name }}</strong></p>
+            <p class="collab-partner">Writing with <strong>{{ partner.pen_name }}</strong></p>
+            <a href="/crown/1/visualize?u={{ current_user.code }}" class="collab-crown-link">View the Crown →</a>
         </div>
 
         <div class="sonnet">
-            <h2>Weaving Your Thread (Line {{ lines_written }}/{{ total_lines_to_write }})</h2>
             <div class="lines">
                 {% for line in lines %}
                 <div class="line-with-number">
@@ -67,7 +68,7 @@
 
         {% if is_my_turn %}
         <div class="turn-indicator my-turn">
-            <p>✍️ It's your turn! Add line {{ next_line_number }}:</p>
+            <p>Your turn — line {{ next_line_number }}</p>
         </div>
 
         <form method="POST" action="/lines" class="line-form">
@@ -75,12 +76,17 @@
             <input
                 type="text"
                 name="text"
-                placeholder="Enter your line..."
+                placeholder="Write your line..."
                 required
                 autofocus
                 class="line-input"
             >
-            <button type="submit" class="submit-btn">Submit Line</button>
+            <button type="submit" class="submit-btn submit-btn--arrow" aria-label="Submit line">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
         </form>
         {% else %}
         <div class="turn-indicator waiting">

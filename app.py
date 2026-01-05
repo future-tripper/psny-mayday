@@ -1236,7 +1236,7 @@ async def crown_scroll_api(crown_id: int, session: Session = Depends(get_session
 
         if source_sonnet.source_type == "classic":
             seed_first_line = source_sonnet.title
-            seed_authors = "Ted Berrigan"
+            seed_authors = "Lady Mary Wroth"
         elif source_sonnet.source_type == "collaborative" and source_sonnet.parent_sonnet_id:
             seed_first_line = first_line_obj.text if first_line_obj else None
             parent_pair = session.exec(
