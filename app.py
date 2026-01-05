@@ -482,18 +482,37 @@ async def signup(
             "error": "Email address is too long."
         })
 
+    # Clean email - just for CRM, not a unique identifier
+    clean_email = email.strip() if email and email.strip() else None
+
     # Generate secure token (16 bytes = 128 bits of entropy)
     code = secrets.token_urlsafe(16)
 
     new_user = User(
-        email=email if email and email.strip() else None,
+        email=clean_email,
         pen_name=pen_name,
         code=code,
         status="waiting"
     )
-    session.add(new_user)
-    session.commit()
-    session.refresh(new_user)
+
+    # Try to create user - if email causes any constraint issues, retry without email
+    try:
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
+    except Exception as e:
+        session.rollback()
+        # If there's any database error (like email uniqueness), try again without email
+        # Email is optional CRM data - don't let it block the poetry experience
+        new_user = User(
+            email=None,  # Omit email on retry
+            pen_name=pen_name,
+            code=secrets.token_urlsafe(16),  # Generate new code since old might be used
+            status="waiting"
+        )
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
 
     try_pair_users(session)
 
