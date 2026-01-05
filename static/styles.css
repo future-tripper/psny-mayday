@@ -431,16 +431,16 @@ h1 {
 }
 
 .submit-btn {
-    padding: 12px 28px;
+    padding: 14px 28px;
     background: #2b2b2b;
     color: white;
-    border: 3px solid #FFFBE2;
-    border-radius: 8px;
+    border: none;
+    border-radius: 3px;
     font-family: 'Josefin Sans', sans-serif;
-    font-size: 0.85em;
+    font-size: 0.9em;
     cursor: pointer;
     font-weight: 400;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     transition: all 0.2s;
 }
@@ -611,10 +611,10 @@ h1 {
     text-decoration: none;
     font-family: 'Josefin Sans', sans-serif;
     font-weight: 400;
-    font-size: 0.85em;
-    border-radius: 8px;
-    border: 3px solid #FFFBE2;
-    letter-spacing: 2px;
+    font-size: 0.9em;
+    border-radius: 3px;
+    border: none;
+    letter-spacing: 1px;
     text-transform: uppercase;
     transition: all 0.2s;
 }
