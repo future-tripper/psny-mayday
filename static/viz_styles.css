@@ -918,6 +918,18 @@
     overflow-x: hidden;
 }
 
+@media (max-width: 768px) {
+    .viz-stage--scroll {
+        padding: 30px 25px;
+    }
+}
+
+@media (max-width: 480px) {
+    .viz-stage--scroll {
+        padding: 20px 15px;
+    }
+}
+
 .scroll-content {
     max-width: 900px;
     margin: 0 auto;

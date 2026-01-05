@@ -56,6 +56,8 @@ export default class CosmosView {
         this.lastY = 0;
         this.lastMouseX = 0;
         this.lastMouseY = 0;
+        this.pinchStartDist = 0;
+        this.pinchStartZoom = 1;
 
         this.hoveredStar = null;
         this.hoveredCrown = null;
@@ -66,7 +68,7 @@ export default class CosmosView {
         this.boundResize = this.resize.bind(this);
         this.boundMouseDown = this.onMouseDown.bind(this);
         this.boundMouseMove = this.onMouseMove.bind(this);
-        this.boundMouseUp = () => this.dragging = false;
+        this.boundMouseUp = () => { this.dragging = false; this.pinchStartDist = 0; };
         this.boundWheel = this.onWheel.bind(this);
         this.boundTouchStart = this.onTouchStart.bind(this);
         this.boundTouchMove = this.onTouchMove.bind(this);
@@ -259,6 +261,11 @@ export default class CosmosView {
                 this.lastX = touch.clientX;
                 this.lastY = touch.clientY;
             }
+        } else if (e.touches.length === 2) {
+            // Pinch-to-zoom: store initial distance
+            this.dragging = false;
+            this.pinchStartDist = this.getTouchDistance(e.touches);
+            this.pinchStartZoom = this.targetZoom;
         }
     }
 
@@ -272,7 +279,18 @@ export default class CosmosView {
             this.camY -= dy;
             this.lastX = touch.clientX;
             this.lastY = touch.clientY;
+        } else if (e.touches.length === 2 && this.pinchStartDist) {
+            // Pinch-to-zoom: calculate new zoom based on distance change
+            const currentDist = this.getTouchDistance(e.touches);
+            const scale = currentDist / this.pinchStartDist;
+            this.targetZoom = Math.max(CONFIG.zoom.min, Math.min(CONFIG.zoom.max, this.pinchStartZoom * scale));
         }
+    }
+
+    getTouchDistance(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     onKeyDown(e) {
