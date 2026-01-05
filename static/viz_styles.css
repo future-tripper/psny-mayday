@@ -54,16 +54,17 @@
     border-bottom: 1px solid rgba(43, 43, 43, 0.1);
 }
 
-.view-controls {
+.view-tabs {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 30px;
-    flex-wrap: wrap;
+    margin-bottom: 12px;
 }
 
 .crown-nav {
     display: flex;
+    justify-content: center;
     align-items: center;
     gap: 8px;
 }

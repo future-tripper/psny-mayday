@@ -38,15 +38,15 @@
         <div class="viz-container">
             <div class="viz-header">
                 <h2>The Crown</h2>
-                <div class="view-controls">
-                    <div class="crown-nav">
-                        <button class="crown-nav-arrow" id="prev-crown" {% if crown_id <= 1 %}disabled{% endif %} data-crown="{{ crown_id - 1 }}">‹</button>
-                        <span class="crown-nav-label">Crown {{ crown_id }}</span>
-                        <button class="crown-nav-arrow" id="next-crown" {% if crown_id >= max_crown_id %}disabled{% endif %} data-crown="{{ crown_id + 1 }}">›</button>
-                    </div>
+                <div class="view-tabs">
                     <a href="#" class="view-link active" data-view="lineage">Threads</a>
                     <a href="#" class="view-link" data-view="scroll">Scroll</a>
                     <a href="#" class="view-link" data-view="cosmos">Cosmos</a>
+                </div>
+                <div class="crown-nav">
+                    <button class="crown-nav-arrow" id="prev-crown" {% if crown_id <= 1 %}disabled{% endif %} data-crown="{{ crown_id - 1 }}">‹</button>
+                    <span class="crown-nav-label">Crown {{ crown_id }}</span>
+                    <button class="crown-nav-arrow" id="next-crown" {% if crown_id >= max_crown_id %}disabled{% endif %} data-crown="{{ crown_id + 1 }}">›</button>
                 </div>
             </div>
 
@@ -54,12 +54,10 @@
             <div class="viz-main">
                 <div class="stage-wrapper">
                     <div id="lineage-stage" class="viz-stage viz-stage--lineage active" aria-live="polite">
-                        <div class="crown-status-badge" id="crown-status-badge-threads"></div>
                         <div id="seed-context-threads" class="seed-context seed-context--threads"></div>
                         <div id="lineage-scroll" class="lineage-scroll" role="list"></div>
                     </div>
                     <div id="scroll-stage" class="viz-stage viz-stage--scroll" hidden>
-                        <div class="crown-status-badge" id="crown-status-badge-scroll"></div>
                         <div id="seed-context-scroll" class="seed-context seed-context--scroll"></div>
                         <div id="scroll-content" class="scroll-content"></div>
                     </div>

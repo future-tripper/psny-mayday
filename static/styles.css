@@ -1003,15 +1003,18 @@ h1 {
 
 .leave-link {
     font-family: 'Josefin Sans', sans-serif;
-    font-size: 0.8em;
-    color: #999;
-    text-decoration: none;
+    font-size: 0.85em;
+    color: #888;
+    text-decoration: underline;
+    text-decoration-color: rgba(136, 136, 136, 0.4);
+    text-underline-offset: 3px;
     letter-spacing: 0.5px;
-    transition: color 0.2s;
+    transition: all 0.2s;
 }
 
 .leave-link:hover {
-    color: #666;
+    color: #555;
+    text-decoration-color: rgba(85, 85, 85, 0.6);
 }
 
 /* Reset/Abort flow pages */
