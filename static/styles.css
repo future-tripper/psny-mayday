@@ -24,34 +24,36 @@ body {
 }
 
 header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     background: #2b2b2b;
     color: white;
-    text-align: center;
-    padding: 40px 30px 60px;
-    position: relative;
+    padding: 18px 24px;
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
 }
 
 .psny-logo {
-    position: absolute;
-    top: 0;
-    left: 30px;
-    height: 120px;
+    height: 75px;
     width: auto;
-    z-index: 10;
 }
 
-.membership-button {
-    display: none;
-}
-
-.membership-button:hover {
-    background: rgba(255, 251, 226, 0.1);
+.header-title {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.4em;
+    font-weight: 300;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: white;
 }
 
 .hamburger-menu {
-    position: absolute;
-    top: 25px;
-    right: 30px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -150,36 +152,16 @@ header {
     visibility: visible;
 }
 
-@media (max-width: 768px) {
-    header {
-        padding: 30px 20px 50px;
-    }
-
-    .psny-logo {
-        position: static;
-        display: block;
-        margin: 0 auto 20px;
-        height: 90px;
-    }
-
-    .psny-logo {
-        position: static;
-        display: block;
-        margin: 0 auto 20px;
-        height: 70px;
-    }
-
-    h1 {
-        font-size: 2.2em;
-        margin-bottom: 12px;
-    }
-
-    .tagline {
-        margin-bottom: 0;
-    }
+/* Hero section - only on signup page */
+.hero {
+    background: #2b2b2b;
+    color: white;
+    text-align: center;
+    padding: 50px 30px 60px;
+    position: relative;
 }
 
-header::after {
+.hero::after {
     content: '';
     position: absolute;
     bottom: -1px;
@@ -190,21 +172,18 @@ header::after {
     clip-path: ellipse(75% 100% at 50% 0%);
 }
 
-h1 {
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 3.6em;
-    font-weight: 300;
-    letter-spacing: 4px;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-}
-
-.tagline {
+.hero h1 {
     font-family: 'Josefin Sans', sans-serif;
     font-size: 1.4em;
     font-weight: 600;
     letter-spacing: 1.2px;
     opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding: 40px 20px 50px;
+    }
 }
 
 .error {
