@@ -53,6 +53,14 @@ uvicorn app:app --reload
 - **Visualization**: Canvas 2D (Cosmos), HTML/CSS (Threads, Scroll)
 - **Deployment**: Render (auto-deploys from `main`)
 
+## Current Scope
+
+The site is live at https://psny-mayday.onrender.com with a shared production database, seeded and ready for testing. Completed poems are permanent and visible in the Crown visualization. The DB can be reset for a fresh start (see Admin below).
+
+The current build is focused on proving the **core experience**: poets get paired automatically, write sonnets together turn-by-turn, completed poems seed new Crowns, and the fractal grows infinitely. Signup is intentionally minimal — pen name and go.
+
+There's plenty to think about beyond this: user profiles, moderation and flagging, richer onboarding, notifications, etc. Those conversations are ahead of us. Right now we're validating that the poetry engine works and feels right. See `ISSUES_AND_ROADMAP.md` and `VISION_BOARD.md` for what's planned and what's possible.
+
 ## Testing
 
 ```bash
