@@ -194,10 +194,12 @@ def cleanup_stale_pairs(session: Session):
             lines = session.exec(select(Line).where(Line.sonnet_id == sonnet.id)).all()
             for line in lines:
                 session.delete(line)
-            # Delete turn
-            turn = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).first()
-            if turn:
+            # Delete all turns
+            turns = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).all()
+            for turn in turns:
                 session.delete(turn)
+            # Flush child deletes before removing the sonnet (avoids FK violation on autoflush)
+            session.flush()
             # Delete sonnet
             session.delete(sonnet)
 
@@ -1507,9 +1509,10 @@ async def restart_same_lines(
             lines = session.exec(select(Line).where(Line.sonnet_id == sonnet.id)).all()
             for line in lines:
                 session.delete(line)
-            turn = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).first()
-            if turn:
+            turns = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).all()
+            for turn in turns:
                 session.delete(turn)
+            session.flush()
             session.delete(sonnet)
 
     # Keep pair as orphaned, user waits for new partner
@@ -1551,9 +1554,10 @@ async def restart_new_lines(
             lines = session.exec(select(Line).where(Line.sonnet_id == sonnet.id)).all()
             for line in lines:
                 session.delete(line)
-            turn = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).first()
-            if turn:
+            turns = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).all()
+            for turn in turns:
                 session.delete(turn)
+            session.flush()
             session.delete(sonnet)
 
     # Mark pair as abandoned (slot freed for backfill)
@@ -1595,9 +1599,10 @@ async def leave_completely(
                 lines = session.exec(select(Line).where(Line.sonnet_id == sonnet.id)).all()
                 for line in lines:
                     session.delete(line)
-                turn = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).first()
-                if turn:
+                turns = session.exec(select(Turn).where(Turn.sonnet_id == sonnet.id)).all()
+                for turn in turns:
                     session.delete(turn)
+                session.flush()
                 session.delete(sonnet)
 
         # Mark pair as abandoned
