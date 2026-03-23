@@ -1,4 +1,4 @@
-fastapi
+fastapi[standard]==0.135.1
 uvicorn[standard]
 sqlmodel
 jinja2

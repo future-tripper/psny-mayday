@@ -457,8 +457,7 @@ async def landing(request: Request):
 
 @app.get("/signup")
 async def signup_page(request: Request, error: str = None):
-    return templates.TemplateResponse("signup.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "signup.html", {
         "error": error
     })
 
@@ -473,14 +472,12 @@ async def signup(
     # Input validation
     pen_name = pen_name.strip()
     if not pen_name or len(pen_name) > 100:
-        return templates.TemplateResponse("signup.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "signup.html", {
             "error": "Pen name must be between 1 and 100 characters."
         })
 
     if email and len(email) > 254:  # RFC 5321 max email length
-        return templates.TemplateResponse("signup.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "signup.html", {
             "error": "Email address is too long."
         })
 
@@ -519,8 +516,7 @@ async def signup(
     try_pair_users(session)
 
     # Show the user their secret code before continuing
-    return templates.TemplateResponse("your_code.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "your_code.html", {
         "user": new_user
     })
 
@@ -534,8 +530,7 @@ async def return_to_poem(
     # Look up user by their secret code
     user = session.exec(select(User).where(User.code == code.strip())).first()
     if not user:
-        return templates.TemplateResponse("signup.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "signup.html", {
             "error": "Code not found. Please check your code and try again."
         })
 
@@ -545,9 +540,7 @@ async def return_to_poem(
 
 @app.get("/about")
 async def about_page(request: Request):
-    return templates.TemplateResponse("about.html", {
-        "request": request
-    })
+    return templates.TemplateResponse(request, "about.html")
 
 
 @app.get("/contributors")
@@ -608,8 +601,7 @@ async def contributors_page(request: Request, session: Session = Depends(get_ses
     ]
     authors.sort(key=lambda a: a["pen_name"].lower())
 
-    return templates.TemplateResponse("contributors.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "contributors.html", {
         "authors": authors,
         "total_authors": len(authors)
     })
@@ -626,8 +618,7 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
 
     # User is waiting for initial pairing
     if user.status == "waiting":
-        return templates.TemplateResponse("waiting.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "waiting.html", {
             "user": user
         })
 
@@ -637,8 +628,7 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
 
     pair = session.exec(select(Pair).where(Pair.id == user.pair_id)).first()
     if not pair:
-        return templates.TemplateResponse("waiting.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "waiting.html", {
             "user": user
         })
 
@@ -654,8 +644,7 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
             return RedirectResponse(f"/partner-left?u={u}", status_code=303)
         else:
             # User already chose to restart, waiting for new partner
-            return templates.TemplateResponse("waiting.html", {
-                "request": request,
+            return templates.TemplateResponse(request, "waiting.html", {
                 "user": user
             })
 
@@ -665,8 +654,7 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
 
     # User is waiting for new partner (after they made a choice)
     if user.status == "waiting_for_partner":
-        return templates.TemplateResponse("waiting.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "waiting.html", {
             "user": user
         })
 
@@ -675,8 +663,7 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
 
     sonnet = session.exec(select(Sonnet).where(Sonnet.id == pair.sonnet_id)).first()
     if not sonnet:
-        return templates.TemplateResponse("waiting.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "waiting.html", {
             "user": user
         })
 
@@ -711,8 +698,7 @@ async def poet_home(request: Request, u: str = None, session: Session = Depends(
             })()
             display_lines.append(placeholder_line)
 
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "current_user": user,
         "partner": partner,
         "lines": display_lines,
@@ -832,8 +818,7 @@ async def completion_page(request: Request, u: str = None, session: Session = De
         if crown and crown.status == "complete":
             crown_complete = True
 
-    return templates.TemplateResponse("complete.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "complete.html", {
         "user": user,
         "partner": partner,
         "crown_complete": crown_complete
@@ -879,8 +864,7 @@ async def sonnet_view(request: Request, sonnet_id: int, u: str = None, session: 
         .order_by(SourceLine.line_number)
     ).all()
 
-    return templates.TemplateResponse("sonnet.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "sonnet.html", {
         "user": user,
         "sonnet": sonnet,
         "pair": pair,
@@ -1330,16 +1314,14 @@ async def crown_visualization(request: Request, crown_id: int, u: str = None, se
     # Verify the requested crown exists
     crown = session.exec(select(Crown).where(Crown.id == crown_id)).first()
     if not crown:
-        return templates.TemplateResponse("crown_visualization.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "crown_visualization.html", {
             "crown_id": 1,  # Default to Crown 1
             "max_crown_id": max_crown_id,
             "available_crowns": available_crowns,
             "user": user
         })
 
-    return templates.TemplateResponse("crown_visualization.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "crown_visualization.html", {
         "crown_id": crown_id,
         "max_crown_id": max_crown_id,
         "available_crowns": available_crowns,
@@ -1391,8 +1373,7 @@ async def confirm_leave_page(request: Request, u: str, session: Session = Depend
 
     lines = get_poem_lines_for_display(pair, session)
 
-    return templates.TemplateResponse("confirm_leave.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "confirm_leave.html", {
         "user": user,
         "lines": lines
     })
@@ -1411,8 +1392,7 @@ async def partner_left_page(request: Request, u: str, session: Session = Depends
 
     lines = get_poem_lines_for_display(pair, session)
 
-    return templates.TemplateResponse("partner_left.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partner_left.html", {
         "user": user,
         "lines": lines
     })
@@ -1425,8 +1405,7 @@ async def session_expired_page(request: Request, u: str, session: Session = Depe
     if not user:
         return RedirectResponse("/signup", status_code=303)
 
-    return templates.TemplateResponse("session_expired.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "session_expired.html", {
         "user": user
     })
 
@@ -1434,9 +1413,7 @@ async def session_expired_page(request: Request, u: str, session: Session = Depe
 @app.get("/goodbye")
 async def goodbye_page(request: Request):
     """Friendly goodbye page"""
-    return templates.TemplateResponse("goodbye.html", {
-        "request": request
-    })
+    return templates.TemplateResponse(request, "goodbye.html")
 
 
 @app.post("/abort")
@@ -1879,9 +1856,7 @@ async def fractal_tree_api(session: Session = Depends(get_session)):
 @app.get("/cosmos")
 async def cosmos_view(request: Request, session: Session = Depends(get_session)):
     """Fractal Cosmos visualization page"""
-    return templates.TemplateResponse("fractal_cosmos.html", {
-        "request": request
-    })
+    return templates.TemplateResponse(request, "fractal_cosmos.html")
 
 
 # =============================================================================
