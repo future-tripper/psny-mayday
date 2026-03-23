@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import FastAPI, Request, Form, Depends, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
+from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse, FileResponse
 from sqlmodel import Session, select
 from sqlalchemy import text
 from database import get_session, run_migrations
@@ -24,6 +24,19 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
+
+FAVICON_PATH = os.path.join("static", "images", "psny-logo.png")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(FAVICON_PATH, media_type="image/png")
+
+
+@app.get("/apple-touch-icon.png", include_in_schema=False)
+@app.get("/apple-touch-icon-precomposed.png", include_in_schema=False)
+async def apple_touch_icon():
+    return FileResponse(FAVICON_PATH, media_type="image/png")
 
 
 # Run migrations on startup

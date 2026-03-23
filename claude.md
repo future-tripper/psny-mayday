@@ -91,11 +91,21 @@ When a partner leaves or goes inactive, the system handles it gracefully:
 - `POST /abort`, `/restart-same-lines`, `/restart-new-lines`, `/leave-completely`, `/rejoin`
 
 ## Tech Stack
-- **Backend**: FastAPI + SQLModel
+- **Backend**: FastAPI + SQLModel (Starlette 1.0+)
 - **Database**: SQLite (local), PostgreSQL (production on Render)
 - **Frontend**: Jinja2 templates + vanilla JavaScript (ES6 modules)
-- **3D Graphics**: Three.js
+- **Visualization**: Canvas 2D (Cosmos), HTML/CSS (Threads, Scroll)
 - **Styling**: Custom CSS with PSNY branding
+
+### Important: TemplateResponse API
+This project uses Starlette 1.0+ which requires the new `TemplateResponse` signature:
+```python
+# Correct (Starlette 1.0+)
+templates.TemplateResponse(request, "template.html", {"key": value})
+
+# Wrong (old Starlette)
+templates.TemplateResponse("template.html", {"request": request, "key": value})
+```
 
 ## File Structure
 
@@ -107,8 +117,10 @@ psny-mayday/
 ├── database.py                 # Database connection
 ├── seed.py                     # Seeds DB with Lady Mary Wroth's seed sonnet
 ├── create_crown.py             # Manual Crown creation tool
-├── mayday.db                   # Production SQLite database (gitignored)
+├── mayday.db                   # Local SQLite database (gitignored)
 ├── requirements.txt            # Python dependencies
+├── .env.example                # Environment variable template
+├── build.sh                    # Render build script
 ```
 
 ### Frontend Files
