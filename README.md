@@ -65,7 +65,7 @@ See `TESTING.md` for the full testing guide and `TEST_PLAN.md` for the manual te
 ## Documentation
 
 - `CLAUDE.md` — Full technical docs, DB schema, user journey, all endpoints
-- `FEATURE_ROADMAP.md` — Known issues and planned features
+- `ISSUES_AND_ROADMAP.md` — Known issues and planned features
 - `VISION_BOARD.md` — Future ideas and expansion concepts
 
 ## Admin

@@ -19,7 +19,7 @@ templates.TemplateResponse(request, "template.html", {"key": value})
 
 ## Architecture
 
-- `app.py` — Monolithic server (routes, business logic, API). Refactor planned in FEATURE_ROADMAP.md
+- `app.py` — Monolithic server (routes, business logic, API). Refactor planned in ISSUES_AND_ROADMAP.md
 - `models.py` — SQLModel schema: User, Sonnet, Line, Turn, Crown, Pair, SourceSonnet, SourceLine
 - `database.py` — DB connection. `seed.py` — Seeds Lady Mary Wroth's poem
 - `templates/` — 14 Jinja2 templates. `static/viz/` — ES6 visualization modules
@@ -70,7 +70,7 @@ uvicorn app:app --reload
 
 ## Docs
 
-- `FEATURE_ROADMAP.md` — Known issues, planned features
+- `ISSUES_AND_ROADMAP.md` — Known issues, planned features
 - `VISION_BOARD.md` — Long-term ideas
 - `TEST_PLAN.md` — Manual QA checklist
 - `TESTING.md` — pytest guide for devs
