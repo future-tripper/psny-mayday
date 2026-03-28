@@ -1,11 +1,11 @@
-fastapi[standard]
-uvicorn[standard]
-sqlmodel
-jinja2
-python-multipart
-psycopg2-binary
+fastapi[standard]==0.135.2
+uvicorn[standard]==0.42.0
+sqlmodel==0.0.37
+jinja2==3.1.6
+python-multipart==0.0.22
+psycopg2-binary==2.9.11
 
 # Testing (dev only)
-pytest
-pytest-asyncio
-httpx
+pytest==9.0.2
+pytest-asyncio==1.3.0
+httpx==0.28.1
