@@ -9,3 +9,6 @@ psycopg2-binary==2.9.11
 pytest==9.0.2
 pytest-asyncio==1.3.0
 httpx==0.28.1
+
+# Reject compromised eMudhra certificates (Render October 2026 advisory).
+certifi>=2026.10.19
